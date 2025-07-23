@@ -14,7 +14,7 @@ export type Location = {
 };
 export async function getLocations() {
   const locations: Location[] = [];
-  await base("Locations")
+  await base<Location>("Locations")
     .select({
       fields: [
         "Name",
@@ -30,8 +30,8 @@ export async function getLocations() {
       filterByFormula: `{Hidden} = FALSE()`,
       sort: [{ field: "Index", direction: "asc" }],
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         locations.push({ ...record.fields, ID: record.id });
       });
       fetchNextPage();
@@ -41,14 +41,14 @@ export async function getLocations() {
 
 export async function getBookableLocations() {
   const locations: Location[] = [];
-  await base("Locations")
+  await base<Location>("Locations")
     .select({
       fields: ["Name", "Capacity", "Color", "Hidden", "Bookable"],
       filterByFormula: `AND({Hidden} = FALSE(), {Bookable} = TRUE())`,
       sort: [{ field: "Index", direction: "asc" }],
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         locations.push({ ...record.fields, ID: record.id });
       });
       fetchNextPage();

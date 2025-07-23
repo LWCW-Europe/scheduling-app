@@ -1,10 +1,10 @@
 import { CakeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 
-export type NavItem = {
+export interface NavItem {
   name: string;
   href: string;
-  icon: any;
-};
+  icon: unknown;
+}
 
 export const CONSTS = {
   TITLE: "Example Conference Weekend",

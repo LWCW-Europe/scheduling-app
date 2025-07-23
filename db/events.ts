@@ -11,7 +11,7 @@ export type Event = {
   "Location names"?: string[];
 };
 
-const eventFields = [
+const eventFields: (keyof Event)[] = [
   "Name",
   "Description",
   "Website",
@@ -19,22 +19,19 @@ const eventFields = [
   "End",
 ];
 
-const fieldsIfMultipleEvents = [
-  "Guests",
-  "Location names"
-];
+const fieldsIfMultipleEvents: (keyof Event)[] = ["Guests", "Location names"];
 
 export async function getEvents() {
   const events: Event[] = [];
-  await base("Events")
+  await base<Event>("Events")
     .select({
       fields: [
         ...eventFields,
-        ...(CONSTS.MULTIPLE_EVENTS ? fieldsIfMultipleEvents : [])
+        ...(CONSTS.MULTIPLE_EVENTS ? fieldsIfMultipleEvents : []),
       ],
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         if (record.fields.Start && record.fields.End) {
           events.push(record.fields);
         }
@@ -46,16 +43,16 @@ export async function getEvents() {
 
 export async function getEventByName(name: string) {
   const events: Event[] = [];
-  await base("Events")
+  await base<Event>("Events")
     .select({
       fields: [
         ...eventFields,
-        ...(CONSTS.MULTIPLE_EVENTS ? fieldsIfMultipleEvents : [])
+        ...(CONSTS.MULTIPLE_EVENTS ? fieldsIfMultipleEvents : []),
       ],
       filterByFormula: `{Name} = "${name}"`,
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         events.push(record.fields);
       });
       fetchNextPage();

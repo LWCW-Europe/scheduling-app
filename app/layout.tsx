@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat, Roboto } from "next/font/google";
+import { Montserrat, Roboto } from "next/font/google";
 import "./globals.css";
 import NavBar from "./nav-bar";
 import { Context } from "./context";
 import clsx from "clsx";
 import { CONSTS } from "@/utils/constants";
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] });
 const roboto = Roboto({
   subsets: ["latin"],
   variable: "--font-roboto",

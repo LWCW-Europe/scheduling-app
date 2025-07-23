@@ -8,12 +8,12 @@ export type Guest = {
 };
 export async function getGuests() {
   const guests: Guest[] = [];
-  await base("Guests")
+  await base<Guest>("Guests")
     .select({
       fields: ["Name", "Email"],
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         guests.push({ ...record.fields, ID: record.id });
       });
       fetchNextPage();
@@ -26,13 +26,13 @@ export async function getGuestsByEvent(eventName: string) {
   const filterFormula = CONSTS.MULTIPLE_EVENTS
     ? `SEARCH("${eventName}", {Events}) != 0`
     : "1";
-  await base("Guests")
+  await base<Guest>("Guests")
     .select({
       fields: ["Name", "Email"],
       filterByFormula: filterFormula,
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         guests.push({ ...record.fields, ID: record.id });
       });
       fetchNextPage();

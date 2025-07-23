@@ -1,8 +1,4 @@
 {
-  "extends": [
-    "next/core-web-vitals",
-    "next/typescript",
-    "plugin:@typescript-eslint/stylistic"
-  ],
+  "extends": ["next/core-web-vitals", "next/typescript"],
   "root": true
 }

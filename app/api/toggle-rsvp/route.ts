@@ -1,10 +1,10 @@
 import { base } from "@/db/db";
 
-type RSVPParams = {
+interface RSVPParams {
   sessionId: string;
   guestId: string;
   remove?: boolean;
-};
+}
 
 export const dynamic = "force-dynamic"; // defaults to auto
 
@@ -29,9 +29,9 @@ export async function POST(req: Request) {
       .select({
         filterByFormula: `AND({Session ID} = "${sessionId}", {Guest ID} = "${guestId}")`,
       })
-      .eachPage(function page(records: any, fetchNextPage: any) {
+      .eachPage(function page(records, fetchNextPage) {
         console.log("RECORDS", { records });
-        records.forEach(function (record: any) {
+        records.forEach(function (record) {
           base("RSVPs").destroy([record.getId()], function (err: string) {
             if (err) {
               console.error(err);

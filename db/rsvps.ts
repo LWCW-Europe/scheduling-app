@@ -7,14 +7,14 @@ export type RSVP = {
 
 export async function getRSVPsByUser(guestId?: string) {
   if (!guestId) return [];
-  const rsvps: any[] = [];
-  await base("RSVPs")
+  const rsvps: RSVP[] = [];
+  await base<RSVP>("RSVPs")
     .select({
       fields: ["Session", "Guest"],
       filterByFormula: `{Guest ID} = "${guestId}"`,
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         rsvps.push(record.fields);
       });
       fetchNextPage();
@@ -23,14 +23,14 @@ export async function getRSVPsByUser(guestId?: string) {
 }
 
 export async function getRSVPsBySession(sessionId: string) {
-  const rsvps: any[] = [];
-  await base("RSVPs")
+  const rsvps: RSVP[] = [];
+  await base<RSVP>("RSVPs")
     .select({
       fields: ["Session", "Guest"],
       filterByFormula: `{Session} = "${sessionId}"`,
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         rsvps.push(record.fields);
       });
       fetchNextPage();

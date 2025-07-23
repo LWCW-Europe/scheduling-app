@@ -17,7 +17,7 @@ export type Session = {
 };
 export async function getSessions() {
   const sessions: Session[] = [];
-  await base("Sessions")
+  await base<Session>("Sessions")
     .select({
       fields: [
         "Title",
@@ -34,8 +34,8 @@ export async function getSessions() {
       ],
       filterByFormula: `AND({Start time}, {End time}, {Location})`,
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         sessions.push({ ...record.fields, ID: record.id });
       });
       fetchNextPage();
@@ -49,7 +49,7 @@ export async function getSessionsByEvent(eventName: string) {
   const filterFormula = CONSTS.MULTIPLE_EVENTS
     ? `AND({Event name} = "${eventName}", ${isScheduledFilter})`
     : isScheduledFilter;
-  await base("Sessions")
+  await base<Session>("Sessions")
     .select({
       fields: [
         "Title",
@@ -66,8 +66,8 @@ export async function getSessionsByEvent(eventName: string) {
       ],
       filterByFormula: filterFormula,
     })
-    .eachPage(function page(records: any, fetchNextPage: any) {
-      records.forEach(function (record: any) {
+    .eachPage(function page(records, fetchNextPage) {
+      records.forEach(function (record) {
         sessions.push({ ...record.fields, ID: record.id });
       });
       fetchNextPage();

@@ -3,11 +3,11 @@ import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 
-type Option = {
+interface Option {
   value: string;
   available: boolean;
   helperText?: string;
-};
+}
 export function MyListbox(props: {
   options: Option[];
   currValue?: string;
