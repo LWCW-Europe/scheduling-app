@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint-watch": "watchexec -c -w app -w db -w utils \"next lint --fix\""
   },
   "dependencies": {
     "@floating-ui/react": "^0.26.12",
