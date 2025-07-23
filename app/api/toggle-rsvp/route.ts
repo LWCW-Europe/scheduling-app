@@ -12,22 +12,17 @@ export async function POST(req: Request) {
   const { sessionId, guestId, remove } = (await req.json()) as RSVPParams;
 
   if (!remove) {
-    await base("RSVPs").create(
-      [
+    try {
+      const records = await base("RSVPs").create([
         {
           fields: { Session: [sessionId], Guest: [guestId] },
         },
-      ],
-      function (err: string, records: any) {
-        if (err) {
-          console.error(err);
-          return;
-        }
-        records.forEach(function (record: any) {
-          console.log(record.getId());
-        });
-      }
-    );
+      ]);
+      records.forEach((record) => console.log(record.getId()));
+    } catch (err) {
+      console.error(err);
+      return;
+    }
   } else {
     console.log("REMOVING RSVP", { sessionId, guestId });
     await base("RSVPs")

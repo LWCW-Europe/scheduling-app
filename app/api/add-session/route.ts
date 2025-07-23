@@ -5,6 +5,7 @@ import { Session, getSessions } from "@/db/sessions";
 import { DateTime } from "luxon";
 import { CONSTS } from "@/utils/constants";
 import { base } from "@/db/db";
+import { FieldSet, Records } from "airtable";
 
 type SessionParams = {
   title: string;
@@ -67,22 +68,17 @@ export async function POST(req: Request) {
   const existingSessions = await getSessions();
   const sessionValid = validateSession(session, existingSessions);
   if (sessionValid) {
-    await base("Sessions").create(
-      [
+    try {
+      const records: Records<FieldSet> = await base("Sessions").create([
         {
           fields: session,
         },
-      ],
-      function (err: string, records: any) {
-        if (err) {
-          console.error(err);
-          return Response.error();
-        }
-        records.forEach(function (record: any) {
-          console.log(record.getId());
-        });
-      }
-    );
+      ]);
+      records.forEach((record) => console.log(record.getId()));
+    } catch (err) {
+      console.error(err);
+      return Response.error();
+    }
     return Response.json({ success: true });
   } else {
     return Response.error();
