@@ -67,7 +67,7 @@ function insertBlankSessions(
       const endTime = new Date(session["End time"]).getTime();
       return startTime <= currentTime && endTime > currentTime;
     });
-    if (!!sessionNow) {
+    if (sessionNow) {
       if (new Date(sessionNow["Start time"]).getTime() === currentTime) {
         sessionsWithBlanks.push(sessionNow);
       } else {
