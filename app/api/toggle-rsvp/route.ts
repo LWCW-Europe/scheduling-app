@@ -1,10 +1,10 @@
 import { base } from "@/db/db";
 
-interface RSVPParams {
+type RSVPParams = {
   sessionId: string;
   guestId: string;
   remove?: boolean;
-}
+};
 
 export const dynamic = "force-dynamic"; // defaults to auto
 

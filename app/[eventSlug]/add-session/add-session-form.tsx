@@ -201,12 +201,12 @@ export function AddSessionForm(props: {
 
 const RequiredStar = () => <span className="text-rose-500 mx-1">*</span>;
 
-interface StartTime {
+type StartTime = {
   formattedTime: string;
   time: number;
   maxDuration: number;
   available: boolean;
-}
+};
 function getAvailableStartTimes(
   day: Day,
   sessions: Session[],

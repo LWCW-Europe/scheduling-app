@@ -7,7 +7,7 @@ import { CONSTS } from "@/utils/constants";
 import { base } from "@/db/db";
 import { FieldSet, Records } from "airtable";
 
-interface SessionParams {
+type SessionParams = {
   title: string;
   description: string;
   hosts: Guest[];
@@ -15,8 +15,8 @@ interface SessionParams {
   day: Day;
   startTimeString: string;
   duration: number;
-}
-interface SessionInsert {
+};
+type SessionInsert = {
   Title: string;
   Description: string;
   "Start time": string;
@@ -25,7 +25,7 @@ interface SessionInsert {
   Location: string[];
   Event?: string[];
   "Attendee scheduled": boolean;
-}
+};
 
 export const dynamic = "force-dynamic"; // defaults to auto
 
