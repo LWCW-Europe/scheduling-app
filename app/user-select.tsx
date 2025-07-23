@@ -20,7 +20,7 @@ export function UserSelect({
         guests={guests}
         hosts={guests.filter((guest) => guest.ID === currentUser)}
         setHosts={(hosts) => {
-          setUser?.(hosts?.at(-1)!?.ID || null);
+          setUser?.(hosts?.at(-1)?.ID || null);
           router.refresh();
         }}
       />
