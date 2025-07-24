@@ -6,7 +6,6 @@ import { Context } from "./context";
 import clsx from "clsx";
 import { CONSTS } from "@/utils/constants";
 
-// const inter = Inter({ subsets: ["latin"] });
 const roboto = Roboto({
   subsets: ["latin"],
   variable: "--font-roboto",
