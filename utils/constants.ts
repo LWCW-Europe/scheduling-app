@@ -1,9 +1,15 @@
 import { CakeIcon, UserGroupIcon } from "@heroicons/react/24/outline";
+import { ForwardRefExoticComponent, RefAttributes, SVGProps } from "react";
 
 export type NavItem = {
   name: string;
   href: string;
-  icon: unknown;
+  icon: ForwardRefExoticComponent<
+    Omit<SVGProps<SVGSVGElement>, "ref"> & {
+      title?: string;
+      titleId?: string;
+    } & RefAttributes<SVGSVGElement>
+  >;
 };
 
 export const CONSTS = {
