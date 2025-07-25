@@ -328,8 +328,8 @@ function getAvailableStartTimes(
   );
   const startTimes: StartTime[] = [];
   for (
-    let t = new Date(day.StartBookings).getTime();
-    t < new Date(day.EndBookings).getTime();
+    let t = day.StartBookings.getTime();
+    t < day.EndBookings.getTime();
     t += 30 * 60 * 1000
   ) {
     const formattedTime = DateTime.fromMillis(t)
@@ -354,7 +354,7 @@ function getAvailableStartTimes(
         );
         const latestEndTime = nextSession
           ? new Date(nextSession["Start time"]).getTime()
-          : new Date(day.EndBookings).getTime();
+          : day.EndBookings.getTime();
         startTimes.push({
           formattedTime,
           time: t,

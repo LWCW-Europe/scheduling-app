@@ -5,8 +5,8 @@ import { Session } from "./sessions";
 export type Day = {
   Start: string;
   End: string;
-  StartBookings: string;
-  EndBookings: string;
+  StartBookings: Date;
+  EndBookings: Date;
   EventName?: string;
   Event?: string[];
   ID: string;
@@ -49,8 +49,8 @@ export async function getDaysByEvent(eventName: string | null) {
         days.push({
           Start: record.fields.Start,
           End: record.fields.End,
-          StartBookings: record.fields["Start bookings"],
-          EndBookings: record.fields["End bookings"],
+          StartBookings: new Date(record.fields["Start bookings"]),
+          EndBookings: new Date(record.fields["End bookings"]),
           EventName: record.fields["Event name"],
           Event: record.fields.Event,
 
