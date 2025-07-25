@@ -30,10 +30,18 @@ export function SessionForm(props: {
   const initLocation = searchParams?.get("location");
   const sessionID = searchParams?.get("sessionID");
   const emptySession: Session = {
-    ID: "", Title: "", Description: "", "Start time": "", "End time": "",
-    Hosts: [], Location: [], "Location name": [], Capacity: 0, "Num RSVPs": 0
-  }
-  const session = sessions.find(ses => ses.ID === sessionID) || emptySession;
+    ID: "",
+    Title: "",
+    Description: "",
+    "Start time": "",
+    "End time": "",
+    Hosts: [],
+    Location: [],
+    "Location name": [],
+    Capacity: 0,
+    "Num RSVPs": 0,
+  };
+  const session = sessions.find((ses) => ses.ID === sessionID) || emptySession;
   const initDateTime =
     dayParam && timeParam
       ? convertParamDateTime(dayParam, timeParam)
@@ -52,7 +60,8 @@ export function SessionForm(props: {
   const [description, setDescription] = useState(session.Description);
   const [day, setDay] = useState(initDay ?? days[0]);
   const [location, setLocation] = useState(
-    locations.find((l) => l.Name === initLocation)?.Name ?? session["Location name"][0]
+    locations.find((l) => l.Name === initLocation)?.Name ??
+      session["Location name"][0]
   );
   const startTimes = getAvailableStartTimes(day, sessions, session, location);
   const initTimeValid = startTimes.some((st) => st.formattedTime === initTime);
@@ -107,7 +116,12 @@ export function SessionForm(props: {
     });
     if (res.ok) {
       const actionType = sessionID ? "updated" : "added";
-      router.push(`/${eventName.replace(/ /g, "-")}/add-session/confirmation?actionType=${actionType}`);
+      router.push(
+        `/${eventName.replace(
+          / /g,
+          "-"
+        )}/add-session/confirmation?actionType=${actionType}`
+      );
       console.log(`Session ${actionType} successfully`);
     } else {
       let errorMessage = "Failed to update session";
@@ -119,7 +133,10 @@ export function SessionForm(props: {
         errorMessage = res.statusText || `Server error (${res.status})`;
       }
       setError(errorMessage);
-      console.error("Error updating session:", { status: res.status, statusText: res.statusText });
+      console.error("Error updating session:", {
+        status: res.status,
+        statusText: res.statusText,
+      });
     }
     setIsSubmitting(false);
   };
@@ -132,12 +149,14 @@ export function SessionForm(props: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        id: sessionID
+        id: sessionID,
       }),
     });
     if (res.ok) {
       console.log("Session deleted successfully");
-      router.push(`/${eventName.replace(/ /g, "-")}/edit-session/deletion-confirmation`);
+      router.push(
+        `/${eventName.replace(/ /g, "-")}/edit-session/deletion-confirmation`
+      );
     } else {
       let errorMessage = "Failed to delete session";
       try {
@@ -147,16 +166,23 @@ export function SessionForm(props: {
         errorMessage = res.statusText || `Server error (${res.status})`;
       }
       setError(errorMessage);
-      console.error("Error deleting session:", { status: res.status, statusText: res.statusText });
+      console.error("Error deleting session:", {
+        status: res.status,
+        statusText: res.statusText,
+      });
     }
     setIsSubmitting(false);
   };
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-2xl font-bold">{eventName}: {sessionID ? 'Edit' : 'Add a'} session</h2>
+        <h2 className="text-2xl font-bold">
+          {eventName}: {sessionID ? "Edit" : "Add a"} session
+        </h2>
         <p className="text-sm text-gray-500 mt-2">
-          { sessionID ? "" : "Fill out this form to add a session to the schedule! "}
+          {sessionID
+            ? ""
+            : "Fill out this form to add a session to the schedule! "}
           Your session will be added to the schedule immediately, but we may
           reach out to you about rescheduling, relocating, or cancelling.
         </p>
@@ -255,11 +281,13 @@ export function SessionForm(props: {
           !duration ||
           isSubmitting
         }
-        onClick={Submit}
+        onClick={() => void Submit()}
       >
         Submit
       </button>
-      {sessionID && <ConfirmDeletionModal btnDisabled={isSubmitting} confirm={Delete} />}
+      {sessionID && (
+        <ConfirmDeletionModal btnDisabled={isSubmitting} confirm={Delete} />
+      )}
     </div>
   );
 }
@@ -280,7 +308,9 @@ function getAvailableStartTimes(
 ) {
   const locationSelected = !!location;
   const filteredSessions = locationSelected
-    ? sessions.filter((s) => s["Location name"][0] === location && s.ID != currentSession.ID)
+    ? sessions.filter(
+        (s) => s["Location name"][0] === location && s.ID != currentSession.ID
+      )
     : sessions;
   const sortedSessions = filteredSessions.sort(
     (a, b) =>

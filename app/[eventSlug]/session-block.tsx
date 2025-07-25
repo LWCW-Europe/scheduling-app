@@ -9,7 +9,7 @@ import { RSVP } from "@/db/rsvps";
 import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
 import Link from "next/link";
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation";
 import { useContext, useState } from "react";
 import { CurrentUserModal } from "../modals";
 import { UserContext } from "../context";
@@ -138,7 +138,9 @@ export function RealSessionCard(props: {
     }
   };
   const onClickEdit = () => {
-    const url = `/${eventName.replace(/ /g, "-")}/edit-session?sessionID=${session.ID}`
+    const url = `/${eventName.replace(/ /g, "-")}/edit-session?sessionID=${
+      session.ID
+    }`;
     router.push(url);
   };
 
@@ -209,7 +211,7 @@ export function RealSessionCard(props: {
               }-${600}`,
           !lowerOpacity && "text-white"
         )}
-        onClick={handleClick}
+        onClick={() => void handleClick()}
       >
         <p
           className={clsx(
@@ -231,15 +233,16 @@ export function RealSessionCard(props: {
         >
           {formattedHostNames}
         </p>
-        {hostStatus &&
-          <PencilSquareIcon onClick={onClickEdit}
+        {hostStatus && (
+          <PencilSquareIcon
+            onClick={onClickEdit}
             className={clsx(
               "absolute h-5 w-5 top-0 right-0",
               "text-gray-600 hover:text-black",
               "cursor-pointer"
             )}
           />
-        }
+        )}
         <div
           className={clsx(
             "absolute py-[1px] px-1 rounded-tl text-[10px] bottom-0 right-0 flex gap-0.5 items-center",
