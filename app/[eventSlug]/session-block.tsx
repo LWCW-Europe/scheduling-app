@@ -129,9 +129,9 @@ export function RealSessionCard(props: {
   const screenWidth = useScreenWidth();
   const onMobile = screenWidth < 640;
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (currentUser && !onMobile) {
-      rsvp(currentUser, session.ID, rsvpStatus());
+      await rsvp(currentUser, session.ID, rsvpStatus());
       setToggledRSVP(!toggledRSVP);
     } else {
       setRsvpModalOpen(true);
@@ -188,9 +188,9 @@ export function RealSessionCard(props: {
         close={() => setRsvpModalOpen(false)}
         open={rsvpModalOpen}
         // rsvp here should actually be rsvp
-        rsvp={() => {
+        rsvp={async () => {
           if (!currentUser) return;
-          rsvp(currentUser, session.ID, rsvpStatus());
+          await rsvp(currentUser, session.ID, rsvpStatus());
           setToggledRSVP(!toggledRSVP);
         }}
         guests={guests}

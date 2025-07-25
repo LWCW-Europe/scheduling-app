@@ -4,17 +4,15 @@ export const dynamic = "force-dynamic"; // defaults to auto
 
 export async function POST(req: Request) {
   const params = (await req.json()) as { id: string };
-  await base("Sessions").destroy(
-    [params.id],
-      function (err: string, records) {
-      if (err) {
-        console.error(err);
-        return Response.error();
-      }
-      records?.forEach(function (record) {
-        console.log(record.getId());
-      });
-    }
-  );
+  try {
+    const records = await base("Sessions").destroy([params.id]);
+    records?.forEach(function (record) {
+      console.log(record.getId());
+    });
+  } catch (err) {
+    console.error(err);
+    return Response.error();
+  }
+
   return Response.json({ success: true });
 }

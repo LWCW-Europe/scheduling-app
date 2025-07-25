@@ -112,8 +112,8 @@ export function SessionForm(props: {
     } else {
       let errorMessage = "Failed to update session";
       try {
-        const errorData = await res.json();
-        errorMessage = errorData.message || errorMessage;
+        const errorData = (await res.json()) as { message: string };
+        errorMessage = errorData.message;
       } catch {
         // Response is not valid JSON, use status text or generic message
         errorMessage = res.statusText || `Server error (${res.status})`;
@@ -141,8 +141,8 @@ export function SessionForm(props: {
     } else {
       let errorMessage = "Failed to delete session";
       try {
-        const errorData = await res.json();
-        errorMessage = errorData.message || errorMessage;
+        const errorData = (await res.json()) as { message: string };
+        errorMessage = errorData.message;
       } catch {
         errorMessage = res.statusText || `Server error (${res.status})`;
       }

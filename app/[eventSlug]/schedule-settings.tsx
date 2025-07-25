@@ -16,7 +16,7 @@ export function ScheduleSettings(props: { guests: Guest[] }) {
   const [view, setView] = useState(searchParams.get("view") ?? "grid");
   const urlSearchParams = new URLSearchParams(searchParams);
   const pathname = usePathname();
-  const { replace } = useRouter();
+  const router = useRouter();
   return (
     <div className="flex flex-col gap-5 w-full rounded-md border border-gray-100 p-2 text-sm sm:text-base">
       <div className="flex flex-col gap-1">
@@ -26,7 +26,7 @@ export function ScheduleSettings(props: { guests: Guest[] }) {
           view={view}
           setView={setView}
           pathname={pathname}
-          replace={replace}
+          replace={(url) => router.replace(url)}
         />
       </div>
       <div className="flex flex-col gap-1">

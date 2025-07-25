@@ -1,6 +1,5 @@
 import { getSessions } from "@/db/sessions";
 import { base } from "@/db/db";
-import { FieldSet, Records } from "airtable";
 import { prepareToInsert, validateSession } from "../session_utils";
 import type { SessionParams } from "../session_utils";
 
@@ -14,7 +13,7 @@ export async function POST(req: Request) {
   const sessionValid = validateSession(session, existingSessions);
   if (sessionValid) {
     try {
-      const records: Records<FieldSet> = await base("Sessions").create([
+      const records = await base("Sessions").create([
         {
           fields: session,
         },

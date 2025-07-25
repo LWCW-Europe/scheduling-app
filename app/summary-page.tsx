@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Event } from "@/db/events";
 import { CONSTS } from "@/utils/constants";
 
-export default async function SummaryPage(props: { events: Event[] }) {
+export default function SummaryPage(props: { events: Event[] }) {
   const { events } = props;
   const sortedEvents = events.sort((a, b) => {
     return new Date(a.Start).getTime() - new Date(b.Start).getTime();

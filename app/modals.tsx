@@ -38,7 +38,7 @@ export function CurrentUserModal(props: {
   guests: Guest[];
   open: boolean;
   close: () => void;
-  rsvp: () => void;
+  rsvp: () => Promise<void>;
   sessionInfoDisplay?: React.ReactNode;
   rsvpd: boolean;
 }) {
@@ -57,8 +57,8 @@ export function CurrentUserModal(props: {
         <button
           type="button"
           className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-400 text-base font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 sm:text-sm mt-4"
-          onClick={() => {
-            rsvp();
+          onClick={async () => {
+            await rsvp();
             close();
           }}
         >
@@ -117,7 +117,7 @@ export function ConfirmDeletionModal(props: {
   btnDisabled: boolean;
   confirm: () => void;
 }) {
-  const {btnDisabled, confirm} = props;
+  const { btnDisabled, confirm } = props;
   const [open, setOpen] = useState(false);
   return (
     <>
