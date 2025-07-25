@@ -113,6 +113,48 @@ export function ExportScheduleModal() {
   );
 }
 
+export function ConfirmDeletionModal(props: {
+  btnDisabled: boolean;
+  confirm: () => void;
+}) {
+  const {btnDisabled, confirm} = props;
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="submit"
+        className="bg-white-400 text-red-900 font-semibold py-2 rounded shadow disabled:bg-gray-200 border-2 border-red-500 mx-auto px-12 hover:bg-rose-100 active:bg-rose-100"
+        onClick={() => setOpen(true)}
+        disabled={btnDisabled}
+      >
+        Delete
+      </button>
+      <Modal open={open} setOpen={setOpen} hideClose={true}>
+        <p>Delete session?</p>
+        <div className="mt-4">
+          <button
+            type="button"
+            className="rounded-md border border-transparent shadow-sm px-6 py-2 bg-rose-400 font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400"
+            onClick={() => {
+              confirm();
+              setOpen(false);
+            }}
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            className="ml-4 rounded-md border border-black shadow-sm px-6 py-2 bg-white font-medium text-black hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+            onClick={() => setOpen(false)}
+          >
+            No
+          </button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
 export function Modal(props: {
   open: boolean;
   setOpen: (value: boolean) => void;

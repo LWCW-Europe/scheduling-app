@@ -1,11 +1,16 @@
+"use client";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default async function Confirmation() {
+  const searchParams = useSearchParams();
+  const actionType = searchParams?.get("actionType");
+  const actionDescription = actionType === "updated" ? "updated" : "added";
   return (
     <div className="p-8 max-w-lg mx-auto flex flex-col">
-      <h1 className="text-2xl font-bold">Session added</h1>
+      <h1 className="text-2xl font-bold">Session {actionDescription}</h1>
       <p className="text-gray-900 mt-4">
-        Your session has been added successfully! You and any other hosts will
+        Your session has been {actionDescription} successfully! You and any other hosts will
         receive an email confirming the details you specified.
       </p>
       <Link

@@ -1,7 +1,7 @@
 "use client";
 import clsx from "clsx";
 import { Fragment, useEffect, useState } from "react";
-import { Input } from "../input";
+import { Input } from "./input";
 import { format } from "date-fns";
 import { Combobox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/16/solid";
@@ -14,8 +14,9 @@ import { Day } from "@/db/days";
 import { Guest } from "@/db/guests";
 import { Location } from "@/db/locations";
 import { Session } from "@/db/sessions";
+import { ConfirmDeletionModal } from "../modals";
 
-export function AddSessionForm(props: {
+export function SessionForm(props: {
   eventName: string;
   days: Day[];
   sessions: Session[];
@@ -27,10 +28,16 @@ export function AddSessionForm(props: {
   const dayParam = searchParams?.get("day");
   const timeParam = searchParams?.get("time");
   const initLocation = searchParams?.get("location");
+  const sessionID = searchParams?.get("sessionID");
+  const emptySession: Session = {
+    ID: "", Title: "", Description: "", "Start time": "", "End time": "",
+    Hosts: [], Location: [], "Location name": [], Capacity: 0, "Num RSVPs": 0
+  }
+  const session = sessions.find(ses => ses.ID === sessionID) || emptySession;
   const initDateTime =
     dayParam && timeParam
       ? convertParamDateTime(dayParam, timeParam)
-      : undefined;
+      : new Date(session["Start time"]);
   const initDay = initDateTime
     ? days.find((d) => dateOnDay(initDateTime, d))
     : undefined;
@@ -39,13 +46,15 @@ export function AddSessionForm(props: {
         .setZone("America/Los_Angeles")
         .toFormat("h:mm a")
     : undefined;
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+
+  const [error, setError] = useState<string | null>(null);
+  const [title, setTitle] = useState(session.Title);
+  const [description, setDescription] = useState(session.Description);
   const [day, setDay] = useState(initDay ?? days[0]);
   const [location, setLocation] = useState(
-    locations.find((l) => l.Name === initLocation)?.Name
+    locations.find((l) => l.Name === initLocation)?.Name ?? session["Location name"][0]
   );
-  const startTimes = getAvailableStartTimes(day, sessions, location);
+  const startTimes = getAvailableStartTimes(day, sessions, session, location);
   const initTimeValid = startTimes.some((st) => st.formattedTime === initTime);
   const [startTime, setStartTime] = useState(
     initTimeValid ? initTime : undefined
@@ -55,6 +64,15 @@ export function AddSessionForm(props: {
   )?.maxDuration;
   const [duration, setDuration] = useState(Math.min(maxDuration ?? 60, 60));
   const [hosts, setHosts] = useState<Guest[]>([]);
+  if (sessionID) {
+    useEffect(() => {
+        setHosts(guests.filter((g) => session.Hosts?.includes(g.ID)));
+        const endTime = new Date(session["End time"]).valueOf();
+        const startTime = new Date(session["Start time"]).valueOf();
+        const duration = Math.round((endTime - startTime) / 1000 / 60);
+        setDuration(duration);
+    }, []);
+  }
   useEffect(() => {
     if (
       !startTimes.some((st) => st.formattedTime === startTime && st.available)
@@ -69,12 +87,15 @@ export function AddSessionForm(props: {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const Submit = async () => {
     setIsSubmitting(true);
-    const res = await fetch("/api/add-session", {
+    setError(null);
+    const endpoint = sessionID ? "/api/update-session" : "/api/add-session";
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        id: sessionID,
         title,
         description,
         day: day,
@@ -85,21 +106,59 @@ export function AddSessionForm(props: {
       }),
     });
     if (res.ok) {
-      console.log("Session added successfully");
-      router.push(`/${eventName.replace(" ", "-")}/add-session/confirmation`);
+      const actionType = sessionID ? "updated" : "added";
+      router.push(`/${eventName.replace(/ /g, "-")}/add-session/confirmation?actionType=${actionType}`);
+      console.log(`Session ${actionType} successfully`);
     } else {
-      console.error("Failed to add session");
+      let errorMessage = "Failed to update session";
+      try {
+        const errorData = await res.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (parseError) {
+        // Response is not valid JSON, use status text or generic message
+        errorMessage = res.statusText || `Server error (${res.status})`;
+      }
+      setError(errorMessage);
+      console.error("Error updating session:", { status: res.status, statusText: res.statusText });
+    }
+    setIsSubmitting(false);
+  };
+  const Delete = async () => {
+    setError(null);
+    setIsSubmitting(true);
+    const res = await fetch("/api/delete-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: sessionID
+      }),
+    });
+    if (res.ok) {
+      console.log("Session deleted successfully");
+      router.push(`/${eventName.replace(/ /g, "-")}/edit-session/deletion-confirmation`);
+    } else {
+      let errorMessage = "Failed to delete session";
+      try {
+        const errorData = await res.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (parseError) {
+        errorMessage = res.statusText || `Server error (${res.status})`;
+      }
+      setError(errorMessage);
+      console.error("Error deleting session:", { status: res.status, statusText: res.statusText });
     }
     setIsSubmitting(false);
   };
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-2xl font-bold">{eventName}: Add a session</h2>
+        <h2 className="text-2xl font-bold">{eventName}: {sessionID ? 'Edit' : 'Add a'} session</h2>
         <p className="text-sm text-gray-500 mt-2">
-          Fill out this form to add a session to the schedule! Your session will
-          be added to the schedule immediately, but we may reach out to you
-          about rescheduling, relocating, or cancelling.
+          { sessionID ? "" : "Fill out this form to add a session to the schedule! "}
+          Your session will be added to the schedule immediately, but we may
+          reach out to you about rescheduling, relocating, or cancelling.
         </p>
       </div>
       <div className="flex flex-col gap-1">
@@ -178,6 +237,11 @@ export function AddSessionForm(props: {
           maxDuration={maxDuration}
         />
       </div>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <p className="text-sm font-medium">Error: {error}</p>
+        </div>
+      )}
       <button
         type="submit"
         className="bg-rose-400 text-white font-semibold py-2 rounded shadow disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none hover:bg-rose-500 active:bg-rose-500 mx-auto px-12"
@@ -195,6 +259,7 @@ export function AddSessionForm(props: {
       >
         Submit
       </button>
+      {sessionID && <ConfirmDeletionModal btnDisabled={isSubmitting} confirm={Delete} />}
     </div>
   );
 }
@@ -210,11 +275,12 @@ type StartTime = {
 function getAvailableStartTimes(
   day: Day,
   sessions: Session[],
+  currentSession: Session,
   location?: string
 ) {
   const locationSelected = !!location;
   const filteredSessions = locationSelected
-    ? sessions.filter((s) => s["Location name"][0] === location)
+    ? sessions.filter((s) => s["Location name"][0] === location && s.ID != currentSession.ID)
     : sessions;
   const sortedSessions = filteredSessions.sort(
     (a, b) =>

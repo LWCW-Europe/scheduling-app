@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { UserIcon } from "@heroicons/react/24/solid";
+import { UserIcon, PencilSquareIcon } from "@heroicons/react/24/solid";
 import { Session } from "@/db/sessions";
 import { Day } from "@/db/days";
 import { Location } from "@/db/locations";
@@ -9,6 +9,7 @@ import { RSVP } from "@/db/rsvps";
 import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
 import Link from "next/link";
+import { useRouter } from 'next/navigation'
 import { useContext, useState } from "react";
 import { CurrentUserModal } from "../modals";
 import { UserContext } from "../context";
@@ -48,6 +49,7 @@ export function SessionBlock(props: {
         <BlankSessionCard numHalfHours={numHalfHours} />
       ) : (
         <RealSessionCard
+          eventName={eventName}
           session={session}
           location={location}
           numHalfHours={numHalfHours}
@@ -72,7 +74,7 @@ export function BookableSessionCard(props: {
   const timeParam = DateTime.fromISO(session["Start time"])
     .setZone("America/Los_Angeles")
     .toFormat("HH:mm");
-  const eventSlug = eventName.replace(" ", "-");
+  const eventSlug = eventName.replace(/ /g, "-");
   return (
     <div className={`row-span-${numHalfHours} my-0.5 min-h-10`}>
       <Link
@@ -102,14 +104,16 @@ async function rsvp(guestId: string, sessionId: string, remove = false) {
 }
 
 export function RealSessionCard(props: {
+  eventName: string;
   session: Session;
   numHalfHours: number;
   location: Location;
   guests: Guest[];
   rsvpd: boolean;
 }) {
-  const { session, numHalfHours, location, guests, rsvpd } = props;
+  const { eventName, session, numHalfHours, location, guests, rsvpd } = props;
   const { user: currentUser } = useContext(UserContext);
+  const router = useRouter();
   const [toggledRSVP, setToggledRSVP] = useState<boolean>(false);
   function rsvpStatus() {
     if (toggledRSVP) {
@@ -132,6 +136,10 @@ export function RealSessionCard(props: {
     } else {
       setRsvpModalOpen(true);
     }
+  };
+  const onClickEdit = () => {
+    const url = `/${eventName.replace(/ /g, "-")}/edit-session?sessionID=${session.ID}`
+    router.push(url);
   };
 
   let numRSVPs = session["Num RSVPs"];
@@ -223,6 +231,15 @@ export function RealSessionCard(props: {
         >
           {formattedHostNames}
         </p>
+        {hostStatus &&
+          <PencilSquareIcon onClick={onClickEdit}
+            className={clsx(
+              "absolute h-5 w-5 top-0 right-0",
+              "text-gray-600 hover:text-black",
+              "cursor-pointer"
+            )}
+          />
+        }
         <div
           className={clsx(
             "absolute py-[1px] px-1 rounded-tl text-[10px] bottom-0 right-0 flex gap-0.5 items-center",
