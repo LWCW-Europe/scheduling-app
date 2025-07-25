@@ -2,7 +2,7 @@
 import { LocationCol } from "./location-col";
 import clsx from "clsx";
 import { useSearchParams } from "next/navigation";
-import { getNumHalfHours, getPercentThroughDay } from "@/utils/utils";
+import { getNumHalfHours } from "@/utils/utils";
 import { useSafeLayoutEffect } from "@/utils/hooks";
 import { useRef, useState } from "react";
 import Image from "next/image";
@@ -195,24 +195,4 @@ function TimestampCol(props: { start: Date; end: Date }) {
       ))}
     </div>
   );
-}
-
-function NowBar(props: { start: Date; end: Date }) {
-  const { start, end } = props;
-  const percentThroughDay = getPercentThroughDay(new Date(), start, end);
-  if (percentThroughDay < 100 && percentThroughDay > 0) {
-    return (
-      <div
-        className="bg-transparent w-full absolute flex flex-col justify-end border-none z-10"
-        style={{ top: `${percentThroughDay}%` }}
-      >
-        <div className="w-full h-[1.5px] bg-rose-600" />
-        <span className="text-[10px] relative bg-rose-600 rounded-b px-2 text-white bottom-[1px] w-fit">
-          now
-        </span>
-      </div>
-    );
-  } else {
-    return null;
-  }
 }

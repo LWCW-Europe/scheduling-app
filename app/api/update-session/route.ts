@@ -22,12 +22,12 @@ export async function POST(req: Request) {
           fields: session,
         },
       ],
-      function (err: string, records: any) {
+      function (err: string, records) {
         if (err) {
           console.error(err);
           return Response.error();
         }
-        records.forEach(function (record: any) {
+        records?.forEach(function (record) {
           console.log(record.getId());
         });
       }

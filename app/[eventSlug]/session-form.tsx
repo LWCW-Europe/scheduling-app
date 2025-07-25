@@ -64,15 +64,15 @@ export function SessionForm(props: {
   )?.maxDuration;
   const [duration, setDuration] = useState(Math.min(maxDuration ?? 60, 60));
   const [hosts, setHosts] = useState<Guest[]>([]);
-  if (sessionID) {
-    useEffect(() => {
-        setHosts(guests.filter((g) => session.Hosts?.includes(g.ID)));
-        const endTime = new Date(session["End time"]).valueOf();
-        const startTime = new Date(session["Start time"]).valueOf();
-        const duration = Math.round((endTime - startTime) / 1000 / 60);
-        setDuration(duration);
-    }, []);
-  }
+  useEffect(() => {
+    if (sessionID) {
+      setHosts(guests.filter((g) => session.Hosts?.includes(g.ID)));
+      const endTime = new Date(session["End time"]).valueOf();
+      const startTime = new Date(session["Start time"]).valueOf();
+      const duration = Math.round((endTime - startTime) / 1000 / 60);
+      setDuration(duration);
+    }
+  }, [guests, session, sessionID]);
   useEffect(() => {
     if (
       !startTimes.some((st) => st.formattedTime === startTime && st.available)
@@ -114,7 +114,7 @@ export function SessionForm(props: {
       try {
         const errorData = await res.json();
         errorMessage = errorData.message || errorMessage;
-      } catch (parseError) {
+      } catch {
         // Response is not valid JSON, use status text or generic message
         errorMessage = res.statusText || `Server error (${res.status})`;
       }
@@ -143,7 +143,7 @@ export function SessionForm(props: {
       try {
         const errorData = await res.json();
         errorMessage = errorData.message || errorMessage;
-      } catch (parseError) {
+      } catch {
         errorMessage = res.statusText || `Server error (${res.status})`;
       }
       setError(errorMessage);

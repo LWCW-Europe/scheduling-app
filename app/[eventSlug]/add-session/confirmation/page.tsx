@@ -2,7 +2,7 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default async function Confirmation() {
+export default function Confirmation() {
   const searchParams = useSearchParams();
   const actionType = searchParams?.get("actionType");
   const actionDescription = actionType === "updated" ? "updated" : "added";
