@@ -2,7 +2,6 @@ import { Session } from "@/db/sessions";
 import { Day } from "@/db/days";
 import { Location } from "@/db/locations";
 import { Guest } from "@/db/guests";
-import { RSVP } from "@/db/rsvps";
 import { SessionBlock } from "./session-block";
 import { getNumHalfHours } from "@/utils/utils";
 import clsx from "clsx";
@@ -13,9 +12,8 @@ export function LocationCol(props: {
   location: Location;
   day: Day;
   guests: Guest[];
-  rsvps: RSVP[];
 }) {
-  const { eventName, sessions, location, day, guests, rsvps } = props;
+  const { eventName, sessions, location, day, guests } = props;
   const sessionsWithBlanks = insertBlankSessions(
     sessions,
     new Date(day.Start),
@@ -31,9 +29,6 @@ export function LocationCol(props: {
         )}
       >
         {sessionsWithBlanks.map((session) => {
-          const filteredRSVPs = rsvps.filter(
-            (rsvp) => rsvp.Session?.[0] === session.ID
-          );
           return (
             <SessionBlock
               eventName={eventName}
@@ -42,7 +37,6 @@ export function LocationCol(props: {
               session={session}
               location={location}
               guests={guests}
-              rsvpsForEvent={filteredRSVPs}
             />
           );
         })}

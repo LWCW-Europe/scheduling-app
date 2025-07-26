@@ -10,7 +10,6 @@ import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
 import { Day } from "@/db/days";
 import { Guest } from "@/db/guests";
-import { RSVP } from "@/db/rsvps";
 import { Location } from "@/db/locations";
 
 export function DayGrid(props: {
@@ -18,9 +17,8 @@ export function DayGrid(props: {
   locations: Location[];
   day: Day;
   guests: Guest[];
-  rsvps: RSVP[];
 }) {
-  const { eventName, day, locations, guests, rsvps } = props;
+  const { eventName, day, locations, guests } = props;
   const searchParams = useSearchParams();
   const locParams = searchParams?.getAll("loc");
   const locationsFromParams = locations.filter((loc) =>
@@ -152,7 +150,6 @@ export function DayGrid(props: {
                       session["Location name"].includes(location.Name)
                     )}
                     guests={guests}
-                    rsvps={rsvps}
                     day={day}
                     location={location}
                     eventName={eventName}

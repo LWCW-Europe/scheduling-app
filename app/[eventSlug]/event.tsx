@@ -80,7 +80,6 @@ export function EventDisplay() {
                 day={day}
                 locations={locationsForEvent}
                 guests={guests}
-                rsvps={rsvps}
                 eventName={event.Name}
               />
             ) : (
