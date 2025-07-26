@@ -130,6 +130,9 @@ export function RealSessionCard(props: {
   const onMobile = screenWidth < 640;
 
   const handleClick = async () => {
+    if (hostStatus) {
+      return;
+    }
     if (currentUser && !onMobile) {
       await rsvp(currentUser, session.ID, rsvpStatus());
       setToggledRSVP(!toggledRSVP);
