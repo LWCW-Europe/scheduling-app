@@ -27,7 +27,7 @@ export async function getRSVPsBySession(sessionId: string) {
   await base<RSVP>("RSVPs")
     .select({
       fields: ["Session", "Guest"],
-      filterByFormula: `{Session} = "${sessionId}"`,
+      filterByFormula: `{Session ID} = "${sessionId}"`,
     })
     .eachPage(function page(records, fetchNextPage) {
       records.forEach(function (record) {
@@ -36,4 +36,20 @@ export async function getRSVPsBySession(sessionId: string) {
       fetchNextPage();
     });
   return rsvps;
+}
+
+export function deleteRSVPsFromSessionByUsers(
+  sessionId: string,
+  users: string[]
+) {
+  const isOneOfUsers = `OR(${users.map((user) => `{Guest ID} = "${user}"`).join(", ")})`;
+  void base("RSVPs")
+    .select({
+      filterByFormula: `AND(${isOneOfUsers}, {Session ID} = "${sessionId}")`,
+    })
+    .eachPage(function page(records, fetchNextPage) {
+      const ids = records.map((rec) => rec.getId());
+      void base("RSVPs").destroy(ids);
+      fetchNextPage();
+    });
 }

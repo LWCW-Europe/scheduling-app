@@ -1,6 +1,6 @@
 "use client";
 import clsx from "clsx";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useContext } from "react";
 import { Input } from "./input";
 import { format } from "date-fns";
 import { Combobox, Transition } from "@headlessui/react";
@@ -15,6 +15,7 @@ import { Guest } from "@/db/guests";
 import { Location } from "@/db/locations";
 import { Session } from "@/db/sessions";
 import { ConfirmDeletionModal } from "../modals";
+import { UserContext } from "../context";
 
 interface ErrorResponse {
   message: string;
@@ -76,7 +77,12 @@ export function SessionForm(props: {
     (st) => st.formattedTime === startTime
   )?.maxDuration;
   const [duration, setDuration] = useState(Math.min(maxDuration ?? 60, 60));
-  const [hosts, setHosts] = useState<Guest[]>([]);
+  const { user: currentUser } = useContext(UserContext);
+  let initialHosts: Guest[] = [];
+  if (!sessionID) {
+    initialHosts = guests.filter(g => g.ID == currentUser);
+  }
+  const [hosts, setHosts] = useState<Guest[]>(initialHosts);
   useEffect(() => {
     if (sessionID) {
       setHosts(guests.filter((g) => session.Hosts?.includes(g.ID)));

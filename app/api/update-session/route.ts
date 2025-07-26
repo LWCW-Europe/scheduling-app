@@ -1,4 +1,5 @@
 import { getSessions } from "@/db/sessions";
+import { deleteRSVPsFromSessionByUsers } from "@/db/rsvps";
 import { base } from "@/db/db";
 import { prepareToInsert, validateSession } from "../session_utils";
 import type { SessionParams } from "../session_utils";
@@ -15,6 +16,7 @@ export async function POST(req: Request) {
   const existingSessions = (await getSessions()).filter(
     (ses) => ses.ID !== params.id
   );
+  const newHostIDs = params.hosts.map((h) => h.ID);
   const sessionValid = validateSession(session, existingSessions);
   if (sessionValid) {
     try {
@@ -32,6 +34,9 @@ export async function POST(req: Request) {
       return Response.error();
     }
 
+    // Corner case: someone RSVPs to a session and is later added as a host
+    // In this case, remove their RSVP
+    deleteRSVPsFromSessionByUsers(params.id, newHostIDs);
     return Response.json({ success: true });
   } else {
     return Response.error();
