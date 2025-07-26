@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Roboto } from "next/font/google";
 import "./globals.css";
 import NavBar from "./nav-bar";
-import { Context } from "./context";
+import { UserProvider } from "./context";
 import clsx from "clsx";
 import { CONSTS } from "@/utils/constants";
 
@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={fontVars}>
       <body className="font-monteserrat">
-        <Context>
+        <UserProvider>
           {CONSTS.MULTIPLE_EVENTS && <NavBar />}
           <main
             className={clsx(
@@ -44,7 +44,7 @@ export default function RootLayout({
           >
             {children}
           </main>
-        </Context>
+        </UserProvider>
       </body>
     </html>
   );

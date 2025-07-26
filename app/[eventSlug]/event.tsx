@@ -6,22 +6,18 @@ import { DateTime } from "luxon";
 import { useSearchParams } from "next/navigation";
 import { DayText } from "./day-text";
 import { Input } from "./input";
-import { useState } from "react";
-import { Day } from "@/db/days";
-import { Event } from "@/db/events";
-import { Guest } from "@/db/guests";
-import { Location } from "@/db/locations";
-import { RSVP } from "@/db/rsvps";
+import { useState, useContext } from "react";
 import { CONSTS } from "@/utils/constants";
+import { EventContext } from "../context";
 
-export function EventDisplay(props: {
-  event: Event;
-  days: Day[];
-  locations: Location[];
-  guests: Guest[];
-  rsvps: RSVP[];
-}) {
-  const { event, days, locations, guests, rsvps } = props;
+export function EventDisplay() {
+  const { event, days, locations, guests, rsvps } = useContext(EventContext);
+  const searchParams = useSearchParams();
+  const view = searchParams.get("view") ?? "grid";
+  const [search, setSearch] = useState("");
+
+  if (!event) return <div>No event data available</div>;
+
   const daysForEvent = days.filter(
     (day) =>
       !CONSTS.MULTIPLE_EVENTS ||
@@ -32,10 +28,8 @@ export function EventDisplay(props: {
       !CONSTS.MULTIPLE_EVENTS ||
       (event["Location names"] && event["Location names"].includes(loc.Name))
   );
-  const searchParams = useSearchParams();
-  const view = searchParams.get("view") ?? "grid";
-  const [search, setSearch] = useState("");
   const multipleDays = event["Start"] !== event["End"];
+
   return (
     <div className="flex flex-col items-start w-full">
       <h1 className="sm:text-4xl text-3xl font-bold mt-5">

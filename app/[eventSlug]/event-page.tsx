@@ -7,6 +7,7 @@ import { getLocations } from "@/db/locations";
 import { getGuests } from "@/db/guests";
 import { getRSVPsByUser } from "@/db/rsvps";
 import { Event } from "@/db/events";
+import { EventProvider } from "../context";
 
 export default async function EventPage(props: { event: Event }) {
   const { event } = props;
@@ -19,6 +20,7 @@ export default async function EventPage(props: { event: Event }) {
     getGuests(),
     getRSVPsByUser(currentUser),
   ]);
+
   days.forEach((day) => {
     const dayStartMillis = new Date(day.Start).getTime();
     const dayEndMillis = new Date(day.End).getTime();
@@ -30,15 +32,22 @@ export default async function EventPage(props: { event: Event }) {
       );
     });
   });
+
+  // Initial event context value
+  const eventContextValue = {
+    event,
+    days,
+    sessions,
+    locations,
+    guests,
+    rsvps,
+  };
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <EventDisplay
-        event={event}
-        days={days}
-        locations={locations}
-        guests={guests}
-        rsvps={rsvps}
-      />
-    </Suspense>
+    <EventProvider value={eventContextValue}>
+      <Suspense fallback={<div>Loading...</div>}>
+        <EventDisplay />
+      </Suspense>
+    </EventProvider>
   );
 }

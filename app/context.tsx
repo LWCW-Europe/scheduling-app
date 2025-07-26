@@ -1,15 +1,48 @@
 "use client";
-import Cookies from "js-cookie"
-import { createContext, useState, useEffect } from "react";
+import Cookies from "js-cookie";
+import { createContext, useState, useEffect, ReactNode } from "react";
+import { Event } from "@/db/events";
+import { Day } from "@/db/days";
+import { Session } from "@/db/sessions";
+import { Location } from "@/db/locations";
+import { Guest } from "@/db/guests";
+import { RSVP } from "@/db/rsvps";
 
-// Create context provider
-export const UserContext = createContext<{user: string | null, setUser: ((u:string | null) => void) | null}>({user: null, setUser: null});
+// User Context
+export interface UserContextType {
+  user: string | null;
+  setUser: ((u: string | null) => void) | null;
+}
 
-export function Context({children}: Readonly<{children: React.ReactNode}>) {
-  // Create current User context from cookie
+export const UserContext = createContext<UserContextType>({
+  user: null,
+  setUser: null,
+});
+
+// Event Context
+export interface EventContextType {
+  event: Event | null;
+  days: Day[];
+  sessions: Session[];
+  locations: Location[];
+  guests: Guest[];
+  rsvps: RSVP[];
+}
+
+export const EventContext = createContext<EventContextType>({
+  event: null,
+  days: [],
+  sessions: [],
+  locations: [],
+  guests: [],
+  rsvps: [],
+});
+
+export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<string | null>(null);
+
   useEffect(() => {
-    const userCookie = Cookies.get("user")
+    const userCookie = Cookies.get("user");
     if (userCookie) {
       setUser(userCookie);
     }
@@ -23,10 +56,23 @@ export function Context({children}: Readonly<{children: React.ReactNode}>) {
       setUser(null);
       Cookies.remove("user");
     }
-  }
+  };
+
   return (
-    <UserContext.Provider value={{user, setUser: setCurrentUser}}>
+    <UserContext.Provider value={{ user, setUser: setCurrentUser }}>
       {children}
     </UserContext.Provider>
+  );
+}
+
+export function EventProvider({
+  children,
+  value,
+}: {
+  children: ReactNode;
+  value: EventContextType;
+}) {
+  return (
+    <EventContext.Provider value={value}>{children}</EventContext.Provider>
   );
 }
