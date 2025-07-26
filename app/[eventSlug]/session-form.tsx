@@ -80,7 +80,7 @@ export function SessionForm(props: {
   const { user: currentUser } = useContext(UserContext);
   let initialHosts: Guest[] = [];
   if (!sessionID) {
-    initialHosts = guests.filter(g => g.ID == currentUser);
+    initialHosts = guests.filter((g) => g.ID == currentUser);
   }
   const [hosts, setHosts] = useState<Guest[]>(initialHosts);
   useEffect(() => {
@@ -328,8 +328,8 @@ function getAvailableStartTimes(
   );
   const startTimes: StartTime[] = [];
   for (
-    let t = new Date(day["Start bookings"]).getTime();
-    t < new Date(day["End bookings"]).getTime();
+    let t = day.StartBookings.getTime();
+    t < day.EndBookings.getTime();
     t += 30 * 60 * 1000
   ) {
     const formattedTime = DateTime.fromMillis(t)
@@ -354,7 +354,7 @@ function getAvailableStartTimes(
         );
         const latestEndTime = nextSession
           ? new Date(nextSession["Start time"]).getTime()
-          : new Date(day["End bookings"]).getTime();
+          : day.EndBookings.getTime();
         startTimes.push({
           formattedTime,
           time: t,
