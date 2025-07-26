@@ -18,11 +18,6 @@ export const UserContext = createContext<UserContextType>({
   setUser: null,
 });
 
-interface ApiResponse {
-  success: boolean;
-  rsvps?: RSVP[];
-}
-
 export interface EventContextType {
   event: Event | null;
   days: Day[];
@@ -30,7 +25,8 @@ export interface EventContextType {
   locations: Location[];
   guests: Guest[];
   rsvps: RSVP[];
-  getRsvpsForSession: (sessionId: string) => RSVP[];
+  rsvpdForSession: (sessionId: string) => boolean;
+  localSessions: Session[];
   updateRsvp: (
     guestId: string,
     sessionId: string,
@@ -45,7 +41,8 @@ export const EventContext = createContext<EventContextType>({
   locations: [],
   guests: [],
   rsvps: [],
-  getRsvpsForSession: () => [],
+  localSessions: [],
+  rsvpdForSession: () => false,
   updateRsvp: async () => {
     await Promise.resolve();
     return false;
@@ -84,17 +81,19 @@ export function EventProvider({
   value,
 }: {
   children: ReactNode;
-  value: Omit<EventContextType, "getRsvpsForSession" | "updateRsvp">;
+  value: Omit<EventContextType, "localSessions" | "rsvpdForSession" | "updateRsvp">;
 }) {
+  const valueSessions = value.days.map(d => d.Sessions).flat();
   const [rsvps, setRsvps] = useState<RSVP[]>(value.rsvps);
+  // contains all optimistic updates
+  const [localSessions, setLocalSessions] = useState<Session[]>(valueSessions);
 
   useEffect(() => {
     setRsvps(value.rsvps);
   }, [value.rsvps]);
 
-  // Add the getRsvpsForSession implementation here in the client component
-  const getRsvpsForSession = (sessionId: string) => {
-    return rsvps.filter(
+  const rsvpdForSession = (sessionId: string) => {
+    return rsvps.some(
       (rsvp) => rsvp.Session && rsvp.Session.includes(sessionId)
     );
   };
@@ -107,6 +106,18 @@ export function EventProvider({
   ) => {
     try {
       // Optimistic update
+      const countChange = remove ? -1 : 1;
+      const newSessions = localSessions.map(session => {
+        if (session.ID === sessionId) {
+          return {
+            ...session,
+            ["Num RSVPs"]: session["Num RSVPs"] + countChange
+          };
+        } else {
+          return session;
+        }
+      });
+      setLocalSessions(newSessions);
       if (remove) {
         // Remove RSVP
         setRsvps((prevRsvps) =>
@@ -141,26 +152,14 @@ export function EventProvider({
       if (!response.ok) {
         // Revert optimistic update on failure
         setRsvps(value.rsvps);
-        return false;
+        setLocalSessions(valueSessions);
       }
-
-      // Get the actual updated data from the server
-      const data = (await response.json()) as ApiResponse;
-      if (data.success) {
-        // Update with actual server data if provided
-        if (data.rsvps) {
-          setRsvps(data.rsvps);
-        }
-        return true;
-      } else {
-        // Revert optimistic update
-        setRsvps(value.rsvps);
-        return false;
-      }
+      return response.ok;
     } catch (error: unknown) {
       // Revert optimistic update on error
       console.error("Error updating RSVP:", error);
       setRsvps(value.rsvps);
+      setLocalSessions(valueSessions);
       return false;
     }
   };
@@ -168,7 +167,8 @@ export function EventProvider({
   const contextValue: EventContextType = {
     ...value,
     rsvps,
-    getRsvpsForSession,
+    localSessions,
+    rsvpdForSession,
     updateRsvp,
   };
 

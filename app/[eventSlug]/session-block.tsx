@@ -22,20 +22,14 @@ export function SessionBlock(props: {
   guests: Guest[];
 }) {
   const { eventName, session, location, day, guests } = props;
-  const { getRsvpsForSession } = useContext(EventContext);
-  const { user: currentUser } = useContext(UserContext);
+  const { rsvpdForSession } = useContext(EventContext);
+  const { user } = useContext(UserContext);
+  const rsvpd = rsvpdForSession(session.ID + (user ? "" : ""));
 
   const startTime = new Date(session["Start time"]).getTime();
   const endTime = new Date(session["End time"]).getTime();
   const sessionLength = endTime - startTime;
   const numHalfHours = sessionLength / 1000 / 60 / 30;
-
-  const rsvpsForSession = getRsvpsForSession(session.ID);
-  const rsvpdForEvent =
-    currentUser &&
-    rsvpsForSession.some(
-      (rsvp) => rsvp.Guest && rsvp.Guest.includes(currentUser)
-    );
 
   const isBlank = !session.Title;
   const isBookable =
@@ -62,7 +56,7 @@ export function SessionBlock(props: {
           location={location}
           numHalfHours={numHalfHours}
           guests={guests}
-          rsvpd={!!rsvpdForEvent}
+          rsvpd={rsvpd}
         />
       )}
     </>
@@ -110,7 +104,7 @@ export function RealSessionCard(props: {
 }) {
   const { eventName, session, numHalfHours, location, guests, rsvpd } = props;
   const { user: currentUser } = useContext(UserContext);
-  const { updateRsvp, getRsvpsForSession } = useContext(EventContext);
+  const { updateRsvp, localSessions } = useContext(EventContext);
   const router = useRouter();
   const [isRsvping, setIsRsvping] = useState(false);
 
@@ -142,10 +136,7 @@ export function RealSessionCard(props: {
   };
 
   // Get the current number of RSVPs from the context
-  const rsvpsForSession = getRsvpsForSession(session.ID);
-  // Count RSVPs plus hosts (authors of the event)
-  const numHosts = session.Hosts?.length || 0;
-  const numRSVPs = rsvpsForSession.length + numHosts;
+  const numRSVPs = localSessions.find(ses => ses.ID == session.ID)!["Num RSVPs"];
 
   const SessionInfoDisplay = () => (
     <>
