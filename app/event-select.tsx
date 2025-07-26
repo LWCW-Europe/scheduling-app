@@ -7,7 +7,7 @@ export function EventSelect(props: { eventNames: string[] }) {
   const searchParams = useSearchParams();
   const urlSearchParams = new URLSearchParams(searchParams);
   const pathname = usePathname();
-  const { replace } = useRouter();
+  const router = useRouter();
   return (
     <div className="flex gap-10 w-full items-center">
       {eventNames.map((name) => (
@@ -15,7 +15,7 @@ export function EventSelect(props: { eventNames: string[] }) {
           key={name}
           onClick={() => {
             urlSearchParams.set("event", name);
-            replace(`${pathname}?${urlSearchParams.toString()}`);
+            router.replace(`${pathname}?${urlSearchParams.toString()}`);
           }}
           className={clsx(
             urlSearchParams.get("event") === name

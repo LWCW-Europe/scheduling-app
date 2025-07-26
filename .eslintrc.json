@@ -1,4 +1,28 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"],
-  "root": true
+  "extends": [
+    "next/core-web-vitals", 
+    "next/typescript",
+    "plugin:@typescript-eslint/recommended-type-checked"
+  ],
+  "parserOptions": {
+    "projectService": true
+  },
+  "root": true,
+  "ignorePatterns": ["tailwind.config.ts"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parserOptions": {
+        "project": "./tsconfig.json"
+      },
+      "rules": {
+        "@typescript-eslint/no-unsafe-argument": "error",
+        "@typescript-eslint/no-unsafe-assignment": "error",
+        "@typescript-eslint/no-unsafe-call": "error",
+        "@typescript-eslint/no-unsafe-member-access": "error",
+        "@typescript-eslint/no-unsafe-return": "error",
+        "@typescript-eslint/no-explicit-any": "error"
+      }
+    }
+  ]
 }

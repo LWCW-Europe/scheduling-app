@@ -19,3 +19,16 @@ jobs:
 
       - name: Lint
         run: bun run lint
+  check-with-prettier:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Check the code with Prettier
+        uses: creyD/prettier_action@v4.6
+        with:
+          dry: true
+          no_commit: true
+          prettier_options: "--check app/**/*.ts db/**/*.ts utils/**/*.ts"

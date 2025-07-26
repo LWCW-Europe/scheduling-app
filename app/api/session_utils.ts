@@ -36,32 +36,32 @@ export function prepareToInsert(params: SessionParams): SessionInsert {
     startTimeString,
     duration,
   } = params;
-    const dayStartDT = DateTime.fromJSDate(new Date(day.Start));
-    const dayISOFormatted = dayStartDT.toFormat("yyyy-MM-dd");
-    const [rawHour, rawMinute, ampm] = startTimeString.split(/[: ]/);
-    const hourNum = parseInt(rawHour);
-    const hour24Num = ampm === "PM" && hourNum !== 12 ? hourNum + 12 : hourNum;
-    const hourStr = hour24Num < 10 ? `0${hour24Num}` : hour24Num.toString();
-    const minuteNum = parseInt(rawMinute);
-    const minuteStr = minuteNum < 10 ? `0${minuteNum}` : rawMinute;
-    const startTimeStamp = new Date(
-      `${dayISOFormatted}T${hourStr}:${minuteStr}:00+02:00`
-    );
-    const session: SessionInsert = {
-      Title: title,
-      Description: description,
-      Hosts: hosts.map((host) => host.ID),
-      Location: [location.ID],
-      "Start time": startTimeStamp.toISOString(),
-      "End time": new Date(
-        startTimeStamp.getTime() + duration * 60 * 1000
-      ).toISOString(),
-      "Attendee scheduled": true,
-    };
-    if (CONSTS.MULTIPLE_EVENTS && day["Event"]) {
-      session.Event = [day["Event"][0]];
-    }
-    return session;
+  const dayStartDT = DateTime.fromJSDate(new Date(day.Start));
+  const dayISOFormatted = dayStartDT.toFormat("yyyy-MM-dd");
+  const [rawHour, rawMinute, ampm] = startTimeString.split(/[: ]/);
+  const hourNum = parseInt(rawHour);
+  const hour24Num = ampm === "PM" && hourNum !== 12 ? hourNum + 12 : hourNum;
+  const hourStr = hour24Num < 10 ? `0${hour24Num}` : hour24Num.toString();
+  const minuteNum = parseInt(rawMinute);
+  const minuteStr = minuteNum < 10 ? `0${minuteNum}` : rawMinute;
+  const startTimeStamp = new Date(
+    `${dayISOFormatted}T${hourStr}:${minuteStr}:00+02:00`
+  );
+  const session: SessionInsert = {
+    Title: title,
+    Description: description,
+    Hosts: hosts.map((host) => host.ID),
+    Location: [location.ID],
+    "Start time": startTimeStamp.toISOString(),
+    "End time": new Date(
+      startTimeStamp.getTime() + duration * 60 * 1000
+    ).toISOString(),
+    "Attendee scheduled": true,
+  };
+  if (CONSTS.MULTIPLE_EVENTS && day["Event"]) {
+    session.Event = [day["Event"][0]];
+  }
+  return session;
 }
 
 export const validateSession = (

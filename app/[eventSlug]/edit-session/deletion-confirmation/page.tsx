@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default async function DeletionConfirmation() {
+export default function DeletionConfirmation() {
   return (
     <div className="p-8 max-w-lg mx-auto flex flex-col">
       <h1 className="text-2xl font-bold">Session deleted</h1>

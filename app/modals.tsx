@@ -38,12 +38,16 @@ export function CurrentUserModal(props: {
   guests: Guest[];
   open: boolean;
   close: () => void;
-  rsvp: () => void;
+  rsvp: () => Promise<void>;
   sessionInfoDisplay?: React.ReactNode;
   rsvpd: boolean;
 }) {
   const { guests, open, close, rsvp, sessionInfoDisplay, rsvpd } = props;
   const { user } = useContext(UserContext);
+  const onClickHandler = async () => {
+    await rsvp();
+    close();
+  };
   return (
     <Modal open={open} setOpen={close} hideClose={!!user}>
       {sessionInfoDisplay}
@@ -57,10 +61,7 @@ export function CurrentUserModal(props: {
         <button
           type="button"
           className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-400 text-base font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 sm:text-sm mt-4"
-          onClick={() => {
-            rsvp();
-            close();
-          }}
+          onClick={() => void onClickHandler()}
         >
           {rsvpd ? "Un-RSVP" : "RSVP"}
         </button>
@@ -115,10 +116,15 @@ export function ExportScheduleModal() {
 
 export function ConfirmDeletionModal(props: {
   btnDisabled: boolean;
-  confirm: () => void;
+  confirm: () => Promise<void>;
 }) {
-  const {btnDisabled, confirm} = props;
+  const { btnDisabled, confirm } = props;
   const [open, setOpen] = useState(false);
+
+  const clickHandler = async () => {
+    await confirm();
+    setOpen(false);
+  };
   return (
     <>
       <button
@@ -135,10 +141,7 @@ export function ConfirmDeletionModal(props: {
           <button
             type="button"
             className="rounded-md border border-transparent shadow-sm px-6 py-2 bg-rose-400 font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400"
-            onClick={() => {
-              confirm();
-              setOpen(false);
-            }}
+            onClick={() => void clickHandler()}
           >
             Yes
           </button>
