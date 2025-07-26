@@ -5,9 +5,9 @@ import { Session } from "./sessions";
 export type Day = {
   Start: string;
   End: string;
-  "Start bookings": string;
-  "End bookings": string;
-  "Event name"?: string;
+  StartBookings: string;
+  EndBookings: string;
+  EventName?: string;
   Event?: string[];
   ID: string;
   Sessions: Session[];
@@ -46,7 +46,17 @@ export async function getDaysByEvent(eventName: string | null) {
     })
     .eachPage(function page(records, fetchNextPage) {
       records.forEach(function (record) {
-        days.push({ ...record.fields, Sessions: [], ID: record.id });
+        days.push({
+          Start: record.fields.Start,
+          End: record.fields.End,
+          StartBookings: record.fields["Start bookings"],
+          EndBookings: record.fields["End bookings"],
+          EventName: record.fields["Event name"],
+          Event: record.fields.Event,
+
+          Sessions: [],
+          ID: record.id,
+        });
       });
       fetchNextPage();
     });

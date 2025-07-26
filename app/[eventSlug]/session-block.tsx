@@ -34,8 +34,8 @@ export function SessionBlock(props: {
     !!isBlank &&
     !!location.Bookable &&
     startTime > new Date().getTime() &&
-    startTime >= new Date(day["Start bookings"]).getTime() &&
-    startTime < new Date(day["End bookings"]).getTime();
+    startTime >= new Date(day.StartBookings).getTime() &&
+    startTime < new Date(day.EndBookings).getTime();
   return isBookable ? (
     <BookableSessionCard
       eventName={eventName}
