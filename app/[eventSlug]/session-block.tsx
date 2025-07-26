@@ -10,8 +10,8 @@ import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
-import { CurrentUserModal } from "../modals";
+import { useContext, useState, useRef, useMemo } from "react";
+import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext } from "../context";
 import { useScreenWidth } from "@/utils/hooks";
 
@@ -22,8 +22,10 @@ export function SessionBlock(props: {
   day: Day;
   guests: Guest[];
   rsvpsForEvent: RSVP[];
+  busySessions: Session[];
+  setRSVP: (guestId: string, sessionId: string, newState: boolean) => void;
 }) {
-  const { eventName, session, location, day, guests, rsvpsForEvent } = props;
+  const { eventName, session, location, day, guests, rsvpsForEvent, busySessions, setRSVP } = props;
   const startTime = new Date(session["Start time"]).getTime();
   const endTime = new Date(session["End time"]).getTime();
   const sessionLength = endTime - startTime;
@@ -55,6 +57,8 @@ export function SessionBlock(props: {
           numHalfHours={numHalfHours}
           guests={guests}
           rsvpd={rsvpdForEvent}
+          busySessions={busySessions}
+          setRSVP={setRSVP}
         />
       )}
     </>
@@ -110,35 +114,54 @@ export function RealSessionCard(props: {
   location: Location;
   guests: Guest[];
   rsvpd: boolean;
+  busySessions: Session[];
+  setRSVP: (guestId: string, sessionId: string, newState: boolean) => void;
 }) {
-  const { eventName, session, numHalfHours, location, guests, rsvpd } = props;
+  const { eventName, session, numHalfHours, location, guests, rsvpd, busySessions, setRSVP } = props;
+  // const initialRSVPd = useRef(rsvpd).current;
+  const initialRSVPd = useMemo(() => rsvpd, []);
   const { user: currentUser } = useContext(UserContext);
   const router = useRouter();
-  const [toggledRSVP, setToggledRSVP] = useState<boolean>(false);
-  function rsvpStatus() {
-    if (toggledRSVP) {
-      return !rsvpd;
-    } else {
-      return rsvpd;
-    }
-  }
   const hostStatus = currentUser && session.Hosts?.includes(currentUser);
-  const lowerOpacity = !rsvpStatus() && !hostStatus;
+  const lowerOpacity = !rsvpd && !hostStatus;
   const formattedHostNames = session["Host name"]?.join(", ") ?? "No hosts";
-  const [rsvpModalOpen, setRsvpModalOpen] = useState(false);
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
   const screenWidth = useScreenWidth();
   const onMobile = screenWidth < 640;
 
-  const handleClick = async () => {
+  const handleClick = () => {
     if (hostStatus) {
       return;
     }
     if (currentUser && !onMobile) {
-      await rsvp(currentUser, session.ID, rsvpStatus());
-      setToggledRSVP(!toggledRSVP);
+      const isBusy = busySessions.some(ses => {
+        if (session.ID == ses.ID) {
+          return false;
+        }
+        const startSes1 = new Date(ses["Start time"]).getTime();
+        const endSes1 = new Date(ses["End time"]).getTime();
+        const startSes2 = new Date(session["Start time"]).getTime();
+        const endSes2 = new Date(session["End time"]).getTime();
+        const maxStart = Math.max(startSes1, startSes2);
+        const minEnd = Math.min(endSes1, endSes2);
+        return maxStart < minEnd;
+      });
+      if (!rsvpd && isBusy) {
+        setConfirmRSVPModalOpen(true);
+      } else {
+        doRsvp();
+      }
     } else {
-      setRsvpModalOpen(true);
+      setUserModalOpen(true);
     }
+  };
+  const doRsvp = async () => {
+    if (!currentUser) {
+      return;
+    }
+    await rsvp(currentUser, session.ID, rsvpd);
+    setRSVP(currentUser, session.ID, !rsvpd);
   };
   const onClickEdit = () => {
     const url = `/${eventName.replace(/ /g, "-")}/edit-session?sessionID=${
@@ -148,8 +171,8 @@ export function RealSessionCard(props: {
   };
 
   let numRSVPs = session["Num RSVPs"];
-  if (toggledRSVP) {
-    if (rsvpd) {
+  if (rsvpd != initialRSVPd) {
+    if (initialRSVPd) {
       numRSVPs -= 1;
     } else {
       numRSVPs += 1;
@@ -189,18 +212,20 @@ export function RealSessionCard(props: {
       content={onMobile ? undefined : <SessionInfoDisplay />}
       className={`row-span-${numHalfHours} my-0.5 overflow-hidden group`}
     >
+      initialRSVPd = {initialRSVPd.toString()}
       <CurrentUserModal
-        close={() => setRsvpModalOpen(false)}
-        open={rsvpModalOpen}
-        // rsvp here should actually be rsvp
-        rsvp={async () => {
-          if (!currentUser) return;
-          await rsvp(currentUser, session.ID, rsvpStatus());
-          setToggledRSVP(!toggledRSVP);
-        }}
+        close={() => setUserModalOpen(false)}
+        open={userModalOpen}
+        rsvp={doRsvp}
         guests={guests}
-        rsvpd={rsvpStatus()}
+        rsvpd={rsvpd}
         sessionInfoDisplay={<SessionInfoDisplay />}
+      />
+      <ConfirmationModal
+        open={confirmRSVPModalOpen}
+        close={() => setConfirmRSVPModalOpen(false)}
+        confirm={doRsvp}
+        message={"Warning: you are already booked during that session. Are you sure you want to proceed?"}
       />
       <button
         className={clsx(

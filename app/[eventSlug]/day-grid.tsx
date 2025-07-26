@@ -4,7 +4,7 @@ import clsx from "clsx";
 import { useSearchParams } from "next/navigation";
 import { getNumHalfHours } from "@/utils/utils";
 import { useSafeLayoutEffect } from "@/utils/hooks";
-import { useRef, useState } from "react";
+import { useRef, useState, useContext, useEffect } from "react";
 import Image from "next/image";
 import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
@@ -12,15 +12,17 @@ import { Day } from "@/db/days";
 import { Guest } from "@/db/guests";
 import { RSVP } from "@/db/rsvps";
 import { Location } from "@/db/locations";
+import { Session } from "@/db/sessions";
+import { UserContext } from "../context";
 
 export function DayGrid(props: {
   eventName: string;
   locations: Location[];
   day: Day;
   guests: Guest[];
-  rsvps: RSVP[];
+  initialRSVPs: RSVP[];
 }) {
-  const { eventName, day, locations, guests, rsvps } = props;
+  const { eventName, day, locations, guests, initialRSVPs } = props;
   const searchParams = useSearchParams();
   const locParams = searchParams?.getAll("loc");
   const locationsFromParams = locations.filter((loc) =>
@@ -38,6 +40,30 @@ export function DayGrid(props: {
   const [expanded, setExpanded] = useState(true);
   // Or use this to hide dates that have already ended
   // const [expanded, setExpanded] = useState(end >= new Date());
+  const [rsvps, setRSVPs] = useState(initialRSVPs);
+  useEffect(() => setRSVPs(initialRSVPs), [initialRSVPs]);
+  function setRSVP(guestId: string, sessionId: string, newState: boolean) {
+    if (newState) {
+      const newRSVP = {
+        Guest: [guestId],
+        Session: [sessionId]
+      };
+      const newRSVPs = Array.from(new Set([... rsvps, newRSVP]));
+      setRSVPs(newRSVPs);
+    } else {
+      const newRSVPs = rsvps.filter(rsvp => !(rsvp.Guest[0] === guestId && rsvp.Session[0] === sessionId));
+      setRSVPs(newRSVPs);
+    }
+  }
+  const { user } = useContext(UserContext);
+  let busySessions: Session[] = [];
+  if (user) {
+    const sessionsWithRSVP = rsvps.map(r => r.Session).flat();
+    busySessions = day.Sessions.filter(ses =>
+      sessionsWithRSVP.includes(ses.ID) ||
+      ses.Hosts?.includes(user)
+    );
+  }
   useSafeLayoutEffect(() => {
     const handleScroll = () => {
       if (scrollableDivRef.current) {
@@ -147,7 +173,7 @@ export function DayGrid(props: {
                 }
                 return (
                   <LocationCol
-                    key={location.Name}
+                    key={location.Name + " | " + user}
                     sessions={day.Sessions.filter((session) =>
                       session["Location name"].includes(location.Name)
                     )}
@@ -156,6 +182,8 @@ export function DayGrid(props: {
                     day={day}
                     location={location}
                     eventName={eventName}
+                    busySessions={busySessions}
+                    setRSVP={setRSVP}
                   />
                 );
               })}

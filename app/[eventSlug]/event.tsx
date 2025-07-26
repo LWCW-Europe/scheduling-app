@@ -86,7 +86,7 @@ export function EventDisplay(props: {
                 day={day}
                 locations={locationsForEvent}
                 guests={guests}
-                rsvps={rsvps}
+                initialRSVPs={rsvps}
                 eventName={event.Name}
               />
             ) : (
