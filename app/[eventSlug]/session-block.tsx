@@ -36,8 +36,10 @@ export function SessionBlock(props: {
     !!isBlank &&
     !!location.Bookable &&
     startTime > new Date().getTime() &&
-    (!day.StartBookings || startTime >= new Date(day.StartBookings as Date | string).getTime()) &&
-    (!day.EndBookings || startTime < new Date(day.EndBookings as Date | string).getTime());
+    (!day.StartBookings ||
+      startTime >= new Date(day.StartBookings as Date | string).getTime()) &&
+    (!day.EndBookings ||
+      startTime < new Date(day.EndBookings as Date | string).getTime());
   return isBookable ? (
     <BookableSessionCard
       eventName={eventName}
@@ -136,7 +138,9 @@ export function RealSessionCard(props: {
   };
 
   // Get the current number of RSVPs from the context
-  const numRSVPs = localSessions.find(ses => ses.ID == session.ID)!["Num RSVPs"];
+  const numRSVPs = localSessions.find((ses) => ses.ID == session.ID)![
+    "Num RSVPs"
+  ];
 
   const SessionInfoDisplay = () => (
     <>
