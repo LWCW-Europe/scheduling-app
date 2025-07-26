@@ -27,7 +27,7 @@ export async function getRSVPsBySession(sessionId: string) {
   await base<RSVP>("RSVPs")
     .select({
       fields: ["Session", "Guest"],
-      filterByFormula: `{Session} = "${sessionId}"`,
+      filterByFormula: `{Session ID} = "${sessionId}"`,
     })
     .eachPage(function page(records, fetchNextPage) {
       records.forEach(function (record) {
