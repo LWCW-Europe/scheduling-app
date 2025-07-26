@@ -1,6 +1,12 @@
 "use client";
 import Cookies from "js-cookie";
-import { createContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useContext,
+} from "react";
 import { Event } from "@/db/events";
 import { Day } from "@/db/days";
 import { Session } from "@/db/sessions";
@@ -81,9 +87,13 @@ export function EventProvider({
   value,
 }: {
   children: ReactNode;
-  value: Omit<EventContextType, "localSessions" | "rsvpdForSession" | "updateRsvp">;
+  value: Omit<
+    EventContextType,
+    "localSessions" | "rsvpdForSession" | "updateRsvp"
+  >;
 }) {
-  const valueSessions = value.days.map(d => d.Sessions).flat();
+  const { user } = useContext(UserContext);
+  const valueSessions = value.days.map((d) => d.Sessions).flat();
   const [rsvps, setRsvps] = useState<RSVP[]>(value.rsvps);
   // contains all optimistic updates
   const [localSessions, setLocalSessions] = useState<Session[]>(valueSessions);
@@ -92,26 +102,47 @@ export function EventProvider({
     setRsvps(value.rsvps);
   }, [value.rsvps]);
 
+  // Fetch RSVPs when user changes
+  useEffect(() => {
+    const fetchUserRsvps = async () => {
+      if (user) {
+        try {
+          const response = await fetch(`/api/rsvps?user=${user}`);
+          if (response.ok) {
+            const userRsvps = (await response.json()) as RSVP[];
+            setRsvps(userRsvps);
+          }
+        } catch (error) {
+          console.error("Error fetching user RSVPs:", error);
+        }
+      } else {
+        // Reset RSVPs when user logs out
+        setRsvps([]);
+      }
+    };
+
+    void fetchUserRsvps();
+  }, [user]);
+
   const rsvpdForSession = (sessionId: string) => {
     return rsvps.some(
       (rsvp) => rsvp.Session && rsvp.Session.includes(sessionId)
     );
   };
 
-  // Add function to update RSVPs optimistically
+  // update RSVPs optimistically
   const updateRsvp = async (
     guestId: string,
     sessionId: string,
     remove: boolean
   ) => {
     try {
-      // Optimistic update
       const countChange = remove ? -1 : 1;
-      const newSessions = localSessions.map(session => {
+      const newSessions = localSessions.map((session) => {
         if (session.ID === sessionId) {
           return {
             ...session,
-            ["Num RSVPs"]: session["Num RSVPs"] + countChange
+            ["Num RSVPs"]: session["Num RSVPs"] + countChange,
           };
         } else {
           return session;
