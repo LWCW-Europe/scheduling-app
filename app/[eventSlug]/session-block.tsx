@@ -36,8 +36,8 @@ export function SessionBlock(props: {
     !!isBlank &&
     !!location.Bookable &&
     startTime > new Date().getTime() &&
-    startTime >= new Date(day["Start bookings"]).getTime() &&
-    startTime < new Date(day["End bookings"]).getTime();
+    startTime >= day.StartBookings.getTime() &&
+    startTime < day.EndBookings.getTime();
   return isBookable ? (
     <BookableSessionCard
       eventName={eventName}
@@ -212,8 +212,8 @@ export function RealSessionCard(props: {
             numHalfHours > 2
               ? "line-clamp-3"
               : numHalfHours > 1
-              ? "line-clamp-2"
-              : "line-clamp-1"
+                ? "line-clamp-2"
+                : "line-clamp-1"
           )}
         >
           {formattedHostNames}

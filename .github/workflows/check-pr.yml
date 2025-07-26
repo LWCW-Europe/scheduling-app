@@ -31,4 +31,4 @@ jobs:
         with:
           dry: true
           no_commit: true
-          prettier_options: "--check app/**/*.ts db/**/*.ts utils/**/*.ts"
+          prettier_options: "--check app/ db/ utils/"

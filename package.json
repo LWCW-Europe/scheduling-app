@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "lint-watch": "watchexec -c -w app -w db -w utils \"next lint --fix\""
+    "lint-watch": "watchexec -c -w app -w db -w utils \"next lint --fix\"",
+    "prettier": "prettier --write app/ db/ utils/"
   },
   "dependencies": {
     "@floating-ui/react": "^0.26.28",
@@ -37,6 +38,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.4.3",
     "postcss": "^8.5.6",
+    "prettier": "3.6.2",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3"
   }

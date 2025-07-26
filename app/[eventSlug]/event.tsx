@@ -21,7 +21,7 @@ export function EventDisplay() {
   const daysForEvent = days.filter(
     (day) =>
       !CONSTS.MULTIPLE_EVENTS ||
-      (day["Event name"] && day["Event name"][0] === event.Name)
+      (day.EventName && day.EventName[0] === event.Name)
   );
   const locationsForEvent = locations.filter(
     (loc) =>
