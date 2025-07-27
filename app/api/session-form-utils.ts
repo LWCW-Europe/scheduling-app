@@ -1,7 +1,7 @@
-import { Day } from "@/db/days";
-import { Location } from "@/db/locations";
-import { Guest } from "@/db/guests";
-import { Session } from "@/db/sessions";
+import type { Day } from "@/db/days";
+import type { Location } from "@/db/locations";
+import type { Guest } from "@/db/guests";
+import type { Session } from "@/db/sessions";
 import { DateTime } from "luxon";
 import { CONSTS } from "@/utils/constants";
 
@@ -25,17 +25,16 @@ export type SessionInsert = {
   Event?: string[];
   "Attendee scheduled": boolean;
 };
+export type SessionInterval = {
+  start: string;
+  end: string;
+};
 
-export function prepareToInsert(params: SessionParams): SessionInsert {
-  const {
-    title,
-    description,
-    hosts,
-    location,
-    day,
-    startTimeString,
-    duration,
-  } = params;
+export function parseSessionTime(
+  day: Day,
+  startTimeString: string,
+  duration: number
+): SessionInterval {
   const dayStartDT = DateTime.fromJSDate(new Date(day.Start));
   const dayISOFormatted = dayStartDT.toFormat("yyyy-MM-dd");
   const [rawHour, rawMinute, ampm] = startTimeString.split(/[: ]/);
@@ -47,15 +46,32 @@ export function prepareToInsert(params: SessionParams): SessionInsert {
   const startTimeStamp = new Date(
     `${dayISOFormatted}T${hourStr}:${minuteStr}:00-07:00`
   );
+  return {
+    start: startTimeStamp.toISOString(),
+    end: new Date(
+      startTimeStamp.getTime() + duration * 60 * 1000
+    ).toISOString(),
+  };
+}
+
+export function prepareToInsert(params: SessionParams): SessionInsert {
+  const {
+    title,
+    description,
+    hosts,
+    location,
+    day,
+    startTimeString,
+    duration,
+  } = params;
+  const { start, end } = parseSessionTime(day, startTimeString, duration);
   const session: SessionInsert = {
     Title: title,
     Description: description,
     Hosts: hosts.map((host) => host.ID),
     Location: [location.ID],
-    "Start time": startTimeStamp.toISOString(),
-    "End time": new Date(
-      startTimeStamp.getTime() + duration * 60 * 1000
-    ).toISOString(),
+    "Start time": start,
+    "End time": end,
     "Attendee scheduled": true,
   };
   if (CONSTS.MULTIPLE_EVENTS && day["Event"]) {

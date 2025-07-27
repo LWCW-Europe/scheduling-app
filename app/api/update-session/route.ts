@@ -1,8 +1,8 @@
 import { getSessions } from "@/db/sessions";
 import { deleteRSVPsFromSessionByUsers } from "@/db/rsvps";
 import { base } from "@/db/db";
-import { prepareToInsert, validateSession } from "../session_utils";
-import type { SessionParams } from "../session_utils";
+import { prepareToInsert, validateSession } from "../session-form-utils";
+import type { SessionParams } from "../session-form-utils";
 
 export const dynamic = "force-dynamic"; // defaults to auto
 
