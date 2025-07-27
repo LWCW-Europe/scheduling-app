@@ -14,8 +14,11 @@ import { Day } from "@/db/days";
 import { Guest } from "@/db/guests";
 import { Location } from "@/db/locations";
 import { Session } from "@/db/sessions";
+import { RSVP } from "@/db/rsvps";
 import { ConfirmDeletionModal } from "../modals";
 import { UserContext } from "../context";
+import { sessionsOverlap, newEmptySession } from "../session_utils";
+import { parseSessionTime } from "../api/session-form-utils";
 
 interface ErrorResponse {
   message: string;
@@ -34,19 +37,8 @@ export function SessionForm(props: {
   const timeParam = searchParams?.get("time");
   const initLocation = searchParams?.get("location");
   const sessionID = searchParams?.get("sessionID");
-  const emptySession: Session = {
-    ID: "",
-    Title: "",
-    Description: "",
-    "Start time": "",
-    "End time": "",
-    Hosts: [],
-    Location: [],
-    "Location name": [],
-    Capacity: 0,
-    "Num RSVPs": 0,
-  };
-  const session = sessions.find((ses) => ses.ID === sessionID) || emptySession;
+  const session =
+    sessions.find((ses) => ses.ID === sessionID) || newEmptySession();
   const initDateTime =
     dayParam && timeParam
       ? convertParamDateTime(dayParam, timeParam)
@@ -102,6 +94,71 @@ export function SessionForm(props: {
       setDuration(maxDuration);
     }
   }, [startTime, maxDuration, duration, startTimes]);
+
+  let dummySession = newEmptySession();
+  if (startTime) {
+    const { start, end } = parseSessionTime(day, startTime, duration);
+    dummySession = {
+      ...newEmptySession(),
+      "Start time": start,
+      "End time": end,
+      ID: sessionID || "",
+    };
+  }
+
+  const [hostRSVPs, setHostRSVPs] = useState<Record<string, RSVP[]>>({});
+  const [isFetchingRSVPs, setIsFetchingRSVPs] = useState(false);
+
+  useEffect(() => {
+    const fetchRSVPs = async () => {
+      setIsFetchingRSVPs(true);
+      const entries = await Promise.all(
+        hosts.map(async (host) => {
+          const res = await fetch(`/api/rsvps?user=${host.ID}`);
+          const rsvps = (await res.json()) as RSVP[];
+          return [host.ID, rsvps] as const;
+        })
+      );
+
+      setHostRSVPs(Object.fromEntries(entries));
+      setIsFetchingRSVPs(false);
+    };
+
+    void fetchRSVPs();
+  }, [hosts]);
+  const clashes = hosts.map((host) => {
+    const sessionClashes = sessions.filter(
+      (ses) =>
+        ses.Hosts?.includes(host.ID) && sessionsOverlap(ses, dummySession)
+    );
+    const rsvpClashes = (hostRSVPs[host.ID] || [])
+      .map((rsvp) => sessions.find((ses) => ses.ID === rsvp.Session[0])!)
+      .filter((ses) => sessionsOverlap(ses, dummySession));
+
+    return {
+      id: host.ID,
+      sessionClashes,
+      rsvpClashes,
+    };
+  });
+  const clashErrors = clashes
+    .map((hostClashes) => {
+      const { id, sessionClashes, rsvpClashes } = hostClashes;
+      const hostName = hosts.find((host) => host.ID === id)!.Name;
+      const formatTime = (str: string) =>
+        DateTime.fromISO(str).setZone("America/Los_Angeles").toFormat("HH:mm");
+      const displayInterval = (ses: Session) =>
+        `from ${formatTime(ses["Start time"])} to ${formatTime(ses["End time"])}`;
+      const sessionErrors = sessionClashes.map(
+        (ses) => `${hostName} is hosting ${ses.Title} ${displayInterval(ses)}`
+      );
+      const rsvpErrors = rsvpClashes.map(
+        (ses) => `${hostName} is attending ${ses.Title} ${displayInterval(ses)}`
+      );
+      return sessionErrors.concat(rsvpErrors);
+    })
+    .flat();
+
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const Submit = async () => {
@@ -273,6 +330,16 @@ export function SessionForm(props: {
           maxDuration={maxDuration}
         />
       </div>
+      {clashErrors.length > 0 && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <p className="text-sm font-medium">Warning: schedule clash</p>
+          {clashErrors.map((error) => (
+            <p key={error} className="text-sm font-medium">
+              - {error}
+            </p>
+          ))}
+        </div>
+      )}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
           <p className="text-sm font-medium">Error: {error}</p>
@@ -289,6 +356,7 @@ export function SessionForm(props: {
           !day ||
           !duration ||
           !duration ||
+          isFetchingRSVPs ||
           isSubmitting
         }
         onClick={() => void Submit()}
