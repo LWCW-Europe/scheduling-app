@@ -5,14 +5,13 @@ import { Session } from "@/db/sessions";
 import { Day } from "@/db/days";
 import { Location } from "@/db/locations";
 import { Guest } from "@/db/guests";
-import { RSVP } from "@/db/rsvps";
 import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useContext, useState } from "react";
 import { CurrentUserModal } from "../modals";
-import { UserContext } from "../context";
+import { UserContext, EventContext } from "../context";
 import { useScreenWidth } from "@/utils/hooks";
 
 export function SessionBlock(props: {
@@ -21,21 +20,26 @@ export function SessionBlock(props: {
   location: Location;
   day: Day;
   guests: Guest[];
-  rsvpsForEvent: RSVP[];
 }) {
-  const { eventName, session, location, day, guests, rsvpsForEvent } = props;
+  const { eventName, session, location, day, guests } = props;
+  const { rsvpdForSession } = useContext(EventContext);
+  const { user } = useContext(UserContext);
+  const rsvpd = rsvpdForSession(session.ID + (user ? "" : ""));
+
   const startTime = new Date(session["Start time"]).getTime();
   const endTime = new Date(session["End time"]).getTime();
   const sessionLength = endTime - startTime;
   const numHalfHours = sessionLength / 1000 / 60 / 30;
-  const rsvpdForEvent = rsvpsForEvent.length > 0;
+
   const isBlank = !session.Title;
   const isBookable =
     !!isBlank &&
     !!location.Bookable &&
     startTime > new Date().getTime() &&
-    startTime >= day.StartBookings.getTime() &&
-    startTime < day.EndBookings.getTime();
+    (!day.StartBookings ||
+      startTime >= new Date(day.StartBookings as Date | string).getTime()) &&
+    (!day.EndBookings ||
+      startTime < new Date(day.EndBookings as Date | string).getTime());
   return isBookable ? (
     <BookableSessionCard
       eventName={eventName}
@@ -54,7 +58,7 @@ export function SessionBlock(props: {
           location={location}
           numHalfHours={numHalfHours}
           guests={guests}
-          rsvpd={rsvpdForEvent}
+          rsvpd={rsvpd}
         />
       )}
     </>
@@ -92,17 +96,6 @@ function BlankSessionCard(props: { numHalfHours: number }) {
   return <div className={`row-span-${numHalfHours} my-0.5 min-h-12`} />;
 }
 
-async function rsvp(guestId: string, sessionId: string, remove = false) {
-  await fetch("/api/toggle-rsvp", {
-    method: "POST",
-    body: JSON.stringify({
-      guestId,
-      sessionId,
-      remove,
-    }),
-  });
-}
-
 export function RealSessionCard(props: {
   eventName: string;
   session: Session;
@@ -113,17 +106,12 @@ export function RealSessionCard(props: {
 }) {
   const { eventName, session, numHalfHours, location, guests, rsvpd } = props;
   const { user: currentUser } = useContext(UserContext);
+  const { updateRsvp, localSessions } = useContext(EventContext);
   const router = useRouter();
-  const [toggledRSVP, setToggledRSVP] = useState<boolean>(false);
-  function rsvpStatus() {
-    if (toggledRSVP) {
-      return !rsvpd;
-    } else {
-      return rsvpd;
-    }
-  }
+  const [isRsvping, setIsRsvping] = useState(false);
+
   const hostStatus = currentUser && session.Hosts?.includes(currentUser);
-  const lowerOpacity = !rsvpStatus() && !hostStatus;
+  const lowerOpacity = !rsvpd && !hostStatus;
   const formattedHostNames = session["Host name"]?.join(", ") ?? "No hosts";
   const [rsvpModalOpen, setRsvpModalOpen] = useState(false);
   const screenWidth = useScreenWidth();
@@ -134,12 +122,14 @@ export function RealSessionCard(props: {
       return;
     }
     if (currentUser && !onMobile) {
-      await rsvp(currentUser, session.ID, rsvpStatus());
-      setToggledRSVP(!toggledRSVP);
+      setIsRsvping(true);
+      await updateRsvp(currentUser, session.ID, rsvpd);
+      setIsRsvping(false);
     } else {
       setRsvpModalOpen(true);
     }
   };
+
   const onClickEdit = () => {
     const url = `/${eventName.replace(/ /g, "-")}/edit-session?sessionID=${
       session.ID
@@ -147,14 +137,11 @@ export function RealSessionCard(props: {
     router.push(url);
   };
 
-  let numRSVPs = session["Num RSVPs"];
-  if (toggledRSVP) {
-    if (rsvpd) {
-      numRSVPs -= 1;
-    } else {
-      numRSVPs += 1;
-    }
-  }
+  // Get the current number of RSVPs from the context
+  const numRSVPs = localSessions.find((ses) => ses.ID == session.ID)![
+    "Num RSVPs"
+  ];
+
   const SessionInfoDisplay = () => (
     <>
       <h1 className="text-lg font-bold leading-tight">{session.Title}</h1>
@@ -192,14 +179,12 @@ export function RealSessionCard(props: {
       <CurrentUserModal
         close={() => setRsvpModalOpen(false)}
         open={rsvpModalOpen}
-        // rsvp here should actually be rsvp
         rsvp={async () => {
           if (!currentUser) return;
-          await rsvp(currentUser, session.ID, rsvpStatus());
-          setToggledRSVP(!toggledRSVP);
+          await updateRsvp(currentUser, session.ID, rsvpd);
         }}
         guests={guests}
-        rsvpd={rsvpStatus()}
+        rsvpd={rsvpd}
         sessionInfoDisplay={<SessionInfoDisplay />}
       />
       <button
@@ -215,6 +200,7 @@ export function RealSessionCard(props: {
           !lowerOpacity && "text-white"
         )}
         onClick={() => void handleClick()}
+        disabled={isRsvping}
       >
         <p
           className={clsx(
