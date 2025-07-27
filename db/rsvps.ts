@@ -49,7 +49,9 @@ export function deleteRSVPsFromSessionByUsers(
     })
     .eachPage(function page(records, fetchNextPage) {
       const ids = records.map((rec) => rec.getId());
-      void base("RSVPs").destroy(ids);
+      if (ids.length > 0) {
+        void base("RSVPs").destroy(ids);
+      }
       fetchNextPage();
     });
 }
