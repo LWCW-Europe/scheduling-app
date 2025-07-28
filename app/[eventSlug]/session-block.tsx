@@ -144,7 +144,9 @@ export function RealSessionCard(props: {
       return;
     }
     setIsRsvping(true);
-    updateRsvp(currentUser, session.ID, rsvpd).then(() => setIsRsvping(false));
+    void updateRsvp(currentUser, session.ID, rsvpd).then(() =>
+      setIsRsvping(false)
+    );
   };
 
   const onClickEdit = () => {
@@ -196,7 +198,7 @@ export function RealSessionCard(props: {
       <CurrentUserModal
         close={() => setUserModalOpen(false)}
         open={userModalOpen}
-        rsvp={async () => doRsvp()}
+        rsvp={() => Promise.resolve(doRsvp())}
         guests={guests}
         rsvpd={rsvpd}
         sessionInfoDisplay={<SessionInfoDisplay />}
