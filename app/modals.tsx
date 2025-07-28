@@ -161,12 +161,12 @@ export function ConfirmDeletionModal(props: {
 export function ConfirmationModal(props: {
   open: boolean;
   close: () => void;
-  confirm: () => Promise<void>;
+  confirm: () => void;
   message: string;
 }) {
   const { open, close, confirm, message } = props;
-  const clickHandler = async () => {
-    await confirm();
+  const clickHandler = () => {
+    confirm();
     close();
   };
   return (
@@ -177,7 +177,7 @@ export function ConfirmationModal(props: {
           <button
             type="button"
             className="rounded-md border border-transparent shadow-sm px-6 py-2 bg-rose-400 font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400"
-            onClick={() => void clickHandler()}
+            onClick={clickHandler}
           >
             Yes
           </button>

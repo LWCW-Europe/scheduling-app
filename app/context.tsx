@@ -33,7 +33,7 @@ export interface EventContextType {
   rsvps: RSVP[];
   rsvpdForSession: (sessionId: string) => boolean;
   localSessions: Session[];
-  userBusySessions: Session[];
+  userBusySessions: () => Session[];
   updateRsvp: (
     guestId: string,
     sessionId: string,
@@ -49,7 +49,7 @@ export const EventContext = createContext<EventContextType>({
   guests: [],
   rsvps: [],
   localSessions: [],
-  userBusySessions: [],
+  userBusySessions: () => [],
   rsvpdForSession: () => false,
   updateRsvp: async () => {
     await Promise.resolve();
@@ -99,8 +99,6 @@ export function EventProvider({
   const [rsvps, setRsvps] = useState<RSVP[]>(value.rsvps);
   // contains all optimistic updates
   const [localSessions, setLocalSessions] = useState<Session[]>(valueSessions);
-  const [userBusySessions, setUserBusySessions] =
-    useState<Session[]>(valueSessions);
 
   useEffect(() => {
     setRsvps(value.rsvps);
@@ -128,17 +126,16 @@ export function EventProvider({
     void fetchUserRsvps();
   }, [user]);
 
-  useEffect(() => {
+  function userBusySessions() {
     if (user) {
       const sessionsWithRSVP = rsvps.map((r) => r.Session).flat();
-      const busySessions = value.sessions.filter(
+      return valueSessions.filter(
         (ses) => sessionsWithRSVP.includes(ses.ID) || ses.Hosts?.includes(user)
       );
-      setUserBusySessions(busySessions);
     } else {
-      setUserBusySessions([]);
+      return [];
     }
-  }, [user, rsvps, value.sessions]);
+  }
 
   const rsvpdForSession = (sessionId: string) => {
     return rsvps.some(

@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 import { useContext, useState } from "react";
 import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext, EventContext } from "../context";
-import { sessionsOverlap, newEmptySession } from "../session_utils";
+import { sessionsOverlap } from "../session_utils";
 import { useScreenWidth } from "@/utils/hooks";
 
 export function SessionBlock(props: {
@@ -116,36 +116,35 @@ export function RealSessionCard(props: {
   const lowerOpacity = !rsvpd && !hostStatus;
   const formattedHostNames = session["Host name"]?.join(", ") ?? "No hosts";
   const [userModalOpen, setUserModalOpen] = useState(false);
-  const [clashingSession, setClashingSession] = useState(newEmptySession());
+  const [clashingSession, setClashingSession] = useState<Session | null>(null);
   const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
   const screenWidth = useScreenWidth();
   const onMobile = screenWidth < 640;
 
-  const handleClick = async () => {
+  const handleClick = () => {
     if (hostStatus) {
       return;
     }
 
-    const overlappingSession = userBusySessions.find((ses) =>
+    const overlappingSession = userBusySessions().find((ses) =>
       sessionsOverlap(session, ses)
     );
     if (!rsvpd && overlappingSession) {
       setClashingSession(overlappingSession);
       setConfirmRSVPModalOpen(true);
     } else if (currentUser && !onMobile) {
-      await doRsvp();
+      doRsvp();
     } else {
       setUserModalOpen(true);
     }
   };
 
-  const doRsvp = async () => {
+  const doRsvp = () => {
     if (!currentUser) {
       return;
     }
     setIsRsvping(true);
-    await updateRsvp(currentUser, session.ID, rsvpd);
-    setIsRsvping(false);
+    updateRsvp(currentUser, session.ID, rsvpd).then(() => setIsRsvping(false));
   };
 
   const onClickEdit = () => {
@@ -197,7 +196,7 @@ export function RealSessionCard(props: {
       <CurrentUserModal
         close={() => setUserModalOpen(false)}
         open={userModalOpen}
-        rsvp={doRsvp}
+        rsvp={async () => doRsvp()}
         guests={guests}
         rsvpd={rsvpd}
         sessionInfoDisplay={<SessionInfoDisplay />}
@@ -207,8 +206,8 @@ export function RealSessionCard(props: {
         close={() => setConfirmRSVPModalOpen(false)}
         confirm={doRsvp}
         message={
-          `Warning: that session clashes with ${clashingSession.Title}, which you ` +
-          `are ${clashingSession.Hosts?.includes(currentUser || "") ? "hosting" : "attending"}. ` +
+          `Warning: that session clashes with ${clashingSession?.Title}, which you ` +
+          `are ${clashingSession?.Hosts?.includes(currentUser || "") ? "hosting" : "attending"}. ` +
           "Are you sure you want to proceed?"
         }
       />
@@ -224,7 +223,7 @@ export function RealSessionCard(props: {
               }-${600}`,
           !lowerOpacity && "text-white"
         )}
-        onClick={() => void handleClick()}
+        onClick={handleClick}
         disabled={isRsvping}
       >
         <p
