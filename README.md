@@ -1,4 +1,5 @@
 ## Licensing
+
 We're still figuring out a system for licensing this app. For now, if you use the app for an event you run, please consider donating to my personal [Manifund regranting balance](https://manifund.org/Rachel) — this is a tax-deductible donation for you, and will provide me with funds that I'll send to charitable projects I think are impactful.
 
 I'd suggest a donation of **$5 per attendee of your event.** If you do donate and would like guidance for setting up the app, you can email me at **rachel.weinberg12@gmail.com** and I can send you the docs that describe how to set up your Airtable base and constants, and/or hop on a call to answer any setup questions you have.
