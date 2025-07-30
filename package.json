@@ -10,7 +10,7 @@
     "lint-watch": "watchexec -c -w app -w db -w utils \"next lint --fix\"",
     "test": "node set-env.js test npx playwright test && npx playwright show-report",
     "start:test": "node set-env.js test next start",
-    "prettier": "prettier --write app/ db/ utils/ *.ts"
+    "prettier": "prettier --write ."
   },
   "dependencies": {
     "@floating-ui/react": "^0.26.28",
