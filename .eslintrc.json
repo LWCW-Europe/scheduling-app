@@ -1,6 +1,6 @@
 {
   "extends": [
-    "next/core-web-vitals", 
+    "next/core-web-vitals",
     "next/typescript",
     "plugin:@typescript-eslint/recommended-type-checked"
   ],
@@ -11,7 +11,7 @@
   "ignorePatterns": ["tailwind.config.ts"],
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx"],
+      "files": ["*.ts", "*.tsx", "*.js"],
       "parserOptions": {
         "project": "./tsconfig.json"
       },
