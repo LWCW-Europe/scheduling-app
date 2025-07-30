@@ -53,6 +53,7 @@ NEXT_PUBLIC_FOOTER_RIGHT_HTML='<a href="https://github.com/yourusername/your-rep
 ```
 
 **Examples:**
+
 - Simple link: `NEXT_PUBLIC_FOOTER_RIGHT_HTML='<a href="https://github.com/user/repo" target="_blank">GitHub</a>'`
 - Multiple links: `NEXT_PUBLIC_FOOTER_RIGHT_HTML='<a href="https://github.com/user/repo">GitHub</a> | <a href="mailto:bugs@example.com">Support</a>'`
 - Plain text: `NEXT_PUBLIC_FOOTER_RIGHT_HTML='© 2025 Your Organization'`
