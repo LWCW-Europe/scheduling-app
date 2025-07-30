@@ -10,32 +10,32 @@ import {
 } from "@/db/sessionProposals";
 
 export async function createProposal(formData: FormData) {
+  const event = formData.get("event") as string;
   const eventSlug = formData.get("eventSlug") as string;
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
-  const hosts = formData.get("hosts") as string;
+  const hosts = formData.getAll("hosts") as string[];
   const durationMinutes =
     parseInt(formData.get("durationMinutes") as string) || 60;
-  const userId = formData.get("userId") as string;
 
   if (!title) {
     return { error: "Title is required" };
   }
 
-  if (!eventSlug) {
-    return { error: "Event slug is required" };
+  if (!event) {
+    return { error: "Event is required" };
   }
 
   try {
     const proposal: NewProposalInput = {
-      eventSlug,
+      event,
       title,
       description,
       hosts,
       durationMinutes,
     };
 
-    const result = await createSessionProposal(proposal, userId);
+    const result = await createSessionProposal(proposal);
     revalidatePath(`/${eventSlug}/activities`);
     return { success: true, data: result };
   } catch (error) {
@@ -48,10 +48,9 @@ export async function updateProposal(id: string, formData: FormData) {
   const eventSlug = formData.get("eventSlug") as string;
   const title = formData.get("title") as string;
   const description = formData.get("description") as string;
-  const hosts = formData.get("hosts") as string;
+  const hosts = formData.getAll("hosts") as string[];
   const durationMinutes =
     parseInt(formData.get("durationMinutes") as string) || 60;
-  const userId = formData.get("userId") as string;
 
   if (!title) {
     return { error: "Title is required" };
@@ -65,7 +64,7 @@ export async function updateProposal(id: string, formData: FormData) {
       durationMinutes,
     };
 
-    const result = await updateSessionProposal(id, patch, userId);
+    const result = await updateSessionProposal(id, patch);
     revalidatePath(`/${eventSlug}/activities`);
     return { success: true, data: result };
   } catch (error) {
@@ -76,18 +75,18 @@ export async function updateProposal(id: string, formData: FormData) {
 
 export async function deleteProposal(id: string, eventSlug: string) {
   try {
-    const result = await deleteSessionProposal(id);
+    await deleteSessionProposal(id);
     revalidatePath(`/${eventSlug}/activities`);
-    return { success: true, data: result };
+    return { success: true };
   } catch (error) {
     console.error("Error deleting proposal:", error);
     return { error: "Failed to delete proposal" };
   }
 }
 
-export async function searchProposals(eventSlug: string, query: string) {
+export async function searchProposals(event: string, query: string) {
   try {
-    const results = await searchSessionProposals(eventSlug, query);
+    const results = await searchSessionProposals(event, query);
     return { success: true, data: results };
   } catch (error) {
     console.error("Error searching proposals:", error);

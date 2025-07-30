@@ -117,8 +117,9 @@ export function ExportScheduleModal() {
 export function ConfirmDeletionModal(props: {
   btnDisabled: boolean;
   confirm: () => Promise<void>;
+  itemName: string;
 }) {
-  const { btnDisabled, confirm } = props;
+  const { btnDisabled, confirm, itemName } = props;
   const [open, setOpen] = useState(false);
 
   const clickHandler = async () => {
@@ -136,7 +137,7 @@ export function ConfirmDeletionModal(props: {
         Delete
       </button>
       <Modal open={open} setOpen={setOpen} hideClose={true}>
-        <p>Delete session?</p>
+        <p>Delete {itemName}?</p>
         <div className="mt-4">
           <button
             type="button"

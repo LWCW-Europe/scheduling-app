@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "./input";
 import { UserContext } from "../context";
@@ -10,6 +10,7 @@ import {
   deleteProposal,
 } from "./activities/actions";
 import { SessionProposal } from "@/db/sessionProposals";
+import { SelectHosts } from "@/app/[eventSlug]/session-form";
 import { ConfirmDeletionModal } from "../modals";
 import { Guest } from "@/db/guests";
 
@@ -23,26 +24,27 @@ const DURATION_OPTIONS = [
 ];
 
 export function SessionProposalForm(props: {
+  eventID: string;
   eventSlug: string;
   proposal?: SessionProposal;
   guests: Guest[];
 }) {
-  const { eventSlug, proposal, guests } = props;
+  const { eventID, eventSlug, proposal, guests } = props;
   const { user: currentUserId } = useContext(UserContext);
   const router = useRouter();
 
-  const currentUser = currentUserId
-    ? guests.find((g) => g.ID === currentUserId)
-    : null;
-
   const [title, setTitle] = useState(proposal?.title || "");
   const [description, setDescription] = useState(proposal?.description || "");
-  const [hosts, setHosts] = useState(
-    proposal?.hosts || (currentUser ? currentUser.Name : "") || ""
-  );
+  const [hosts, setHosts] = useState(proposal?.hosts || []);
   const [durationMinutes, setDurationMinutes] = useState(
     proposal?.durationMinutes || 60
   );
+
+  useEffect(() => {
+    if (!proposal && currentUserId) {
+      setHosts([currentUserId]);
+    }
+  }, [proposal, currentUserId]);
 
   // UI state
   const [error, setError] = useState<string | null>(null);
@@ -54,12 +56,12 @@ export function SessionProposalForm(props: {
     setError(null);
 
     const formData = new FormData();
+    formData.append("event", eventID);
     formData.append("eventSlug", eventSlug);
     formData.append("title", title);
     formData.append("description", description || "");
-    formData.append("hosts", hosts);
+    hosts.forEach((host) => formData.append("hosts", host));
     formData.append("durationMinutes", durationMinutes.toString());
-    formData.append("userId", currentUserId || "");
 
     try {
       let result;
@@ -116,10 +118,13 @@ export function SessionProposalForm(props: {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form
+        onSubmit={(e) => void handleSubmit(e)}
+        className="flex flex-col gap-4"
+      >
         <div className="flex flex-col gap-1">
           <label className="font-medium">
-            Session title
+            Title
             <span className="text-rose-500 mx-1">*</span>
           </label>
           <Input
@@ -142,14 +147,14 @@ export function SessionProposalForm(props: {
 
         <div className="flex flex-col gap-1">
           <label className="font-medium">Host(s)</label>
-          <Input
-            value={hosts}
-            onChange={(e) => setHosts(e.target.value)}
-            placeholder="Your name (or comma-separated names for multiple hosts)"
-          />
-          <p className="text-xs text-gray-500">
-            Enter your name or the names of multiple hosts separated by commas
+          <p className="text-sm text-gray-500 mt-1">
+            Leave empty if you would like someone to volunteer.
           </p>
+          <SelectHosts
+            guests={guests}
+            hosts={guests.filter((g) => hosts.some((h) => h === g.ID))}
+            setHosts={(nextHosts) => setHosts(nextHosts.map((h) => h.ID))}
+          />
         </div>
 
         <div className="flex flex-col gap-1">
@@ -196,6 +201,7 @@ export function SessionProposalForm(props: {
         <ConfirmDeletionModal
           btnDisabled={isSubmitting}
           confirm={handleDelete}
+          itemName="session proposal"
         />
       )}
     </div>

@@ -21,7 +21,11 @@ export default async function NewProposalPage({
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <SessionProposalForm eventSlug={eventSlug} guests={guests} />
+      <SessionProposalForm
+        eventID={event.ID}
+        eventSlug={eventSlug}
+        guests={guests}
+      />
     </div>
   );
 }

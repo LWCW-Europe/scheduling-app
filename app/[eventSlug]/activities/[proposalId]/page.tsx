@@ -31,6 +31,7 @@ export default async function EditProposalPage({
   return (
     <div className="container mx-auto px-4 py-8">
       <SessionProposalForm
+        eventID={event.ID}
         eventSlug={eventSlug}
         proposal={proposal}
         guests={guests}

@@ -1,15 +1,11 @@
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
+import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
 import { ProposalTable } from "./proposal-table";
 import Link from "next/link";
 import { PlusIcon } from "@heroicons/react/24/outline";
 
 export const dynamic = "force-dynamic";
-
-export function generateStaticParams() {
-  // This is just a placeholder, actual event slugs would come from a database query
-  return [{ eventSlug: "unconference" }];
-}
 
 export default async function ActivitiesPage({
   params,
@@ -26,7 +22,10 @@ export default async function ActivitiesPage({
     return <div>Event not found</div>;
   }
 
-  const proposals = await getSessionProposalsByEvent(eventSlug);
+  const [guests, proposals] = await Promise.all([
+    getGuestsByEvent(eventName),
+    getSessionProposalsByEvent(eventName),
+  ]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -64,7 +63,11 @@ export default async function ActivitiesPage({
           </Link>
         </div>
       ) : (
-        <ProposalTable proposals={proposals} eventSlug={eventSlug} />
+        <ProposalTable
+          guests={guests}
+          proposals={proposals}
+          eventSlug={eventSlug}
+        />
       )}
     </div>
   );

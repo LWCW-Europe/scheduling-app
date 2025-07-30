@@ -1,22 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Link from "next/link";
-import { SessionProposal } from "@/db/sessionProposals";
+import { UserContext } from "@/app/context";
+import type { SessionProposal } from "@/db/sessionProposals";
+import type { Guest } from "@/db/guests";
 import { PencilIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { searchProposals } from "./actions";
 import { useTransition } from "react";
 
 export function ProposalTable({
+  guests,
   proposals: initialProposals,
   eventSlug,
 }: {
+  guests: Guest[];
   proposals: SessionProposal[];
   eventSlug: string;
 }) {
   const [proposals, setProposals] = useState(initialProposals);
   const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
+  const { user: currentUserId } = useContext(UserContext);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -39,8 +44,24 @@ export function ProposalTable({
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0
-      ? `${hours} hour${hours > 1 ? "s" : ""} ${remainingMinutes} min`
-      : `${hours} hour${hours > 1 ? "s" : ""}`;
+      ? `${hours}h${hours > 1 ? "s" : ""} ${remainingMinutes}m`
+      : `${hours}h${hours > 1 ? "s" : ""}`;
+  };
+
+  const formatDescription = (description: string | undefined) => {
+    if (description && description.length >= 100) {
+      return description.substring(0, 100) + "...";
+    } else {
+      return description;
+    }
+  };
+
+  const canEdit = (hosts: string[]) => {
+    if (hosts.length === 0) {
+      return true;
+    } else {
+      return currentUserId && hosts.includes(currentUserId);
+    }
   };
 
   return (
@@ -80,6 +101,12 @@ export function ProposalTable({
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
+                Description
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Duration
               </th>
               <th
@@ -97,14 +124,17 @@ export function ProposalTable({
                   <div className="text-sm font-medium text-gray-900">
                     {proposal.title}
                   </div>
-                  {proposal.description && (
-                    <div className="text-sm text-gray-500 line-clamp-2">
-                      {proposal.description}
-                    </div>
-                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {proposal.hosts || "No hosts"}
+                  {proposal.hosts
+                    .map(
+                      (host) =>
+                        guests.find((g) => g.ID === host)?.Name || "Deleted"
+                    )
+                    .join(", ") || "No hosts"}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {formatDescription(proposal.description)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
@@ -115,13 +145,15 @@ export function ProposalTable({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link
-                    href={`/${eventSlug}/activities/${proposal.id}`}
-                    className="text-rose-400 hover:text-rose-500 inline-flex items-center"
-                  >
-                    <PencilIcon className="h-4 w-4 mr-1" />
-                    Edit
-                  </Link>
+                  {canEdit(proposal.hosts) && (
+                    <Link
+                      href={`/${eventSlug}/activities/${proposal.id}`}
+                      className="text-rose-400 hover:text-rose-500 inline-flex items-center"
+                    >
+                      <PencilIcon className="h-4 w-4 mr-1" />
+                      Edit
+                    </Link>
+                  )}
                 </td>
               </tr>
             ))}

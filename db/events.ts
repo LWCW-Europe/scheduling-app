@@ -2,6 +2,7 @@ import { CONSTS } from "@/utils/constants";
 import { base } from "./db";
 
 export type Event = {
+  ID: string;
   Name: string;
   Description: string;
   Website: string;
@@ -33,7 +34,7 @@ export async function getEvents() {
     .eachPage(function page(records, fetchNextPage) {
       records.forEach(function (record) {
         if (record.fields.Start && record.fields.End) {
-          events.push(record.fields);
+          events.push({ ...record.fields, ID: record.getId() });
         }
       });
       fetchNextPage();
@@ -53,7 +54,7 @@ export async function getEventByName(name: string) {
     })
     .eachPage(function page(records, fetchNextPage) {
       records.forEach(function (record) {
-        events.push(record.fields);
+        events.push({ ...record.fields, ID: record.getId() });
       });
       fetchNextPage();
     });
