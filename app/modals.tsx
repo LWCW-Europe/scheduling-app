@@ -117,8 +117,9 @@ export function ExportScheduleModal() {
 export function ConfirmDeletionModal(props: {
   btnDisabled: boolean;
   confirm: () => Promise<void>;
+  itemName: string;
 }) {
-  const { btnDisabled, confirm } = props;
+  const { btnDisabled, confirm, itemName } = props;
   const [open, setOpen] = useState(false);
 
   const clickHandler = async () => {
@@ -136,7 +137,7 @@ export function ConfirmDeletionModal(props: {
         Delete
       </button>
       <Modal open={open} setOpen={setOpen} hideClose={true}>
-        <p>Delete session?</p>
+        <p>Delete {itemName}?</p>
         <div className="mt-4">
           <button
             type="button"
@@ -149,6 +150,42 @@ export function ConfirmDeletionModal(props: {
             type="button"
             className="ml-4 rounded-md border border-black shadow-sm px-6 py-2 bg-white font-medium text-black hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
             onClick={() => setOpen(false)}
+          >
+            No
+          </button>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+export function ConfirmationModal(props: {
+  open: boolean;
+  close: () => void;
+  confirm: () => void;
+  message: string;
+}) {
+  const { open, close, confirm, message } = props;
+  const clickHandler = () => {
+    confirm();
+    close();
+  };
+  return (
+    <>
+      <Modal open={open} setOpen={close} hideClose={true}>
+        <p>{message}</p>
+        <div className="mt-4">
+          <button
+            type="button"
+            className="rounded-md border border-transparent shadow-sm px-6 py-2 bg-rose-400 font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400"
+            onClick={clickHandler}
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            className="ml-4 rounded-md border border-black shadow-sm px-6 py-2 bg-white font-medium text-black hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200"
+            onClick={close}
           >
             No
           </button>

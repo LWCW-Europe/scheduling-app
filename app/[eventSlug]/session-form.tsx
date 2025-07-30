@@ -364,7 +364,11 @@ export function SessionForm(props: {
         Submit
       </button>
       {sessionID && (
-        <ConfirmDeletionModal btnDisabled={isSubmitting} confirm={Delete} />
+        <ConfirmDeletionModal
+          btnDisabled={isSubmitting}
+          confirm={Delete}
+          itemName="session proposal"
+        />
       )}
     </div>
   );

@@ -33,6 +33,7 @@ export interface EventContextType {
   rsvps: RSVP[];
   rsvpdForSession: (sessionId: string) => boolean;
   localSessions: Session[];
+  userBusySessions: () => Session[];
   updateRsvp: (
     guestId: string,
     sessionId: string,
@@ -48,6 +49,7 @@ export const EventContext = createContext<EventContextType>({
   guests: [],
   rsvps: [],
   localSessions: [],
+  userBusySessions: () => [],
   rsvpdForSession: () => false,
   updateRsvp: async () => {
     await Promise.resolve();
@@ -89,7 +91,7 @@ export function EventProvider({
   children: ReactNode;
   value: Omit<
     EventContextType,
-    "localSessions" | "rsvpdForSession" | "updateRsvp"
+    "localSessions" | "userBusySessions" | "rsvpdForSession" | "updateRsvp"
   >;
 }) {
   const { user } = useContext(UserContext);
@@ -123,6 +125,17 @@ export function EventProvider({
 
     void fetchUserRsvps();
   }, [user]);
+
+  function userBusySessions() {
+    if (user) {
+      const sessionsWithRSVP = rsvps.map((r) => r.Session).flat();
+      return valueSessions.filter(
+        (ses) => sessionsWithRSVP.includes(ses.ID) || ses.Hosts?.includes(user)
+      );
+    } else {
+      return [];
+    }
+  }
 
   const rsvpdForSession = (sessionId: string) => {
     return rsvps.some(
@@ -199,6 +212,7 @@ export function EventProvider({
     ...value,
     rsvps,
     localSessions,
+    userBusySessions,
     rsvpdForSession,
     updateRsvp,
   };
