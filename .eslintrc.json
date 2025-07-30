@@ -11,7 +11,7 @@
   "ignorePatterns": ["tailwind.config.ts"],
   "overrides": [
     {
-      "files": ["*.ts", "*.tsx"],
+      "files": ["*.ts", "*.tsx", "*.js"],
       "parserOptions": {
         "project": "./tsconfig.json"
       },
