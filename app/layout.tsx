@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Roboto } from "next/font/google";
 import "./globals.css";
 import NavBar from "./nav-bar";
+import Footer from "./footer";
 import { UserProvider } from "./context";
 import clsx from "clsx";
 import { CONSTS } from "@/utils/constants";
@@ -39,11 +40,12 @@ export default function RootLayout({
           <main
             className={clsx(
               "lg:px-24 sm:px-10 p-6",
-              CONSTS.MULTIPLE_EVENTS ? "py-24" : "pt-12 pb-24"
+              CONSTS.MULTIPLE_EVENTS ? "py-24 sm:pb-16" : "pt-12 pb-4 sm:pb-16"
             )}
           >
             {children}
           </main>
+          <Footer />
         </UserProvider>
       </body>
     </html>
