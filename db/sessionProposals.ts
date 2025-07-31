@@ -14,7 +14,7 @@ export type NewProposalInput = {
   title: string;
   description?: string;
   hosts: string[];
-  durationMinutes?: number;
+  durationMinutes: number | null;
 };
 
 export async function getSessionProposalsByEvent(event: string) {
@@ -37,33 +37,13 @@ export async function getSessionProposalsByEvent(event: string) {
   return proposals;
 }
 
-export async function searchSessionProposals(event: string, query: string) {
-  const proposals: SessionProposal[] = [];
-  await base("SessionProposals")
-    .select({
-      fields: ["event", "title", "description", "hosts", "durationMinutes"],
-      filterByFormula: `AND({event} = "${event}", SEARCH("${query.replace(/"/g, '\\"')}", {title}))`,
-    })
-    .eachPage(function page(records, fetchNextPage) {
-      records.forEach(function (record) {
-        proposals.push({
-          ...(record.fields as Omit<SessionProposal, "id">),
-          hosts: (record.fields.hosts as string[]) || [],
-          id: record.id,
-        });
-      });
-      fetchNextPage();
-    });
-  return proposals;
-}
-
 export async function createSessionProposal(input: NewProposalInput) {
   const record = await base("SessionProposals").create({
     event: [input.event],
     title: input.title,
     description: input.description || "",
     hosts: input.hosts,
-    durationMinutes: input.durationMinutes || 60,
+    durationMinutes: input.durationMinutes || undefined,
   });
 
   return {
@@ -78,6 +58,11 @@ export async function updateSessionProposal(
 ) {
   const record = await base("SessionProposals").update(id, {
     ...patch,
+    // https://github.com/Airtable/airtable.js/issues/272
+    // Typescript does not let me use null here, but using null is the only
+    //   way to get Airtable to have no value for a numeric field
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
+    durationMinutes: patch.durationMinutes as any,
   });
 
   return {
