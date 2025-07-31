@@ -1,5 +1,6 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import {
   createSessionProposal,
@@ -34,13 +35,13 @@ export async function createProposal(formData: FormData) {
       durationMinutes,
     };
 
-    const result = await createSessionProposal(proposal);
+    await createSessionProposal(proposal);
     revalidatePath(`/${eventSlug}/proposals`);
-    return { success: true, data: result };
   } catch (error) {
     console.error("Error creating proposal:", error);
     return { error: "Failed to create proposal" };
   }
+  redirect(`/${eventSlug}/proposals`);
 }
 
 export async function updateProposal(id: string, formData: FormData) {
@@ -63,22 +64,22 @@ export async function updateProposal(id: string, formData: FormData) {
       durationMinutes,
     };
 
-    const result = await updateSessionProposal(id, patch);
+    await updateSessionProposal(id, patch);
     revalidatePath(`/${eventSlug}/proposals`);
-    return { success: true, data: result };
   } catch (error) {
     console.error("Error updating proposal:", error);
     return { error: "Failed to update proposal" };
   }
+  redirect(`/${eventSlug}/proposals`);
 }
 
 export async function deleteProposal(id: string, eventSlug: string) {
   try {
     await deleteSessionProposal(id);
     revalidatePath(`/${eventSlug}/proposals`);
-    return { success: true };
   } catch (error) {
     console.error("Error deleting proposal:", error);
     return { error: "Failed to delete proposal" };
   }
+  redirect(`/${eventSlug}/proposals`);
 }

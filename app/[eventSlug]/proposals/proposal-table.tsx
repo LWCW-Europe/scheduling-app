@@ -3,14 +3,13 @@
 import { useState, useContext } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import clsx from "clsx";
 
 import { UserContext } from "@/app/context";
 import type { SessionProposal } from "@/db/sessionProposals";
 import type { Guest } from "@/db/guests";
 import { PencilIcon, ClockIcon } from "@heroicons/react/24/outline";
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 10;
 
 export function ProposalTable({
   guests,
@@ -26,17 +25,20 @@ export function ProposalTable({
   const [myProposals, setMyProposals] = useState(false);
   const { user: currentUserId } = useContext(UserContext);
   const router = useRouter();
-  const filteredProposals = () => {
-    let res = initialProposals;
-    if (myProposals) {
-      res = res.filter((pr) => pr.hosts.includes(currentUserId || ""));
+  const filteredProposals = initialProposals.filter((pr) => {
+    if (myProposals && currentUserId) {
+      if (!pr.hosts.includes(currentUserId)) {
+        return false;
+      }
     }
     if (searchQuery.trim()) {
-      res = res.filter((pr) => pr.title.includes(searchQuery));
+      if (!pr.title.includes(searchQuery)) {
+        return false;
+      }
     }
-    return res;
-  };
-  const totalPages = Math.ceil(filteredProposals().length / ITEMS_PER_PAGE);
+    return true;
+  });
+  const totalPages = Math.ceil(filteredProposals.length / ITEMS_PER_PAGE);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -46,39 +48,40 @@ export function ProposalTable({
   };
 
   const getPageNumbers = () => {
+    const arrowCss =
+      "px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed";
+    const currentPageNumCss = "bg-blue-600 text-white";
+    const otherPageNumCss =
+      "text-gray-700 bg-white border border-gray-300 hover:bg-gray-200";
     const pages = [
-      { display: "<<", toPage: 1 },
-      { display: "<", toPage: Math.max(page - 1, 1) },
+      { display: "<<", toPage: 1, css: arrowCss },
+      { display: "<", toPage: Math.max(page - 1, 1), css: arrowCss },
     ];
     for (
       let i = Math.max(1, page - 2);
       i <= Math.min(page + 2, totalPages);
       i++
     ) {
+      const css = i === page ? currentPageNumCss : otherPageNumCss;
       pages.push({
         display: i.toString(),
         toPage: i,
+        css,
       });
     }
-    pages.push({ display: ">", toPage: Math.min(page + 1, totalPages) });
-    pages.push({ display: ">>", toPage: totalPages });
+    pages.push({
+      display: ">",
+      toPage: Math.min(page + 1, totalPages),
+      css: arrowCss,
+    });
+    pages.push({ display: ">>", toPage: totalPages, css: arrowCss });
     return pages;
   };
 
-  const pageCssClass = (display: string) => {
-    if (+display === page) {
-      return "bg-blue-600 text-white";
-    } else if (!isNaN(+display)) {
-      return "text-gray-700 bg-white border border-gray-300 hover:bg-gray-200";
-    } else {
-      return "px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed";
-    }
-  };
-
-  const currentPageProposals = () => {
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    return filteredProposals().slice(start, start + ITEMS_PER_PAGE);
-  };
+  const currentPageProposals = filteredProposals.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE
+  );
 
   const visitViewPage = (proposal: SessionProposal) => {
     router.push(`/${eventSlug}/proposals/${proposal.id}`);
@@ -113,12 +116,11 @@ export function ProposalTable({
   return (
     <div className="space-y-4">
       <button
-        className={clsx(
-          "text-white px-3 py-2 rounded-md items-center",
+        className={`text-white px-3 py-2 rounded-md items-center ${
           myProposals
             ? "bg-blue-600 hover:bg-blue-700"
             : "bg-gray-400 hover:bg-gray-500"
-        )}
+        }`}
         onClick={() => setMyProposals(!myProposals)}
       >
         My proposals
@@ -170,7 +172,7 @@ export function ProposalTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {currentPageProposals().map((proposal) => (
+            {currentPageProposals.map((proposal) => (
               <tr
                 key={proposal.id}
                 className="hover:bg-gray-200 cursor-pointer"
@@ -218,7 +220,7 @@ export function ProposalTable({
                 </td>
               </tr>
             ))}
-            {filteredProposals().length === 0 && (
+            {filteredProposals.length === 0 && (
               <tr>
                 <td
                   colSpan={4}
@@ -231,17 +233,14 @@ export function ProposalTable({
           </tbody>
         </table>
       </div>
-      {filteredProposals().length > ITEMS_PER_PAGE && (
+      {filteredProposals.length > ITEMS_PER_PAGE && (
         <div className="flex items-center gap-1">
-          {getPageNumbers().map(({ display, toPage }) => (
+          {getPageNumbers().map(({ display, toPage, css }) => (
             <button
               key={display}
               onClick={() => setPage(toPage)}
               disabled={page == toPage}
-              className={clsx(
-                "px-3 py-2 text-sm font-medium rounded-md",
-                pageCssClass(display)
-              )}
+              className={"px-3 py-2 text-sm font-medium rounded-md " + css}
             >
               {display}
             </button>

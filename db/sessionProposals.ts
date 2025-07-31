@@ -6,7 +6,7 @@ export type SessionProposal = {
   title: string;
   description?: string;
   hosts: string[];
-  durationMinutes: number | null;
+  durationMinutes?: number;
 };
 
 export type NewProposalInput = {
@@ -43,10 +43,7 @@ export async function createSessionProposal(input: NewProposalInput) {
     title: input.title,
     description: input.description || "",
     hosts: input.hosts,
-    // Typescript does not let me use null here, but using null is the only
-    //   way to get Airtable to have no value for a numeric field
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-    durationMinutes: input.durationMinutes as any,
+    durationMinutes: input.durationMinutes || undefined,
   });
 
   return {
@@ -61,8 +58,11 @@ export async function updateSessionProposal(
 ) {
   const record = await base("SessionProposals").update(id, {
     ...patch,
+    // https://github.com/Airtable/airtable.js/issues/272
+    // Typescript does not let me use null here, but using null is the only
+    //   way to get Airtable to have no value for a numeric field
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-    durationMinutes: patch.durationMinutes as any, // see comment above
+    durationMinutes: patch.durationMinutes as any,
   });
 
   return {
