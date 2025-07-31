@@ -93,7 +93,7 @@ The following additions are made to the AirTable schema:
   - durationMinutes - Number
   - event - Link to another record (Events) - "Allow linking to multiple records" is unchecked
   - hosts - Link to another record (Guests)
-  - title - Single line text
+  - title - Single line text (Primary field)
 
 ## Learn More
 
