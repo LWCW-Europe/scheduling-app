@@ -1,8 +1,9 @@
+import { notFound } from "next/navigation";
+
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
-import { ViewProposal } from "@/app/[eventSlug]/proposal";
-import { notFound } from "next/navigation";
+import { ViewProposal } from "./view-proposal";
 
 export default async function ViewProposalPage({
   params,
