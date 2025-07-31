@@ -198,7 +198,7 @@ export function RealSessionCard(props: {
       <CurrentUserModal
         close={() => setUserModalOpen(false)}
         open={userModalOpen}
-        rsvp={() => Promise.resolve(doRsvp())}
+        rsvp={() => Promise.resolve(handleClick())}
         guests={guests}
         hosts={session.Hosts || []}
         rsvpd={rsvpd}
