@@ -200,6 +200,7 @@ export function RealSessionCard(props: {
         open={userModalOpen}
         rsvp={() => Promise.resolve(doRsvp())}
         guests={guests}
+        hosts={session.Hosts || []}
         rsvpd={rsvpd}
         sessionInfoDisplay={<SessionInfoDisplay />}
       />
