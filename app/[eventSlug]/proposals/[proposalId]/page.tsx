@@ -1,10 +1,10 @@
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
-import { SessionProposalForm } from "../../session-proposal-form";
+import { ViewProposal } from "@/app/[eventSlug]/proposal";
 import { notFound } from "next/navigation";
 
-export default async function EditProposalPage({
+export default async function ViewProposalPage({
   params,
 }: {
   params: { eventSlug: string; proposalId: string };
@@ -19,7 +19,7 @@ export default async function EditProposalPage({
     return <div>Event not found</div>;
   }
 
-  const proposals = await getSessionProposalsByEvent(eventSlug);
+  const proposals = await getSessionProposalsByEvent(eventName);
   const proposal = proposals.find((p) => p.id === proposalId);
 
   if (!proposal) {
@@ -30,12 +30,7 @@ export default async function EditProposalPage({
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <SessionProposalForm
-        eventID={event.ID}
-        eventSlug={eventSlug}
-        proposal={proposal}
-        guests={guests}
-      />
+      <ViewProposal proposal={proposal} guests={guests} eventSlug={eventSlug} />
     </div>
   );
 }

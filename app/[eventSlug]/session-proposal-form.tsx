@@ -8,7 +8,7 @@ import {
   createProposal,
   updateProposal,
   deleteProposal,
-} from "./activities/actions";
+} from "./proposals/actions";
 import { SessionProposal } from "@/db/sessionProposals";
 import { SelectHosts } from "@/app/[eventSlug]/session-form";
 import { ConfirmDeletionModal } from "../modals";
@@ -35,13 +35,15 @@ export function SessionProposalForm(props: {
 
   const [title, setTitle] = useState(proposal?.title || "");
   const [description, setDescription] = useState(proposal?.description || "");
-  const [hosts, setHosts] = useState(proposal?.hosts || []);
+  const [hosts, setHosts] = useState<string[]>([]);
   const [durationMinutes, setDurationMinutes] = useState(
-    proposal?.durationMinutes || 60
+    proposal?.durationMinutes
   );
 
   useEffect(() => {
-    if (!proposal && currentUserId) {
+    if (proposal) {
+      setHosts(proposal.hosts);
+    } else if (!proposal && currentUserId) {
       setHosts([currentUserId]);
     }
   }, [proposal, currentUserId]);
@@ -61,7 +63,9 @@ export function SessionProposalForm(props: {
     formData.append("title", title);
     formData.append("description", description || "");
     hosts.forEach((host) => formData.append("hosts", host));
-    formData.append("durationMinutes", durationMinutes.toString());
+    if (durationMinutes) {
+      formData.append("durationMinutes", durationMinutes.toString());
+    }
 
     try {
       let result;
@@ -74,7 +78,7 @@ export function SessionProposalForm(props: {
       if (result && "error" in result) {
         setError(result.error as string);
       } else {
-        router.push(`/${eventSlug}/activities`);
+        router.push(`/${eventSlug}/proposals`);
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -96,7 +100,7 @@ export function SessionProposalForm(props: {
       if (result && "error" in result) {
         setError(result.error as string);
       } else {
-        router.push(`/${eventSlug}/activities`);
+        router.push(`/${eventSlug}/proposals`);
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -180,6 +184,16 @@ export function SessionProposalForm(props: {
               ))}
             </div>
           </fieldset>
+          <div className="space-y-4">
+            {durationMinutes && (
+              <button
+                className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded-md items-center"
+                onClick={() => setDurationMinutes(undefined)}
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
         {error && (

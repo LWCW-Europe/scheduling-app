@@ -4,10 +4,11 @@ import { getEventByName } from "@/db/events";
 import { ProposalTable } from "./proposal-table";
 import Link from "next/link";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { UserSelect } from "@/app/user-select";
 
 export const dynamic = "force-dynamic";
 
-export default async function ActivitiesPage({
+export default async function ProposalsPage({
   params,
 }: {
   params: { eventSlug: string };
@@ -29,7 +30,11 @@ export default async function ActivitiesPage({
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col gap-1">
+        <span className="text-gray-500">You are logged in as:</span>
+        <UserSelect guests={guests} />
+      </div>
+      <div className="flex justify-between items-center mb-8 mt-6">
         <div>
           <h1 className="text-3xl font-bold">
             {event.Name}: Session Proposals
@@ -39,7 +44,7 @@ export default async function ActivitiesPage({
           </p>
         </div>
         <Link
-          href={`/${eventSlug}/activities/new`}
+          href={`/${eventSlug}/proposals/new`}
           className="bg-rose-400 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-rose-500"
         >
           <PlusIcon className="h-5 w-5" />
@@ -56,7 +61,7 @@ export default async function ActivitiesPage({
             Be the first to suggest a session!
           </p>
           <Link
-            href={`/${eventSlug}/activities/new`}
+            href={`/${eventSlug}/proposals/new`}
             className="mt-4 inline-block bg-rose-400 text-white px-4 py-2 rounded-md hover:bg-rose-500"
           >
             Add Proposal

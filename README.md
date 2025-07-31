@@ -85,6 +85,16 @@ bun lint
 bun prettier
 ```
 
+The following additions are made to the AirTable schema:
+
+- Added table SessionProposals with columns:
+  - id - primary field - Formula type, the formula is RECORD_ID()
+  - description - Long text
+  - durationMinutes - Number
+  - event - Link to another record (Events) - "Allow linking to multiple records" is unchecked
+  - hosts - Link to another record (Guests)
+  - title - Single line text
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
