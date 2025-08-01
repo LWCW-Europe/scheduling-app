@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Fuse from "fuse.js";
 
 import { UserContext } from "@/app/context";
 import type { SessionProposal } from "@/db/sessionProposals";
@@ -13,13 +14,19 @@ const ITEMS_PER_PAGE = 10;
 
 export function ProposalTable({
   guests,
-  proposals: initialProposals,
+  proposals: paramProposals,
   eventSlug,
 }: {
   guests: Guest[];
   proposals: SessionProposal[];
   eventSlug: string;
 }) {
+  const initialProposals = paramProposals.map((proposal) => {
+    const hostNames = proposal.hosts.map(
+      (h) => guests.find((g) => g.ID === h)?.Name || ""
+    );
+    return { ...proposal, hostNames };
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [myProposals, setMyProposals] = useState(false);
@@ -31,14 +38,37 @@ export function ProposalTable({
         return false;
       }
     }
-    if (searchQuery.trim()) {
-      if (!pr.title.includes(searchQuery)) {
-        return false;
-      }
-    }
     return true;
   });
   const totalPages = Math.ceil(filteredProposals.length / ITEMS_PER_PAGE);
+  function updateMyProposals(newValue: boolean) {
+    setPage(1);
+    setMyProposals(newValue);
+  }
+  useEffect(() => {
+    if (!currentUserId) {
+      setMyProposals(false);
+    }
+  }, [currentUserId]);
+  const fuse = new Fuse(filteredProposals, {
+    keys: [
+      {
+        name: "title",
+        weight: 0.6,
+      },
+      {
+        name: "hostNames",
+        weight: 0.25,
+      },
+      {
+        name: "description",
+        weight: 0.15,
+      },
+    ],
+  });
+  const searchResults = searchQuery.trim()
+    ? fuse.search(searchQuery).map((res) => res.item)
+    : filteredProposals;
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -78,7 +108,7 @@ export function ProposalTable({
     return pages;
   };
 
-  const currentPageProposals = filteredProposals.slice(
+  const currentPageProposals = searchResults.slice(
     (page - 1) * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE
   );
@@ -97,14 +127,6 @@ export function ProposalTable({
       : `${hours}h`;
   };
 
-  const formatDescription = (description: string | undefined) => {
-    if (description && description.length >= 100) {
-      return description.substring(0, 100) + "...";
-    } else {
-      return description;
-    }
-  };
-
   const canEdit = (hosts: string[]) => {
     if (hosts.length === 0) {
       return true;
@@ -121,7 +143,8 @@ export function ProposalTable({
             ? "bg-blue-600 hover:bg-blue-700"
             : "bg-gray-400 hover:bg-gray-500"
         }`}
-        onClick={() => setMyProposals(!myProposals)}
+        onClick={() => updateMyProposals(!myProposals)}
+        disabled={!currentUserId}
       >
         My proposals
       </button>
@@ -136,36 +159,36 @@ export function ProposalTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="table-fixed w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="w-[20%] truncate text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Title
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="w-[20%] truncate px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Host(s)
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="w-[40%] truncate px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Description
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="w-[10%] truncate px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Duration
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="w-[10%] truncate px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Actions
               </th>
@@ -178,23 +201,23 @@ export function ProposalTable({
                 className="hover:bg-gray-200 cursor-pointer"
                 onClick={() => visitViewPage(proposal)}
               >
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="truncate px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">
                     {proposal.title}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="truncate px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {proposal.hosts
                     .map(
                       (host) =>
                         guests.find((g) => g.ID === host)?.Name || "Deleted"
                     )
-                    .join(", ") || "No hosts"}
+                    .join(", ") || "-"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDescription(proposal.description)}
+                <td className="truncate px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {proposal.description}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="truncate px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     {proposal.durationMinutes && (
                       <>
@@ -206,7 +229,7 @@ export function ProposalTable({
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="truncate px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {canEdit(proposal.hosts) && (
                     <Link
                       href={`/${eventSlug}/proposals/${proposal.id}/edit`}
@@ -220,7 +243,7 @@ export function ProposalTable({
                 </td>
               </tr>
             ))}
-            {filteredProposals.length === 0 && (
+            {searchResults.length === 0 && (
               <tr>
                 <td
                   colSpan={4}
@@ -233,7 +256,7 @@ export function ProposalTable({
           </tbody>
         </table>
       </div>
-      {filteredProposals.length > ITEMS_PER_PAGE && (
+      {searchResults.length > ITEMS_PER_PAGE && (
         <div className="flex items-center gap-1">
           {getPageNumbers().map(({ display, toPage, css }) => (
             <button
