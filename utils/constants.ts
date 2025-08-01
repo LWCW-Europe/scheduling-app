@@ -1,3 +1,4 @@
+import { BuildingLibraryIcon, FilmIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { ForwardRefExoticComponent, RefAttributes, SVGProps } from "react";
 
 export type NavItem = {
@@ -14,9 +15,13 @@ export type NavItem = {
 export const CONSTS = {
   TITLE: "LWCW 2025",
   DESCRIPTION: "[DEV INSTANCE] Berlin, Germany.",
-  MULTIPLE_EVENTS: false,
+  MULTIPLE_EVENTS: true,
   // If you have multiple events, add your events to the nav bar below
   // If you only have one event, you can leave the array empty
   // Find available icons at https://heroicons.com/
-  NAV_ITEMS: [] as NavItem[],
+  NAV_ITEMS: [
+    { name: "Pre LWCW", href: "/Pre-LWCW", icon: FilmIcon },
+    { name: "LWCW 2025", href: "/LWCW-2025", icon: UserGroupIcon },
+    { name: "Post LWCW", href: "/Post-LWCW", icon: BuildingLibraryIcon },
+  ] as NavItem[],
 };
