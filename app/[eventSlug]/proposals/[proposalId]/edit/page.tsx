@@ -29,7 +29,7 @@ export default async function EditProposalPage({
   const guests = await getGuestsByEvent(event.Name);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto pb-24">
       <SessionProposalForm
         eventID={event.ID}
         eventSlug={eventSlug}
