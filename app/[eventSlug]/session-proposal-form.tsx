@@ -14,6 +14,7 @@ import { ConfirmDeletionModal } from "../modals";
 import { Guest } from "@/db/guests";
 
 const DURATION_OPTIONS = [
+  { value: undefined, label: "Undecided" },
   { value: 30, label: "30 minutes" },
   { value: 60, label: "1 hour" },
   { value: 90, label: "1.5 hours" },
@@ -158,7 +159,7 @@ export function SessionProposalForm(props: {
         <div className="flex flex-col gap-1">
           <label className="font-medium">Duration</label>
           <fieldset>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid gap-3">
               {DURATION_OPTIONS.map(({ value, label }) => (
                 <div key={value} className="flex items-center">
                   <input
@@ -178,16 +179,6 @@ export function SessionProposalForm(props: {
               ))}
             </div>
           </fieldset>
-          <div className="space-y-4">
-            {durationMinutes && (
-              <button
-                className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-2 rounded-md items-center"
-                onClick={() => setDurationMinutes(undefined)}
-              >
-                Clear
-              </button>
-            )}
-          </div>
         </div>
 
         {error && (
