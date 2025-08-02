@@ -39,7 +39,7 @@ export function CurrentUserModal(props: {
   hosts: string[];
   open: boolean;
   close: () => void;
-  rsvp: () => Promise<void>;
+  rsvp: () => void;
   sessionInfoDisplay?: React.ReactNode;
   rsvpd: boolean;
 }) {
@@ -47,8 +47,8 @@ export function CurrentUserModal(props: {
   const { guests, hosts, open, close, rsvp, sessionInfoDisplay, rsvpd } = props;
   const isDisabled = hosts.includes(currentUser || "");
   const { user } = useContext(UserContext);
-  const onClickHandler = async () => {
-    await rsvp();
+  const onClickHandler = () => {
+    rsvp();
     close();
   };
   return (
@@ -65,7 +65,7 @@ export function CurrentUserModal(props: {
           <button
             type="button"
             className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm disabled:bg-gray-400 px-4 py-2 bg-rose-400 text-base font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 sm:text-sm mt-4"
-            onClick={() => void onClickHandler()}
+            onClick={onClickHandler}
             disabled={isDisabled}
           >
             {rsvpd ? "Un-RSVP" : "RSVP"}
