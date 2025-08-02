@@ -75,6 +75,17 @@ When deploying to Vercel, set your environment variables in the Vercel dashboard
 
 **Note:** Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser, while others remain server-side only.
 
+## Schedule proposal phase
+
+It is possible to have a preliminary session proposal phase before the event starts. It enables users to get feedback on their session ideas.
+
+It is split in three phases: proposal, voting, and scheduling.
+During the proposal phase, users can create session proposals and others can view them.
+During the voting phase, users can indicate interest for session proposals. This is not yet visible to the hosts of the proposals. It makes sense for proposal to keep going during voting.
+During the scheduling phase, hosts can view how many people were interested in their sessions. Also, the sessions board is unlocked, making it possible to turn your proposals into planned sessions.
+
+In order to have these phases, you need to set their dates on the corresponding Event record. The way to do that is to edit Airtable manually. If none are set then scheduling will be available all the time.
+
 ## Development
 
 Lint and run prettier locally. Note that `prettier` is configured so that it
@@ -86,6 +97,14 @@ bun prettier
 ```
 
 The following additions are made to the AirTable schema:
+
+- Added columns to the Events table, all of them of type Date with time included:
+  - Proposal start
+  - Proposal end
+  - Voting start
+  - Voting end
+  - Scheduling start
+  - Scheduling end
 
 - Added table SessionProposals with columns:
   - id - primary field - Formula type, the formula is RECORD_ID()
