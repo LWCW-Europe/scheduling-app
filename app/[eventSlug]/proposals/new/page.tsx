@@ -1,15 +1,13 @@
-import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
 import { SessionProposalForm } from "../../session-proposal-form";
-import { notFound } from "next/navigation";
 
-export default async function EditProposalPage({
+export default async function NewProposalPage({
   params,
 }: {
-  params: { eventSlug: string; proposalId: string };
+  params: { eventSlug: string };
 }) {
-  const { eventSlug, proposalId } = params;
+  const { eventSlug } = params;
 
   // Convert slug to event name (simple conversion for now)
   const eventName = eventSlug.replace(/-/g, " ");
@@ -19,21 +17,13 @@ export default async function EditProposalPage({
     return <div>Event not found</div>;
   }
 
-  const proposals = await getSessionProposalsByEvent(eventSlug);
-  const proposal = proposals.find((p) => p.id === proposalId);
-
-  if (!proposal) {
-    notFound();
-  }
-
   const guests = await getGuestsByEvent(event.Name);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto pb-24">
       <SessionProposalForm
         eventID={event.ID}
         eventSlug={eventSlug}
-        proposal={proposal}
         guests={guests}
       />
     </div>

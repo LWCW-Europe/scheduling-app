@@ -1,20 +1,20 @@
 "use client";
 
 import { useState, useContext, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Input } from "./input";
 import { UserContext } from "../context";
 import {
   createProposal,
   updateProposal,
   deleteProposal,
-} from "./activities/actions";
+} from "./proposals/actions";
 import { SessionProposal } from "@/db/sessionProposals";
 import { SelectHosts } from "@/app/[eventSlug]/session-form";
 import { ConfirmDeletionModal } from "../modals";
 import { Guest } from "@/db/guests";
 
 const DURATION_OPTIONS = [
+  { value: undefined, label: "Undecided" },
   { value: 30, label: "30 minutes" },
   { value: 60, label: "1 hour" },
   { value: 90, label: "1.5 hours" },
@@ -31,17 +31,18 @@ export function SessionProposalForm(props: {
 }) {
   const { eventID, eventSlug, proposal, guests } = props;
   const { user: currentUserId } = useContext(UserContext);
-  const router = useRouter();
 
   const [title, setTitle] = useState(proposal?.title || "");
   const [description, setDescription] = useState(proposal?.description || "");
-  const [hosts, setHosts] = useState(proposal?.hosts || []);
+  const [hosts, setHosts] = useState<string[]>([]);
   const [durationMinutes, setDurationMinutes] = useState(
-    proposal?.durationMinutes || 60
+    proposal?.durationMinutes
   );
 
   useEffect(() => {
-    if (!proposal && currentUserId) {
+    if (proposal) {
+      setHosts(proposal.hosts);
+    } else if (currentUserId) {
       setHosts([currentUserId]);
     }
   }, [proposal, currentUserId]);
@@ -61,7 +62,9 @@ export function SessionProposalForm(props: {
     formData.append("title", title);
     formData.append("description", description || "");
     hosts.forEach((host) => formData.append("hosts", host));
-    formData.append("durationMinutes", durationMinutes.toString());
+    if (durationMinutes) {
+      formData.append("durationMinutes", durationMinutes.toString());
+    }
 
     try {
       let result;
@@ -72,9 +75,7 @@ export function SessionProposalForm(props: {
       }
 
       if (result && "error" in result) {
-        setError(result.error as string);
-      } else {
-        router.push(`/${eventSlug}/activities`);
+        setError(result.error);
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -94,9 +95,7 @@ export function SessionProposalForm(props: {
       const result = await deleteProposal(proposal.id, eventSlug);
 
       if (result && "error" in result) {
-        setError(result.error as string);
-      } else {
-        router.push(`/${eventSlug}/activities`);
+        setError(result.error);
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -160,7 +159,7 @@ export function SessionProposalForm(props: {
         <div className="flex flex-col gap-1">
           <label className="font-medium">Duration</label>
           <fieldset>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid gap-3">
               {DURATION_OPTIONS.map(({ value, label }) => (
                 <div key={value} className="flex items-center">
                   <input
