@@ -18,7 +18,7 @@ export type NavItem = {
 
 export const CONSTS = {
   TITLE: "LWCW 2025",
-  DESCRIPTION: "[DEV INSTANCE] Berlin, Germany.",
+  DESCRIPTION: "LessWrong Community Weekend in Berlin, Germany.",
   MULTIPLE_EVENTS: true,
   // If you have multiple events, add your events to the nav bar below
   // If you only have one event, you can leave the array empty
