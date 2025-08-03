@@ -96,12 +96,12 @@ then there are no phases (i.e. sessions can be scheduled, that's it).
 
 You need to add the following columns to the Event table in your Airtable base:
 
-- `proposalPhaseStart`: Date
-- `proposalPhaseEnd`: Date
-- `votingPhaseStart`: Date
-- `votingPhaseEnd`: Date
-- `schedulingPhaseStart`: Date
-- `schedulingPhaseEnd`: Date
+- `proposalPhaseStart`: Date, format ISO, Include time, Display time zone
+- `proposalPhaseEnd`: (same)
+- `votingPhaseStart`: (same)
+- `votingPhaseEnd`: (same)
+- `schedulingPhaseStart`: (same)
+- `schedulingPhaseEnd`: (same)
 
 You also need to add a SessionProposals table to your Airtable base:
 
