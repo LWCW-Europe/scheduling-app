@@ -4,7 +4,6 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { MapModal } from "./modals";
 import { CONSTS, NavItem } from "@/utils/constants";
 
 export default function Example() {
@@ -39,9 +38,7 @@ export default function Example() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <MapModal />
-                </div>
+                <div className="flex items-center gap-3"></div>
               </div>
             </div>
           </div>
