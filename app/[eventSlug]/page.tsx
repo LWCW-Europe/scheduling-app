@@ -1,5 +1,7 @@
+import { EventPhase, getCurrentPhase } from "../utils/events";
 import { getEventByName } from "@/db/events";
 import EventPage from "./event-page";
+import { redirect } from "next/navigation";
 
 export default async function Page(props: { params: { eventSlug: string } }) {
   const { eventSlug } = props.params;
@@ -10,5 +12,13 @@ export default async function Page(props: { params: { eventSlug: string } }) {
     return "Event not found: " + eventName;
   }
 
-  return <EventPage event={event} />;
+  const phase = getCurrentPhase(event);
+
+  if (phase === EventPhase.SCHEDULING) {
+    return <EventPage event={event} />;
+  } else if (phase === EventPhase.VOTING || phase === EventPhase.PROPOSAL) {
+    redirect(`/${eventSlug}/proposals`);
+  } else {
+    return "Event unavailable: " + eventName;
+  }
 }

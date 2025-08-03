@@ -36,16 +36,19 @@ export function MapModal() {
 
 export function CurrentUserModal(props: {
   guests: Guest[];
+  hosts: string[];
   open: boolean;
   close: () => void;
-  rsvp: () => Promise<void>;
+  rsvp: () => void;
   sessionInfoDisplay?: React.ReactNode;
   rsvpd: boolean;
 }) {
-  const { guests, open, close, rsvp, sessionInfoDisplay, rsvpd } = props;
+  const { user: currentUser } = useContext(UserContext);
+  const { guests, hosts, open, close, rsvp, sessionInfoDisplay, rsvpd } = props;
+  const isDisabled = hosts.includes(currentUser || "");
   const { user } = useContext(UserContext);
-  const onClickHandler = async () => {
-    await rsvp();
+  const onClickHandler = () => {
+    rsvp();
     close();
   };
   return (
@@ -58,13 +61,21 @@ export function CurrentUserModal(props: {
         </div>
       }
       {user && (
-        <button
-          type="button"
-          className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-rose-400 text-base font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 sm:text-sm mt-4"
-          onClick={() => void onClickHandler()}
-        >
-          {rsvpd ? "Un-RSVP" : "RSVP"}
-        </button>
+        <div className="relative inline-block group">
+          <button
+            type="button"
+            className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm disabled:bg-gray-400 px-4 py-2 bg-rose-400 text-base font-medium text-white hover:bg-rose-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 sm:text-sm mt-4"
+            onClick={onClickHandler}
+            disabled={isDisabled}
+          >
+            {rsvpd ? "Un-RSVP" : "RSVP"}
+          </button>
+          {isDisabled && (
+            <div className="absolute bottom-3/4 left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+              Cannot RSVP for your own event
+            </div>
+          )}
+        </div>
       )}
     </Modal>
   );

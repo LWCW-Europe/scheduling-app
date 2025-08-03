@@ -75,6 +75,47 @@ When deploying to Vercel, set your environment variables in the Vercel dashboard
 
 **Note:** Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser, while others remain server-side only.
 
+## Event Phases
+
+It is possible to have multiple phases for your event to enable hosts to get
+feedback on their session ideas.
+
+There are three such phases:
+
+- Proposal Phase: Users can create session proposals and others can view them.
+- Voting Phase: Users can indicate interest in session proposals. This is not
+  yet visible to the hosts of the proposals. It makes sense for proposals to
+  keep going during voting.
+- Scheduling Phase: Hosts can view how many people were interested in their
+  sessions. Also, the sessions board is unlocked, making it possible to turn
+  your proposals into planned sessions.
+
+In order to have these phases, you need to set their dates on the corresponding
+Event record. The way to do that is to edit Airtable manually. If none are set
+then there are no phases (i.e. sessions can be scheduled, that's it).
+
+You need to add the following columns to the Event table in your Airtable base:
+
+- `proposalPhaseStart`: Date
+- `proposalPhaseEnd`: Date
+- `votingPhaseStart`: Date
+- `votingPhaseEnd`: Date
+- `schedulingPhaseStart`: Date
+- `schedulingPhaseEnd`: Date
+
+You also need to add a SessionProposals table to your Airtable base:
+
+- Create a new table named "SessionProposals"
+- Add the following fields:
+  - `id`: Primary field, type "Formula", formula is `RECORD_ID()
+  - `description`: Long text
+  - `durationMinutes`: Number
+  - `event`: Link to another record (Events),
+    "Allow linking to multiple records" **unchecked**
+  - `hosts`: Link to another record (Guests),
+    "Allow linking to multiple records" **checked**
+  - `title`: Single line text (Primary field)
+
 ## Development
 
 Lint and run prettier locally. Note that `prettier` is configured so that it
@@ -84,16 +125,6 @@ automatically writes changes to the files.
 bun lint
 bun prettier
 ```
-
-The following additions are made to the AirTable schema:
-
-- Added table SessionProposals with columns:
-  - id - primary field - Formula type, the formula is RECORD_ID()
-  - description - Long text
-  - durationMinutes - Number
-  - event - Link to another record (Events) - "Allow linking to multiple records" is unchecked
-  - hosts - Link to another record (Guests)
-  - title - Single line text (Primary field)
 
 ## Learn More
 
