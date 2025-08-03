@@ -30,7 +30,7 @@ export function ScheduleSettings(props: { guests: Guest[] }) {
         />
       </div>
       <div className="flex flex-col gap-1">
-        <span className="text-gray-500">Showing schedule for...</span>
+        <span className="text-gray-500">You are logged in as:</span>
         <UserSelect guests={guests} />
       </div>
     </div>
