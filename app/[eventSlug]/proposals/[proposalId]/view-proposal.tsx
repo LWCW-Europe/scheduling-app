@@ -43,7 +43,12 @@ export function ViewProposal(props: {
 
   return (
     <div className="max-w-2xl mx-auto pb-24">
-      <Proposal eventSlug={eventSlug} proposal={proposal} guests={guests} />
+      <Proposal
+        eventSlug={eventSlug}
+        proposal={proposal}
+        guests={guests}
+        showBackBtn={true}
+      />
 
       {canEdit() && (
         <div className="mt-6 flex gap-2 flex-wrap">

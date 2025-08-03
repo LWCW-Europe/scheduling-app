@@ -1,0 +1,27 @@
+import { base } from "@/db/db";
+import { VoteChoice } from "@/app/votes";
+
+type VoteParams = {
+  proposal: string;
+  guest: string;
+  choice: VoteChoice;
+};
+
+export const dynamic = "force-dynamic"; // defaults to auto
+
+export async function POST(req: Request) {
+  const { proposal, guest, choice } = (await req.json()) as VoteParams;
+  try {
+    const records = await base("Votes").create([
+      {
+        fields: { proposal: [proposal], guest: [guest], choice },
+      },
+    ]);
+    records.forEach((record) => console.log(record.getId()));
+  } catch (err) {
+    console.error(err);
+    return;
+  }
+
+  return Response.json({ success: true });
+}
