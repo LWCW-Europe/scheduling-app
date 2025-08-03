@@ -6,6 +6,8 @@ import Footer from "./footer";
 import { UserProvider } from "./context";
 import clsx from "clsx";
 import { CONSTS } from "@/utils/constants";
+import { isPasswordProtectionEnabledServer } from "@/utils/auth";
+import { LogoutButton } from "./logout-button";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -32,11 +34,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const showLogout = isPasswordProtectionEnabledServer();
+
   return (
     <html lang="en" className={fontVars}>
       <body className="font-monteserrat">
         <UserProvider>
           {CONSTS.MULTIPLE_EVENTS && <NavBar />}
+          {showLogout && !CONSTS.MULTIPLE_EVENTS && (
+            <div className="fixed top-4 right-4 z-50">
+              <LogoutButton />
+            </div>
+          )}
           <main
             className={clsx(
               "lg:px-24 sm:px-10 p-6",

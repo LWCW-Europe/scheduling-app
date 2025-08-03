@@ -6,8 +6,39 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ExportScheduleModal, MapModal } from "./modals";
 import { CONSTS, NavItem } from "@/utils/constants";
+import { LogoutButton } from "./logout-button";
+import { useEffect, useState } from "react";
 
 export default function Example() {
+  const [showLogout, setShowLogout] = useState(false);
+  const pathname = usePathname();
+
+  const checkAuth = () => {
+    // Check if password protection is enabled and user is authenticated
+    const hasAuthCookie = document.cookie.includes("site-auth=authenticated");
+    setShowLogout(hasAuthCookie);
+  };
+
+  useEffect(() => {
+    checkAuth();
+  }, [pathname]); // Re-check when pathname changes (like after login redirect)
+
+  // Listen for custom auth events (triggered by login/logout actions)
+  useEffect(() => {
+    const handleAuthChange = () => checkAuth();
+
+    // Listen for custom events
+    window.addEventListener("authStateChanged", handleAuthChange);
+
+    // Also listen for focus (when user returns to tab)
+    window.addEventListener("focus", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("authStateChanged", handleAuthChange);
+      window.removeEventListener("focus", handleAuthChange);
+    };
+  }, []);
+
   return (
     <Disclosure
       as="nav"
@@ -42,6 +73,7 @@ export default function Example() {
                 <div className="flex items-center gap-3">
                   <MapModal />
                   <ExportScheduleModal />
+                  {showLogout && <LogoutButton />}
                 </div>
               </div>
             </div>
@@ -51,6 +83,11 @@ export default function Example() {
               {CONSTS.NAV_ITEMS.map((item) => (
                 <SmallNavBarItem key={item.name} item={item} />
               ))}
+              {showLogout && (
+                <div className="px-1 pt-2 border-t border-gray-200">
+                  <LogoutButton className="w-full justify-start" />
+                </div>
+              )}
             </div>
           </Disclosure.Panel>
         </>
