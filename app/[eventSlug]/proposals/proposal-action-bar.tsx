@@ -32,13 +32,16 @@ export function ProposalActionBar({
         <span>Add Proposal</span>
       </Link>
       <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
-        <button
-          className="opacity-50 cursor-not-allowed bg-rose-400 text-white px-4 py-2 rounded-md flex items-center gap-2"
-          disabled
+        <Link
+          href={votingEnabled ? `/${eventSlug}/proposals/quick-voting` : "#"}
+          className={`bg-rose-400 text-white px-4 py-2 rounded-md flex items-center gap-2 ${
+            !votingEnabled ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          {...(!votingEnabled && { onClick: (e) => e.preventDefault() })}
         >
           <ChartBarIcon className="h-5 w-5" />
           <span>Go to Quick Voting!</span>
-        </button>
+        </Link>
       </HoverTooltip>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import Link from "next/link";
 import { PencilIcon, CalendarIcon } from "@heroicons/react/24/outline";
 
@@ -15,15 +15,55 @@ import { Proposal } from "@/app/[eventSlug]/proposal";
 import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { SessionProposal } from "@/db/sessionProposals";
+import { VoteChoice } from "@/app/votes";
 
 export function ViewProposal(props: {
   proposal: SessionProposal;
   guests: Guest[];
   eventSlug: string;
   event: Event;
+  vote: VoteChoice | null;
 }) {
-  const { proposal, guests, eventSlug, event } = props;
+  const { proposal, guests, eventSlug, event, vote: initialVote } = props;
   const { user: currentUserId } = useContext(UserContext);
+  const [vote, setVote] = useState(initialVote);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onClickVote = async (choice: VoteChoice) => {
+    if (!votingEnabled) {
+      return;
+    }
+    setIsLoading(true);
+    const previousVote = vote;
+    const newChoice = vote === choice ? null : choice;
+
+    let response: Response;
+    if (newChoice === null) {
+      response = await fetch("/api/delete-vote", {
+        method: "POST",
+        body: JSON.stringify({
+          proposalId: proposal.id,
+          guestId: currentUserId,
+        }),
+      });
+    } else {
+      response = await fetch("/api/add-vote", {
+        method: "POST",
+        body: JSON.stringify({
+          proposal: proposal.id,
+          guest: currentUserId,
+          choice: newChoice,
+        }),
+      });
+    }
+    if (response.ok) {
+      setVote(newChoice);
+    } else {
+      setVote(previousVote);
+    }
+    setIsLoading(false);
+  };
+
   const canEdit = () => {
     if (proposal.hosts.length === 0) {
       return true;
@@ -36,14 +76,26 @@ export function ViewProposal(props: {
     return currentUserId && proposal.hosts.includes(currentUserId);
   };
 
-  const votingEnabled = inVotingPhase(event);
+  const votingEnabled = !!currentUserId && inVotingPhase(event) && !isLoading;
   const schedEnabled = inSchedPhase(event);
-  const votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
+  let votingDisabledText = "";
+  if (!inVotingPhase(event)) {
+    votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
+  } else if (!currentUserId) {
+    votingDisabledText = "Select a user first";
+  } else if (isLoading) {
+    votingDisabledText = "Loading...";
+  }
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
 
   return (
     <div className="max-w-2xl mx-auto pb-24">
-      <Proposal eventSlug={eventSlug} proposal={proposal} guests={guests} />
+      <Proposal
+        eventSlug={eventSlug}
+        proposal={proposal}
+        guests={guests}
+        showBackBtn={true}
+      />
 
       {canEdit() && (
         <div className="mt-6 flex gap-2 flex-wrap">
@@ -60,7 +112,7 @@ export function ViewProposal(props: {
             <button
               onClick={(e) => e.stopPropagation()}
               className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
-              disabled
+              disabled={!schedEnabled}
             >
               <CalendarIcon className="h-3 w-3 mr-1" />
               Schedule
@@ -75,8 +127,11 @@ export function ViewProposal(props: {
           <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
             <button
               type="button"
-              className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
-              disabled
+              className={`rounded-md border border-black shadow-sm w-20 h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
+                ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
+                ${vote === VoteChoice.interested ? "bg-blue-200" : "bg-white"}`}
+              disabled={!votingEnabled}
+              onClick={() => void onClickVote(VoteChoice.interested)}
             >
               <div className="text-lg mb-1">❤️</div>
               <div className="text-xs">Interested</div>
@@ -85,8 +140,11 @@ export function ViewProposal(props: {
           <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
             <button
               type="button"
-              className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
-              disabled
+              className={`rounded-md border border-black shadow-sm w-20 h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
+                ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
+                ${vote === VoteChoice.maybe ? "bg-blue-200" : "bg-white"}`}
+              disabled={!votingEnabled}
+              onClick={() => void onClickVote(VoteChoice.maybe)}
             >
               <div className="text-lg mb-1">⭐</div>
               <div className="text-xs">Maybe</div>
@@ -95,8 +153,11 @@ export function ViewProposal(props: {
           <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
             <button
               type="button"
-              className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
-              disabled
+              className={`rounded-md border border-black shadow-sm w-20 h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
+                ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
+                ${vote === VoteChoice.skip ? "bg-blue-200" : "bg-white"}`}
+              disabled={!votingEnabled}
+              onClick={() => void onClickVote(VoteChoice.skip)}
             >
               <div className="text-lg mb-1">👋🏽</div>
               <div className="text-xs">Skip</div>

@@ -39,6 +39,20 @@ When using the type `Date` preferably use the following format:
 | hosts           | Link to another record (Guests) - Multiple | ✅       | Hosts of the session proposal       |
 | title           | Single line text                           | ✅       | Title of the session proposal       |
 | createdTime     | Created time                               | ✅       | When the proposal was created       |
+| votes           | Link to another record (Votes) - Multiple  |          | Votes on the proposal               |
+| votesCount      | Count                                      |          | Number of votes on the proposal     |
+
+## Votes Table
+
+| Field      | Type                                                 | Required | Description                          |
+| ---------- | ---------------------------------------------------- | -------- | ------------------------------------ | --------------- |
+| id         | Formula                                              | ✅       | Primary key, formula: `RECORD_ID()`  |
+| choice     | Single select                                        | ✅       | Vote choice: interested, maybe, skip |
+| guest      | Link to another record (Guests) - Only one           | ✅       |                                      | Guest who voted |
+| proposal   | Link to another record (SessionProposals) - Only one | ✅       | Proposal being voted on              |
+| guestId    | Lookup (guest.ID)                                    |          | ID of the guest who voted            |
+| proposalId | Lookup (proposal.ID)                                 |          | ID of the proposal being voted on    |
+| event      | Lookup (proposal.event)                              |          | Event associated with the proposal   |
 
 ## Migration History
 
