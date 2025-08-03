@@ -86,3 +86,18 @@ export function hasPhases(event: Event): boolean {
 
   return !!(proposalPhaseStart || votingPhaseStart || schedulingPhaseStart);
 }
+
+export function dateStartDescription(date?: Date): string {
+  if (date) {
+    const dateText = date.toLocaleString("en-GB", {
+      month: "numeric",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    return "will be enabled on " + dateText;
+  } else {
+    return "is not enabled";
+  }
+}

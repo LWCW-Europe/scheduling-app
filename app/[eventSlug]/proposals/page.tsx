@@ -1,10 +1,13 @@
+import Link from "next/link";
+import { PlusIcon, ChartBarIcon } from "@heroicons/react/24/outline";
+
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
 import { ProposalTable } from "./proposal-table";
-import Link from "next/link";
-import { PlusIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import { UserSelect } from "@/app/user-select";
+import HoverTooltip from "@/app/hover-tooltip";
+import { inVotingPhase, dateStartDescription } from "@/app/utils/events";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +30,9 @@ export default async function ProposalsPage({
     getGuestsByEvent(eventName),
     getSessionProposalsByEvent(eventName),
   ]);
+
+  const votingEnabled = inVotingPhase(event);
+  const votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -55,7 +61,7 @@ export default async function ProposalsPage({
             <PlusIcon className="h-5 w-5" />
             <span>Add Proposal</span>
           </Link>
-          <div className="relative inline-block group">
+          <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
             <button
               className="opacity-50 cursor-not-allowed bg-rose-400 text-white px-4 py-2 rounded-md flex items-center gap-2"
               disabled
@@ -63,10 +69,7 @@ export default async function ProposalsPage({
               <ChartBarIcon className="h-5 w-5" />
               <span>Go to Quick Voting!</span>
             </button>
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-              Voting is not yet enabled
-            </div>
-          </div>
+          </HoverTooltip>
         </div>
       </div>
 
@@ -90,6 +93,7 @@ export default async function ProposalsPage({
           guests={guests}
           proposals={proposals}
           eventSlug={eventSlug}
+          event={event}
         />
       )}
     </div>

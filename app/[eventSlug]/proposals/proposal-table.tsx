@@ -3,10 +3,6 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import Fuse from "fuse.js";
-
-import { UserContext } from "@/app/context";
-import type { SessionProposal } from "@/db/sessionProposals";
-import type { Guest } from "@/db/guests";
 import {
   PencilIcon,
   ClockIcon,
@@ -16,16 +12,29 @@ import {
   CalendarIcon,
 } from "@heroicons/react/24/outline";
 
+import HoverTooltip from "@/app/hover-tooltip";
+import { UserContext } from "@/app/context";
+import type { SessionProposal } from "@/db/sessionProposals";
+import type { Guest } from "@/db/guests";
+import {
+  inSchedPhase,
+  inVotingPhase,
+  dateStartDescription,
+} from "@/app/utils/events";
+import type { Event } from "@/db/events";
+
 const ITEMS_PER_PAGE = 10;
 
 export function ProposalTable({
   guests,
   proposals: paramProposals,
   eventSlug,
+  event,
 }: {
   guests: Guest[];
   proposals: SessionProposal[];
   eventSlug: string;
+  event: Event;
 }) {
   const initialProposals = paramProposals.map((proposal) => {
     const hostNames = proposal.hosts.map(
@@ -47,7 +56,10 @@ export function ProposalTable({
     return true;
   });
   const totalPages = Math.ceil(filteredProposals.length / ITEMS_PER_PAGE);
-  const votingEnabled = false;
+  const votingEnabled = inVotingPhase(event);
+  const schedEnabled = inSchedPhase(event);
+  const votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
+  const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
   function updateMyProposals(newValue: boolean) {
     setPage(1);
     setMyProposals(newValue);
@@ -186,7 +198,7 @@ export function ProposalTable({
                   </div>
                 )}
               </div>
-              <div className="relative inline-block group">
+              <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
                 <button
                   className="disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md bg-gray-400 transition-colors inline-flex items-center gap-2"
                   disabled={!votingEnabled}
@@ -195,13 +207,8 @@ export function ProposalTable({
                   <EyeSlashIcon className="h-4 w-4" />
                   Only unvoted
                 </button>
-                {!votingEnabled && (
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                    Voting is not yet enabled
-                  </div>
-                )}
-              </div>
-              <div className="relative inline-block group">
+              </HoverTooltip>
+              <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
                 <button
                   className="disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md bg-gray-400 transition-colors inline-flex items-center gap-2"
                   disabled={!votingEnabled}
@@ -210,12 +217,7 @@ export function ProposalTable({
                   <CheckCircleIcon className="h-4 w-4" />
                   Only voted
                 </button>
-                {!votingEnabled && (
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                    Voting is not yet enabled
-                  </div>
-                )}
-              </div>
+              </HoverTooltip>
               {myProposals && (
                 <button
                   onClick={() => {
@@ -328,44 +330,46 @@ export function ProposalTable({
                   </div>
                 </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                  <div className="flex gap-1 flex-col sm:flex-row">
-                    <div className="relative inline-block group">
-                      <button
-                        type="button"
-                        className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                        disabled
+                  {!canEdit(proposal.hosts) && (
+                    <div className="flex gap-1 flex-col sm:flex-row">
+                      <HoverTooltip
+                        text={votingDisabledText}
+                        visible={!votingEnabled}
                       >
-                        ❤️
-                      </button>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                        Voting is not yet enabled
-                      </div>
-                    </div>
-                    <div className="relative inline-block group">
-                      <button
-                        type="button"
-                        className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                        disabled
+                        <button
+                          type="button"
+                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
+                          disabled
+                        >
+                          ❤️
+                        </button>
+                      </HoverTooltip>
+                      <HoverTooltip
+                        text={votingDisabledText}
+                        visible={!votingEnabled}
                       >
-                        ⭐
-                      </button>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                        Voting is not yet enabled
-                      </div>
-                    </div>
-                    <div className="relative inline-block group">
-                      <button
-                        type="button"
-                        className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                        disabled
+                        <button
+                          type="button"
+                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
+                          disabled
+                        >
+                          ⭐
+                        </button>
+                      </HoverTooltip>
+                      <HoverTooltip
+                        text={votingDisabledText}
+                        visible={!votingEnabled}
                       >
-                        👋🏽
-                      </button>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                        Voting is not yet enabled
-                      </div>
+                        <button
+                          type="button"
+                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
+                          disabled
+                        >
+                          👋🏽
+                        </button>
+                      </HoverTooltip>
                     </div>
-                  </div>
+                  )}
                 </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                   <div className="flex gap-1 flex-col sm:flex-row">
@@ -386,7 +390,10 @@ export function ProposalTable({
                       </div>
                     )}
                     {canEdit(proposal.hosts) && (
-                      <div className="relative inline-block group">
+                      <HoverTooltip
+                        text={schedDisabledText}
+                        visible={!schedEnabled}
+                      >
                         <button
                           onClick={(e) => e.stopPropagation()}
                           className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
@@ -395,10 +402,7 @@ export function ProposalTable({
                           <CalendarIcon className="h-3 w-3 mr-1" />
                           Schedule
                         </button>
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                          Scheduling is not yet enabled
-                        </div>
-                      </div>
+                      </HoverTooltip>
                     )}
                   </div>
                 </td>
@@ -463,7 +467,10 @@ export function ProposalTable({
 
               <div className="pt-2 border-t border-gray-100 space-y-3">
                 <div className="flex gap-1">
-                  <div className="relative inline-block group">
+                  <HoverTooltip
+                    text={votingDisabledText}
+                    visible={!votingEnabled}
+                  >
                     <button
                       type="button"
                       className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
@@ -471,11 +478,11 @@ export function ProposalTable({
                     >
                       ❤️
                     </button>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                      Voting is not yet enabled
-                    </div>
-                  </div>
-                  <div className="relative inline-block group">
+                  </HoverTooltip>
+                  <HoverTooltip
+                    text={votingDisabledText}
+                    visible={!votingEnabled}
+                  >
                     <button
                       type="button"
                       className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
@@ -483,11 +490,11 @@ export function ProposalTable({
                     >
                       ⭐
                     </button>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                      Voting is not yet enabled
-                    </div>
-                  </div>
-                  <div className="relative inline-block group">
+                  </HoverTooltip>
+                  <HoverTooltip
+                    text={votingDisabledText}
+                    visible={!votingEnabled}
+                  >
                     <button
                       type="button"
                       className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
@@ -495,10 +502,7 @@ export function ProposalTable({
                     >
                       👋🏽
                     </button>
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                      Voting is not yet enabled
-                    </div>
-                  </div>
+                  </HoverTooltip>
                 </div>
 
                 <div className="flex gap-2">
@@ -519,7 +523,10 @@ export function ProposalTable({
                     </div>
                   )}
                   {canEdit(proposal.hosts) && (
-                    <div className="relative inline-block group">
+                    <HoverTooltip
+                      text={schedDisabledText}
+                      visible={!schedEnabled}
+                    >
                       <button
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
@@ -528,10 +535,7 @@ export function ProposalTable({
                         <CalendarIcon className="h-4 w-4 mr-1" />
                         Schedule
                       </button>
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                        Scheduling is not yet enabled
-                      </div>
-                    </div>
+                    </HoverTooltip>
                   )}
                 </div>
               </div>
