@@ -4,8 +4,15 @@ import { useContext } from "react";
 import Link from "next/link";
 import { PencilIcon, CalendarIcon } from "@heroicons/react/24/outline";
 
+import {
+  inVotingPhase,
+  inSchedPhase,
+  dateStartDescription,
+} from "@/app/utils/events";
+import HoverTooltip from "@/app/hover-tooltip";
 import { UserContext } from "@/app/context";
 import { Proposal } from "@/app/[eventSlug]/proposal";
+import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { SessionProposal } from "@/db/sessionProposals";
 
@@ -13,8 +20,9 @@ export function ViewProposal(props: {
   proposal: SessionProposal;
   guests: Guest[];
   eventSlug: string;
+  event: Event;
 }) {
-  const { proposal, guests, eventSlug } = props;
+  const { proposal, guests, eventSlug, event } = props;
   const { user: currentUserId } = useContext(UserContext);
   const canEdit = () => {
     if (proposal.hosts.length === 0) {
@@ -23,6 +31,11 @@ export function ViewProposal(props: {
       return currentUserId && proposal.hosts.includes(currentUserId);
     }
   };
+
+  const votingEnabled = inVotingPhase(event);
+  const schedEnabled = inSchedPhase(event);
+  const votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
+  const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
 
   return (
     <div className="max-w-2xl mx-auto pb-24">
@@ -39,7 +52,7 @@ export function ViewProposal(props: {
               Edit
             </Link>
           </div>
-          <div className="relative inline-block group">
+          <HoverTooltip text={schedDisabledText} visible={!schedEnabled}>
             <button
               onClick={(e) => e.stopPropagation()}
               className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
@@ -48,55 +61,45 @@ export function ViewProposal(props: {
               <CalendarIcon className="h-3 w-3 mr-1" />
               Schedule
             </button>
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-              Scheduling is not yet enabled
-            </div>
-          </div>
+          </HoverTooltip>
         </div>
       )}
 
       {/* Voting buttons section */}
-      <div className="mt-6 flex gap-3 flex-wrap">
-        <div className="relative inline-block group">
-          <button
-            type="button"
-            className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
-            disabled
-          >
-            <div className="text-lg mb-1">❤️</div>
-            <div className="text-xs">Interested</div>
-          </button>
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-            Voting is not yet enabled
-          </div>
+      {!canEdit() && (
+        <div className="mt-6 flex gap-3 flex-wrap">
+          <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
+            <button
+              type="button"
+              className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
+              disabled
+            >
+              <div className="text-lg mb-1">❤️</div>
+              <div className="text-xs">Interested</div>
+            </button>
+          </HoverTooltip>
+          <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
+            <button
+              type="button"
+              className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
+              disabled
+            >
+              <div className="text-lg mb-1">⭐</div>
+              <div className="text-xs">Maybe</div>
+            </button>
+          </HoverTooltip>
+          <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
+            <button
+              type="button"
+              className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
+              disabled
+            >
+              <div className="text-lg mb-1">👋🏽</div>
+              <div className="text-xs">Skip</div>
+            </button>
+          </HoverTooltip>
         </div>
-        <div className="relative inline-block group">
-          <button
-            type="button"
-            className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
-            disabled
-          >
-            <div className="text-lg mb-1">⭐</div>
-            <div className="text-xs">Maybe</div>
-          </button>
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-            Voting is not yet enabled
-          </div>
-        </div>
-        <div className="relative inline-block group">
-          <button
-            type="button"
-            className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm w-20 h-20 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale flex flex-col items-center justify-center"
-            disabled
-          >
-            <div className="text-lg mb-1">👋🏽</div>
-            <div className="text-xs">Skip</div>
-          </button>
-          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-            Voting is not yet enabled
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
