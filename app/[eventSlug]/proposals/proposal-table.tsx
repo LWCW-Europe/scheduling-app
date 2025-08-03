@@ -256,7 +256,7 @@ export function ProposalTable({
               </th>
               <th
                 scope="col"
-                className="w-[12%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="w-[15%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Host(s)
               </th>
@@ -268,13 +268,13 @@ export function ProposalTable({
               </th>
               <th
                 scope="col"
-                className="w-[8%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Duration
               </th>
               <th
                 scope="col"
-                className="w-[15%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Your votes
               </th>
