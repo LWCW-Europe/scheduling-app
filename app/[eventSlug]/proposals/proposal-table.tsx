@@ -22,6 +22,7 @@ import {
   dateStartDescription,
 } from "@/app/utils/events";
 import type { Event } from "@/db/events";
+import { Vote, VoteChoice } from "@/app/votes";
 
 const ITEMS_PER_PAGE = 1000;
 
@@ -30,16 +31,20 @@ type SortConfig = {
   direction: "asc" | "desc";
 };
 
+type Filter = "mine" | "voted" | "unvoted" | undefined;
+
 export function ProposalTable({
   guests,
   proposals: paramProposals,
   eventSlug,
   event,
+  initialVotes,
 }: {
   guests: Guest[];
   proposals: SessionProposal[];
   eventSlug: string;
   event: Event;
+  initialVotes: Vote[];
 }) {
   const initialProposals = paramProposals.map((proposal) => {
     const hostNames = proposal.hosts.map(
@@ -49,33 +54,55 @@ export function ProposalTable({
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [myProposals, setMyProposals] = useState(false);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "createdTime",
-    direction: "desc",
-  });
+  const [resultFilter, setResultFilter] = useState<Filter>(undefined);
+  const [votes, setVotes] = useState(initialVotes);
+  const [sortConfig, setSortConfig] = useState<SortConfig>(
+    inVotingPhase(event)
+      ? {
+          key: "votesCount",
+          direction: "asc",
+        }
+      : {
+          key: "createdTime",
+          direction: "desc",
+        }
+  );
   const { user: currentUserId } = useContext(UserContext);
   const router = useRouter();
   const filteredProposals = initialProposals.filter((pr) => {
-    if (myProposals && currentUserId) {
-      if (!pr.hosts.includes(currentUserId)) {
-        return false;
+    if (currentUserId && resultFilter) {
+      const isMine = pr.hosts.includes(currentUserId);
+      const hasVoted = votes.some((vote) => vote.proposal === pr.id);
+      let actual: Filter;
+      if (isMine) {
+        actual = "mine";
+      } else if (hasVoted) {
+        actual = "voted";
+      } else {
+        actual = "unvoted";
       }
+      return resultFilter === actual;
+    } else {
+      return true;
     }
-    return true;
   });
   const totalPages = Math.ceil(filteredProposals.length / ITEMS_PER_PAGE);
-  const votingEnabled = inVotingPhase(event);
+  const votingEnabled = !!currentUserId && inVotingPhase(event);
   const schedEnabled = inSchedPhase(event);
-  const votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
-  const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
-  function updateMyProposals(newValue: boolean) {
+  const votingDisabledText = !inVotingPhase(event)
+    ? `Voting ${dateStartDescription(event.votingPhaseStart)}`
+    : "Select a user first";
+  const schedDisabledText =
+    "Scheduling " + dateStartDescription(event.schedulingPhaseStart);
+  function updateResultFilter(newFilter: Filter) {
     setPage(1);
-    setMyProposals(newValue);
+    setResultFilter((oldFilter) =>
+      oldFilter === newFilter ? undefined : newFilter
+    );
   }
   useEffect(() => {
     if (!currentUserId) {
-      setMyProposals(false);
+      setResultFilter(undefined);
     }
   }, [currentUserId]);
   const fuse = new Fuse(filteredProposals, {
@@ -123,6 +150,8 @@ export function ProposalTable({
       cmp = (a[key] || 0) - (b[key] || 0);
     } else if (key === "createdTime") {
       cmp = new Date(a[key]).getTime() - new Date(b[key]).getTime();
+    } else if (key === "votesCount") {
+      cmp = (a[key] || 0) - (b[key] || 0);
     }
     return direction === "asc" ? cmp : -cmp;
   });
@@ -202,6 +231,87 @@ export function ProposalTable({
     setSortConfig({ key, direction });
   };
 
+  const eventName = eventSlug.replace(/-/g, " ");
+  useEffect(() => {
+    if (!currentUserId) {
+      return;
+    } else if (!votes.every((vote) => vote.guest !== currentUserId)) {
+      return;
+    }
+
+    const fetchVotes = async (user: string) => {
+      const res = await fetch(`/api/votes?user=${user}&event=${eventName}`);
+      const newVotes = (await res.json()) as Vote[];
+      if (!(votes.length === 0 && newVotes.length === 0)) {
+        setVotes(newVotes);
+      }
+    };
+
+    void fetchVotes(currentUserId);
+  }, [currentUserId, eventName, votes]);
+
+  // update votes optimistically
+  async function vote(proposalId: string, choice: VoteChoice) {
+    if (!votingEnabled) {
+      return;
+    }
+    setVotes((prev) => prev.filter((v) => v.proposal !== proposalId));
+    const existingVote = votes.find((v) => v.proposal === proposalId);
+    if (existingVote?.choice === choice) {
+      return deleteVote(proposalId);
+    }
+    const votesAtStart = votes;
+
+    try {
+      const newVote: Vote = {
+        proposal: proposalId,
+        guest: currentUserId,
+        choice: choice,
+      };
+      setVotes((prevVotes) => [...prevVotes, newVote]);
+
+      const response = await fetch("/api/add-vote", {
+        method: "POST",
+        body: JSON.stringify(newVote),
+      });
+
+      if (!response.ok) {
+        // Revert optimistic update on failure
+        setVotes(votesAtStart);
+      }
+      return response.ok;
+    } catch (error: unknown) {
+      // Revert optimistic update on error
+      console.error("Error updating vote: ", error);
+      setVotes(votesAtStart);
+      return false;
+    }
+  }
+
+  async function deleteVote(proposalId: string) {
+    const votesAtStart = votes;
+    try {
+      const response = await fetch("/api/delete-vote", {
+        method: "POST",
+        body: JSON.stringify({
+          proposalId,
+          guestId: currentUserId,
+        }),
+      });
+
+      if (!response.ok) {
+        // Revert optimistic update on failure
+        setVotes(votesAtStart);
+      }
+      return response.ok;
+    } catch (error: unknown) {
+      // Revert optimistic update on error
+      console.error("Error deleting vote: ", error);
+      setVotes(votesAtStart);
+      return false;
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Search & Filter Section */}
@@ -221,22 +331,22 @@ export function ProposalTable({
               <div className="relative inline-block group">
                 <button
                   className={`disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md transition-colors inline-flex items-center gap-2 ${
-                    myProposals
+                    resultFilter === "mine"
                       ? "bg-blue-600 hover:bg-blue-700"
                       : currentUserId
                         ? "bg-gray-400 hover:bg-gray-500"
                         : "bg-gray-400"
                   }`}
-                  onClick={() => updateMyProposals(!myProposals)}
+                  onClick={() => updateResultFilter("mine")}
                   disabled={!currentUserId}
-                  aria-pressed={myProposals}
-                  aria-label={`Filter to show only your proposals${myProposals ? " (active)" : ""}`}
+                  aria-pressed={resultFilter === "mine"}
+                  aria-label={`Filter to show only your proposals${resultFilter === "mine" ? " (active)" : ""}`}
                 >
                   <UserIcon className="h-4 w-4" />
                   My proposals
-                  {myProposals && currentUserId && (
+                  {resultFilter === "mine" && (
                     <span className="bg-blue-800 text-white text-xs px-1.5 py-0.5 rounded-full">
-                      {searchResults.length}
+                      {filteredProposals.length}
                     </span>
                   )}
                 </button>
@@ -248,30 +358,51 @@ export function ProposalTable({
               </div>
               <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
                 <button
-                  className="disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md bg-gray-400 transition-colors inline-flex items-center gap-2"
+                  className={`disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md transition-colors inline-flex items-center gap-2 ${
+                    resultFilter === "unvoted"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : currentUserId
+                        ? "bg-gray-400 hover:bg-gray-500"
+                        : "bg-gray-400"
+                  }`}
                   disabled={!votingEnabled}
-                  aria-label="Filter to show only unvoted proposals (not available yet)"
+                  aria-label="Filter to show only unvoted proposals"
+                  onClick={() => updateResultFilter("unvoted")}
                 >
                   <EyeSlashIcon className="h-4 w-4" />
                   Only unvoted
+                  {resultFilter === "unvoted" && (
+                    <span className="bg-blue-800 text-white text-xs px-1.5 py-0.5 rounded-full">
+                      {filteredProposals.length}
+                    </span>
+                  )}
                 </button>
               </HoverTooltip>
               <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
                 <button
-                  className="disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md bg-gray-400 transition-colors inline-flex items-center gap-2"
+                  className={`disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md transition-colors inline-flex items-center gap-2 ${
+                    resultFilter === "voted"
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : currentUserId
+                        ? "bg-gray-400 hover:bg-gray-500"
+                        : "bg-gray-400"
+                  }`}
                   disabled={!votingEnabled}
-                  aria-label="Filter to show only voted proposals (not available yet)"
+                  aria-label="Filter to show only voted proposals"
+                  onClick={() => updateResultFilter("voted")}
                 >
                   <CheckCircleIcon className="h-4 w-4" />
                   Only voted
+                  {resultFilter === "voted" && (
+                    <span className="bg-blue-800 text-white text-xs px-1.5 py-0.5 rounded-full">
+                      {filteredProposals.length}
+                    </span>
+                  )}
                 </button>
               </HoverTooltip>
-              {myProposals && (
+              {resultFilter && (
                 <button
-                  onClick={() => {
-                    setMyProposals(false);
-                    setPage(1);
-                  }}
+                  onClick={() => updateResultFilter(undefined)}
                   className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 transition-colors inline-flex items-center gap-1"
                   aria-label="Clear all active filters"
                 >
@@ -408,37 +539,55 @@ export function ProposalTable({
                   {currentUserId && !proposal.hosts.includes(currentUserId) && (
                     <div className="flex gap-1 flex-col sm:flex-row">
                       <HoverTooltip
-                        text={votingDisabledText}
-                        visible={!votingEnabled}
+                        text={votingEnabled ? "Interested" : votingDisabledText}
+                        visible={true}
                       >
                         <button
                           type="button"
-                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                          disabled
+                          className={`rounded-md border border-black shadow-sm px-1 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
+                            ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
+                            ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.interested) ? "bg-blue-200" : "bg-white"}`}
+                          disabled={!votingEnabled}
+                          onClick={(e) => {
+                            void vote(proposal.id, VoteChoice.interested);
+                            e.stopPropagation();
+                          }}
                         >
                           ❤️
                         </button>
                       </HoverTooltip>
                       <HoverTooltip
-                        text={votingDisabledText}
-                        visible={!votingEnabled}
+                        text={votingEnabled ? "Maybe" : votingDisabledText}
+                        visible={true}
                       >
                         <button
                           type="button"
-                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                          disabled
+                          className={`rounded-md border border-black shadow-sm px-1 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
+                            ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
+                            ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.maybe) ? "bg-blue-200" : "bg-white"}`}
+                          disabled={!votingEnabled}
+                          onClick={(e) => {
+                            void vote(proposal.id, VoteChoice.maybe);
+                            e.stopPropagation();
+                          }}
                         >
                           ⭐
                         </button>
                       </HoverTooltip>
                       <HoverTooltip
-                        text={votingDisabledText}
-                        visible={!votingEnabled}
+                        text={votingEnabled ? "Skip" : votingDisabledText}
+                        visible={true}
                       >
                         <button
                           type="button"
-                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                          disabled
+                          className={`rounded-md border border-black shadow-sm px-1 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
+                            ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
+                            ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.skip) ? "bg-blue-200" : "bg-white"}`}
+                          disabled={!votingEnabled}
+                          onClick={(e) => {
+                            void vote(proposal.id, VoteChoice.skip);
+                            e.stopPropagation();
+                          }}
                         >
                           👋🏽
                         </button>
@@ -472,7 +621,7 @@ export function ProposalTable({
                         <button
                           onClick={(e) => e.stopPropagation()}
                           className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
-                          disabled
+                          disabled={!schedEnabled}
                         >
                           <CalendarIcon className="h-3 w-3 mr-1" />
                           Schedule
@@ -543,37 +692,55 @@ export function ProposalTable({
               <div className="pt-2 border-t border-gray-100 space-y-3">
                 <div className="flex gap-1">
                   <HoverTooltip
-                    text={votingDisabledText}
-                    visible={!votingEnabled}
+                    text={votingEnabled ? "Interested" : votingDisabledText}
+                    visible={true}
                   >
                     <button
                       type="button"
-                      className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                      disabled
+                      className={`rounded-md border border-black shadow-sm px-2 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
+                        ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
+                        ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.interested) ? "bg-blue-200" : "bg-white"}`}
+                      disabled={!votingEnabled}
+                      onClick={(e) => {
+                        void vote(proposal.id, VoteChoice.interested);
+                        e.stopPropagation();
+                      }}
                     >
                       ❤️
                     </button>
                   </HoverTooltip>
                   <HoverTooltip
-                    text={votingDisabledText}
-                    visible={!votingEnabled}
+                    text={votingEnabled ? "Maybe" : votingDisabledText}
+                    visible={true}
                   >
                     <button
                       type="button"
-                      className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                      disabled
+                      className={`rounded-md border border-black shadow-sm px-2 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
+                        ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
+                        ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.maybe) ? "bg-blue-200" : "bg-white"}`}
+                      disabled={!votingEnabled}
+                      onClick={(e) => {
+                        void vote(proposal.id, VoteChoice.maybe);
+                        e.stopPropagation();
+                      }}
                     >
                       ⭐
                     </button>
                   </HoverTooltip>
                   <HoverTooltip
-                    text={votingDisabledText}
-                    visible={!votingEnabled}
+                    text={votingEnabled ? "Skip" : votingDisabledText}
+                    visible={true}
                   >
                     <button
                       type="button"
-                      className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                      disabled
+                      className={`rounded-md border border-black shadow-sm px-2 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
+                        ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
+                        ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.skip) ? "bg-blue-200" : "bg-white"}`}
+                      disabled={!votingEnabled}
+                      onClick={(e) => {
+                        void vote(proposal.id, VoteChoice.skip);
+                        e.stopPropagation();
+                      }}
                     >
                       👋🏽
                     </button>
@@ -605,7 +772,7 @@ export function ProposalTable({
                       <button
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
-                        disabled
+                        disabled={!schedEnabled}
                       >
                         <CalendarIcon className="h-4 w-4 mr-1" />
                         Schedule
