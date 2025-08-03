@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useContext, useEffect } from "react";
+import Link from "next/link";
+
 import { Input } from "./input";
 import { UserContext } from "../context";
 import {
@@ -107,6 +109,12 @@ export function SessionProposalForm(props: {
 
   return (
     <div className="flex flex-col gap-4">
+      <Link
+        className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
+        href={`/${eventSlug}/proposals`}
+      >
+        Back to Proposals
+      </Link>
       <div>
         <h2 className="text-2xl font-bold">
           {proposal ? "Edit" : "Add"} Session Proposal

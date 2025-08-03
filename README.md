@@ -43,6 +43,17 @@ AIRTABLE_BASE_ID=your_airtable_base_id
 
 ### Optional Variables
 
+#### Site Protection
+
+You can add basic password protection to your entire site:
+
+```bash
+# Site-wide password protection (leave unset to disable protection)
+SITE_PASSWORD=your_secure_password
+```
+
+When `SITE_PASSWORD` is set, users must enter this password to access any part of the application. The authentication persists for 7 days via secure cookies. If this variable is not set, no protection is applied (useful for development).
+
 #### Footer Configuration
 
 You can customize the footer content that appears on the right side next to the version information:
@@ -69,6 +80,7 @@ When deploying to Vercel, set your environment variables in the Vercel dashboard
 3. Add the required variables:
    - `AIRTABLE_API_KEY` (keep this secret)
    - `AIRTABLE_BASE_ID`
+   - `SITE_PASSWORD` (optional, for site protection)
    - `NEXT_PUBLIC_FOOTER_RIGHT_HTML` (optional)
 4. Set the appropriate environment (Production, Preview, Development)
 5. Deploy your application
@@ -96,12 +108,12 @@ then there are no phases (i.e. sessions can be scheduled, that's it).
 
 You need to add the following columns to the Event table in your Airtable base:
 
-- `proposalPhaseStart`: Date
-- `proposalPhaseEnd`: Date
-- `votingPhaseStart`: Date
-- `votingPhaseEnd`: Date
-- `schedulingPhaseStart`: Date
-- `schedulingPhaseEnd`: Date
+- `proposalPhaseStart`: Date, format ISO, Include time, Display time zone
+- `proposalPhaseEnd`: (same)
+- `votingPhaseStart`: (same)
+- `votingPhaseEnd`: (same)
+- `schedulingPhaseStart`: (same)
+- `schedulingPhaseEnd`: (same)
 
 You also need to add a SessionProposals table to your Airtable base:
 
