@@ -1,13 +1,11 @@
 import Link from "next/link";
-import { PlusIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
 import { ProposalTable } from "./proposal-table";
+import { ProposalActionBar } from "./proposal-action-bar";
 import { UserSelect } from "@/app/user-select";
-import HoverTooltip from "@/app/hover-tooltip";
-import { inVotingPhase, dateStartDescription } from "@/app/utils/events";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +29,6 @@ export default async function ProposalsPage({
     getSessionProposalsByEvent(eventName),
   ]);
 
-  const votingEnabled = inVotingPhase(event);
-  const votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col gap-1">
@@ -51,26 +46,7 @@ export default async function ProposalsPage({
             </p>
           </div>
         </div>
-
-        {/* Action Bar */}
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-6">
-          <Link
-            href={`/${eventSlug}/proposals/new`}
-            className="bg-rose-400 text-white px-4 py-2 rounded-md flex items-center gap-2 hover:bg-rose-500 transition-colors"
-          >
-            <PlusIcon className="h-5 w-5" />
-            <span>Add Proposal</span>
-          </Link>
-          <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
-            <button
-              className="opacity-50 cursor-not-allowed bg-rose-400 text-white px-4 py-2 rounded-md flex items-center gap-2"
-              disabled
-            >
-              <ChartBarIcon className="h-5 w-5" />
-              <span>Go to Quick Voting!</span>
-            </button>
-          </HoverTooltip>
-        </div>
+        <ProposalActionBar eventSlug={eventSlug} event={event} />
       </div>
 
       {proposals.length === 0 ? (
