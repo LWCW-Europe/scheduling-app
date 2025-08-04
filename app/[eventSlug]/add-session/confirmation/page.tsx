@@ -2,7 +2,8 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function Confirmation() {
+export default function Confirmation(props: { params: { eventSlug: string } }) {
+  const { eventSlug } = props.params;
   const searchParams = useSearchParams();
   const actionType = searchParams?.get("actionType");
   const actionDescription = actionType === "updated" ? "updated" : "added";
@@ -15,7 +16,7 @@ export default function Confirmation() {
       </p>
       <Link
         className="bg-rose-400 mt-8 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 mx-auto px-12"
-        href="/"
+        href={`/${eventSlug}`}
       >
         Back to schedule
       </Link>
