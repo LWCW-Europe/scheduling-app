@@ -23,6 +23,7 @@ export function SessionBlock(props: {
   guests: Guest[];
 }) {
   const { eventName, session, location, day, guests } = props;
+  const eventSlug = eventName.replace(/ /g, "-");
   const { rsvpdForSession } = useContext(EventContext);
   const { user } = useContext(UserContext);
   const rsvpd = rsvpdForSession(session.ID + (user ? "" : ""));
@@ -43,7 +44,7 @@ export function SessionBlock(props: {
       startTime < new Date(day.EndBookings as Date | string).getTime());
   return isBookable ? (
     <BookableSessionCard
-      eventName={eventName}
+      eventSlug={eventSlug}
       session={session}
       location={location}
       numHalfHours={numHalfHours}
@@ -54,7 +55,7 @@ export function SessionBlock(props: {
         <BlankSessionCard numHalfHours={numHalfHours} />
       ) : (
         <RealSessionCard
-          eventName={eventName}
+          eventSlug={eventSlug}
           session={session}
           location={location}
           numHalfHours={numHalfHours}
@@ -70,16 +71,15 @@ export function BookableSessionCard(props: {
   location: Location;
   session: Session;
   numHalfHours: number;
-  eventName: string;
+  eventSlug: string;
 }) {
-  const { numHalfHours, session, location, eventName } = props;
+  const { numHalfHours, session, location, eventSlug } = props;
   const dayParam = DateTime.fromISO(session["Start time"])
     .setZone("America/Los_Angeles")
     .toFormat("MM-dd");
   const timeParam = DateTime.fromISO(session["Start time"])
     .setZone("America/Los_Angeles")
     .toFormat("HH:mm");
-  const eventSlug = eventName.replace(/ /g, "-");
   return (
     <div className={`row-span-${numHalfHours} my-0.5 min-h-10`}>
       <Link
@@ -98,14 +98,14 @@ function BlankSessionCard(props: { numHalfHours: number }) {
 }
 
 export function RealSessionCard(props: {
-  eventName: string;
+  eventSlug: string;
   session: Session;
   numHalfHours: number;
   location: Location;
   guests: Guest[];
   rsvpd: boolean;
 }) {
-  const { eventName, session, numHalfHours, location, guests, rsvpd } = props;
+  const { eventSlug, session, numHalfHours, location, guests, rsvpd } = props;
   const { user: currentUser } = useContext(UserContext);
   const { updateRsvp, localSessions, userBusySessions } =
     useContext(EventContext);
@@ -123,6 +123,8 @@ export function RealSessionCard(props: {
 
   const handleClick = () => {
     if (hostStatus) {
+      const url = `/${eventSlug}/edit-session?sessionID=${session.ID}`;
+      router.push(url);
       return;
     }
 
@@ -147,13 +149,6 @@ export function RealSessionCard(props: {
     void updateRsvp(currentUser, session.ID, rsvpd).then(() =>
       setIsRsvping(false)
     );
-  };
-
-  const onClickEdit = () => {
-    const url = `/${eventName.replace(/ /g, "-")}/edit-session?sessionID=${
-      session.ID
-    }`;
-    router.push(url);
   };
 
   // Get the current number of RSVPs from the context
@@ -216,7 +211,7 @@ export function RealSessionCard(props: {
       />
       <button
         className={clsx(
-          "py-1 px-1 rounded font-roboto h-full min-h-10 cursor-pointer flex flex-col relative w-full",
+          "py-1 px-1 rounded font-roboto h-full min-h-10 cursor-pointer flex flex-col relative w-full group",
           lowerOpacity
             ? `bg-${location.Color}-${200} border-2 border-${
                 location.Color
@@ -251,10 +246,9 @@ export function RealSessionCard(props: {
         </p>
         {hostStatus && (
           <PencilSquareIcon
-            onClick={onClickEdit}
             className={clsx(
               "absolute h-5 w-5 top-0 right-0",
-              "text-gray-600 hover:text-black",
+              "text-gray-600 group-hover:text-black",
               "cursor-pointer"
             )}
           />
