@@ -121,11 +121,14 @@ export function RealSessionCard(props: {
   const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
   const screenWidth = useScreenWidth();
   const onMobile = screenWidth < 640;
+  const isEditable = hostStatus && session["Attendee scheduled"];
 
   const handleClick = () => {
-    if (hostStatus) {
+    if (isEditable) {
       const url = `/${eventSlug}/edit-session?sessionID=${session.ID}`;
       router.push(url);
+      return;
+    } else if (hostStatus) {
       return;
     }
 
@@ -245,7 +248,7 @@ export function RealSessionCard(props: {
         >
           {formattedHostNames}
         </p>
-        {hostStatus && (
+        {isEditable && (
           <PencilSquareIcon
             className={clsx(
               "absolute h-5 w-5 top-0 right-0",

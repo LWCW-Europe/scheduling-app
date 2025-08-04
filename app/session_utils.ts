@@ -12,6 +12,7 @@ export function newEmptySession(): Session {
     "Location name": [],
     Capacity: 0,
     "Num RSVPs": 0,
+    "Attendee scheduled": true,
   };
 }
 
