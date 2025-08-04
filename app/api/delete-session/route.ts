@@ -1,14 +1,31 @@
 import { base } from "@/db/db";
+import type { Session } from "@/db/sessions";
 
 export const dynamic = "force-dynamic"; // defaults to auto
 
 export async function POST(req: Request) {
-  const params = (await req.json()) as { id: string };
+  const { id } = (await req.json()) as { id: string };
+  let canEdit = true;
+  await base<Session>("Sessions")
+    .select({
+      fields: ["Attendee scheduled"],
+      filterByFormula: `{ID} = "${id}"`,
+    })
+    .eachPage(function page(records, fetchNextPage) {
+      if (records.some((r) => !r.fields["Attendee scheduled"])) {
+        canEdit = false;
+      }
+      fetchNextPage();
+    });
+  if (!canEdit) {
+    return new Response("Cannot delete via web app", { status: 400 });
+  }
+
   try {
     // This deletes all RSVPs for the session
     await base("RSVPs")
       .select({
-        filterByFormula: `{Session} = "${params.id}"`,
+        filterByFormula: `{Session} = "${id}"`,
       })
       .eachPage(function page(records, fetchNextPage) {
         const recordIds = records.map((record) => record.getId());
@@ -18,7 +35,7 @@ export async function POST(req: Request) {
               console.error("Error deleting RSVPs:", err);
             } else {
               console.log(
-                `Deleted ${recordIds.length} RSVPs for session ${params.id}`
+                `Deleted ${recordIds.length} RSVPs for session ${id}`
               );
             }
           });
@@ -26,7 +43,7 @@ export async function POST(req: Request) {
         fetchNextPage();
       });
 
-    const records = await base("Sessions").destroy([params.id]);
+    const records = await base("Sessions").destroy([id]);
     records?.forEach(function (record) {
       console.log(`Deleted session: ${record.getId()}`);
     });
