@@ -7,6 +7,7 @@ export type SessionProposal = {
   description?: string;
   hosts: string[];
   durationMinutes?: number;
+  createdTime: string;
 };
 
 export type NewProposalInput = {
@@ -21,7 +22,14 @@ export async function getSessionProposalsByEvent(event: string) {
   const proposals: SessionProposal[] = [];
   await base("SessionProposals")
     .select({
-      fields: ["event", "title", "description", "hosts", "durationMinutes"],
+      fields: [
+        "event",
+        "title",
+        "description",
+        "hosts",
+        "durationMinutes",
+        "createdTime",
+      ],
       filterByFormula: `{event} = "${event}"`,
     })
     .eachPage(function page(records, fetchNextPage) {
