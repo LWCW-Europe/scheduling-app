@@ -23,7 +23,7 @@ import {
 } from "@/app/utils/events";
 import type { Event } from "@/db/events";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 1000;
 
 export function ProposalTable({
   guests,
