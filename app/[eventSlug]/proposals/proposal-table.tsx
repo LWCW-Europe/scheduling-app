@@ -25,6 +25,11 @@ import type { Event } from "@/db/events";
 
 const ITEMS_PER_PAGE = 1000;
 
+type SortConfig = {
+  key: keyof SessionProposal;
+  direction: "asc" | "desc";
+};
+
 export function ProposalTable({
   guests,
   proposals: paramProposals,
@@ -45,6 +50,10 @@ export function ProposalTable({
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [myProposals, setMyProposals] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: "createdTime",
+    direction: "desc",
+  });
   const { user: currentUserId } = useContext(UserContext);
   const router = useRouter();
   const filteredProposals = initialProposals.filter((pr) => {
@@ -88,6 +97,36 @@ export function ProposalTable({
   const searchResults = searchQuery.trim()
     ? fuse.search(searchQuery).map((res) => res.item)
     : filteredProposals;
+  searchResults.sort((a, b) => {
+    const { key, direction } = sortConfig;
+
+    let cmp = 0;
+    if (key === "title") {
+      cmp = a[key].localeCompare(b[key]);
+    } else if (key === "hosts") {
+      // Missing or empty values are always last
+      if (a[key].length === 0 && b[key].length === 0) {
+        return 0;
+      } else if (a[key].length === 0) {
+        return -1;
+      } else if (b[key].length === 0) {
+        return 1;
+      }
+
+      const hostNames = (hosts: string[]) =>
+        guests
+          .filter((g) => hosts.includes(g.ID))
+          .map((g) => g.Name)
+          .sort()
+          .join("");
+      cmp = hostNames(a.hosts).localeCompare(hostNames(b.hosts));
+    } else if (key === "durationMinutes") {
+      cmp = (a[key] || 0) - (b[key] || 0);
+    } else if (key === "createdTime") {
+      cmp = new Date(a[key]).getTime() - new Date(b[key]).getTime();
+    }
+    return direction === "asc" ? cmp : -cmp;
+  });
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -152,6 +191,16 @@ export function ProposalTable({
     } else {
       return currentUserId && hosts.includes(currentUserId);
     }
+  };
+
+  const handleSort = (key: keyof SessionProposal) => {
+    let direction: "asc" | "desc" = "asc";
+
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+
+    setSortConfig({ key, direction });
   };
 
   return (
@@ -251,16 +300,30 @@ export function ProposalTable({
           <thead className="bg-gray-50">
             <tr>
               <th
+                onClick={() => handleSort("title")}
                 scope="col"
-                className="w-[20%] text-left px-4 lg:px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className={`w-[20%] text-left px-4 lg:px-6 py-3 text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                  ${sortConfig.key === "title" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Title
+                {sortConfig.key === "title"
+                  ? sortConfig.direction === "asc"
+                    ? " ↓"
+                    : " ↑"
+                  : " ↑↓"}
               </th>
               <th
+                onClick={() => handleSort("hosts")}
                 scope="col"
-                className="w-[15%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className={`w-[15%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                  ${sortConfig.key === "hosts" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Host(s)
+                {sortConfig.key === "hosts"
+                  ? sortConfig.direction === "asc"
+                    ? " ↓"
+                    : " ↑"
+                  : " ↑↓"}
               </th>
               <th
                 scope="col"
@@ -269,10 +332,17 @@ export function ProposalTable({
                 Description
               </th>
               <th
+                onClick={() => handleSort("durationMinutes")}
                 scope="col"
-                className="w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                  ${sortConfig.key === "durationMinutes" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Duration
+                {sortConfig.key === "durationMinutes"
+                  ? sortConfig.direction === "asc"
+                    ? " ↓"
+                    : " ↑"
+                  : " ↑↓"}
               </th>
               <th
                 scope="col"

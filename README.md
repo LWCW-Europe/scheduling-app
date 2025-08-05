@@ -127,6 +127,7 @@ You also need to add a SessionProposals table to your Airtable base:
   - `hosts`: Link to another record (Guests),
     "Allow linking to multiple records" **checked**
   - `title`: Single line text (Primary field)
+  - `createdTime`: Created time
 
 ## Development
 
