@@ -336,7 +336,7 @@ export function ProposalTable({
                   </div>
                 </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                  {!canEdit(proposal.hosts) && (
+                  {currentUserId && !proposal.hosts.includes(currentUserId) && (
                     <div className="flex gap-1 flex-col sm:flex-row">
                       <HoverTooltip
                         text={votingDisabledText}
