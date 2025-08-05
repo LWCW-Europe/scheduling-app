@@ -23,7 +23,7 @@ import {
 } from "@/app/utils/events";
 import type { Event } from "@/db/events";
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 1000;
 
 export function ProposalTable({
   guests,
@@ -295,7 +295,10 @@ export function ProposalTable({
                 className="hover:bg-gray-200 cursor-pointer"
                 onClick={() => visitViewPage(proposal)}
               >
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                <td
+                  className="px-4 lg:px-6 py-4 whitespace-nowrap"
+                  title={proposal.title}
+                >
                   <div className="text-sm font-medium text-gray-900 truncate">
                     {proposal.title}
                   </div>
@@ -310,7 +313,10 @@ export function ProposalTable({
                       .join(", ") || "-"}
                   </div>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                <td
+                  className="px-4 lg:px-6 py-4 whitespace-nowrap"
+                  title={proposal.description}
+                >
                   <div className="text-sm text-gray-500 truncate">
                     {proposal.description || "-"}
                   </div>
