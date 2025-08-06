@@ -104,22 +104,21 @@ export function ProposalTable({
     if (key === "title") {
       cmp = a[key].localeCompare(b[key]);
     } else if (key === "hosts") {
-      // Missing or empty values are always last
       if (a[key].length === 0 && b[key].length === 0) {
-        return 0;
+        cmp = 0;
       } else if (a[key].length === 0) {
-        return -1;
+        cmp = -1;
       } else if (b[key].length === 0) {
-        return 1;
+        cmp = 1;
+      } else {
+        const hostNames = (hosts: string[]) =>
+          guests
+            .filter((g) => hosts.includes(g.ID))
+            .map((g) => g.Name)
+            .sort()
+            .join("");
+        cmp = hostNames(a.hosts).localeCompare(hostNames(b.hosts));
       }
-
-      const hostNames = (hosts: string[]) =>
-        guests
-          .filter((g) => hosts.includes(g.ID))
-          .map((g) => g.Name)
-          .sort()
-          .join("");
-      cmp = hostNames(a.hosts).localeCompare(hostNames(b.hosts));
     } else if (key === "durationMinutes") {
       cmp = (a[key] || 0) - (b[key] || 0);
     } else if (key === "createdTime") {
