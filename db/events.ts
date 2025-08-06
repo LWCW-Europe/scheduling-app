@@ -169,3 +169,11 @@ export async function getEventByName(name: string) {
     return events[0];
   });
 }
+
+export function eventNameToSlug(name: string): string {
+  return name.replace(/ /g, "-");
+}
+
+export function eventSlugToName(slug: string): string {
+  return slug.replace(/-/g, " ");
+}
