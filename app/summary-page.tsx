@@ -6,7 +6,8 @@ import {
 } from "@heroicons/react/16/solid";
 import { DateTime } from "luxon";
 import Link from "next/link";
-import { Event, eventNameToSlug } from "@/db/events";
+import { Event } from "@/db/events";
+import { eventNameToSlug } from "@/utils/utils";
 import { CONSTS } from "@/utils/constants";
 
 export default function SummaryPage(props: { events: Event[] }) {

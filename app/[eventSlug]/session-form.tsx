@@ -19,7 +19,7 @@ import { ConfirmDeletionModal } from "../modals";
 import { UserContext } from "../context";
 import { sessionsOverlap, newEmptySession } from "../session_utils";
 import { parseSessionTime } from "../api/session-form-utils";
-import { eventNameToSlug } from "@/db/events";
+import { eventNameToSlug } from "@/utils/utils";
 
 interface ErrorResponse {
   message: string;

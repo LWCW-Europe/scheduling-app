@@ -1,5 +1,6 @@
 import { getGuestsByEvent } from "@/db/guests";
-import { eventSlugToName, getEventByName } from "@/db/events";
+import { getEventByName } from "@/db/events";
+import { eventSlugToName } from "@/utils/utils";
 import { SessionProposalForm } from "../../session-proposal-form";
 
 export default async function NewProposalPage({
