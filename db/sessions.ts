@@ -14,6 +14,7 @@ export type Session = {
   "Location name": string[];
   Capacity: number;
   "Num RSVPs": number;
+  "Attendee scheduled": boolean;
 };
 export async function getSessions() {
   const sessions: Session[] = [];
@@ -31,12 +32,17 @@ export async function getSessions() {
         "Location name",
         "Capacity",
         "Num RSVPs",
+        "Attendee scheduled",
       ],
       filterByFormula: `AND({Start time}, {End time}, {Location})`,
     })
     .eachPage(function page(records, fetchNextPage) {
       records.forEach(function (record) {
-        sessions.push({ ...record.fields, ID: record.id });
+        sessions.push({
+          ...record.fields,
+          ID: record.id,
+          "Attendee scheduled": !!record.fields["Attendee scheduled"],
+        });
       });
       fetchNextPage();
     });
@@ -63,12 +69,17 @@ export async function getSessionsByEvent(eventName: string) {
         "Location name",
         "Capacity",
         "Num RSVPs",
+        "Attendee scheduled",
       ],
       filterByFormula: filterFormula,
     })
     .eachPage(function page(records, fetchNextPage) {
       records.forEach(function (record) {
-        sessions.push({ ...record.fields, ID: record.id });
+        sessions.push({
+          ...record.fields,
+          ID: record.id,
+          "Attendee scheduled": !!record.fields["Attendee scheduled"],
+        });
       });
       fetchNextPage();
     });

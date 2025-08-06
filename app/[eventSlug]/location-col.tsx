@@ -81,6 +81,7 @@ function insertBlankSessions(
         Capacity: 0,
         "Num RSVPs": 0,
         ID: "",
+        "Attendee scheduled": true,
       });
     }
   }

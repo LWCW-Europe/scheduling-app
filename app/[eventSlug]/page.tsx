@@ -1,11 +1,12 @@
 import { EventPhase, getCurrentPhase } from "../utils/events";
 import { getEventByName } from "@/db/events";
+import { eventSlugToName } from "@/utils/utils";
 import EventPage from "./event-page";
 import { redirect } from "next/navigation";
 
 export default async function Page(props: { params: { eventSlug: string } }) {
   const { eventSlug } = props.params;
-  const eventName = eventSlug.replace(/-/g, " ");
+  const eventName = eventSlugToName(eventSlug);
   const event = await getEventByName(eventName);
 
   if (!event) {

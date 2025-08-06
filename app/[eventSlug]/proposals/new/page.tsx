@@ -1,5 +1,6 @@
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
+import { eventSlugToName } from "@/utils/utils";
 import { SessionProposalForm } from "../../session-proposal-form";
 
 export default async function NewProposalPage({
@@ -10,7 +11,7 @@ export default async function NewProposalPage({
   const { eventSlug } = params;
 
   // Convert slug to event name (simple conversion for now)
-  const eventName = eventSlug.replace(/-/g, " ");
+  const eventName = eventSlugToName(eventSlug);
   const event = await getEventByName(eventName);
 
   if (!event) {

@@ -7,6 +7,7 @@ import {
 import { DateTime } from "luxon";
 import Link from "next/link";
 import { Event } from "@/db/events";
+import { eventNameToSlug } from "@/utils/utils";
 import { CONSTS } from "@/utils/constants";
 
 export default function SummaryPage(props: { events: Event[] }) {
@@ -46,7 +47,7 @@ export default function SummaryPage(props: { events: Event[] }) {
               </div>
               <p className="text-gray-900 mt-2">{event.Description}</p>
               <Link
-                href={`/${event.Name.replace(" ", "-")}`}
+                href={`/${eventNameToSlug(event.Name)}`}
                 className="font-semibold text-rose-400 hover:text-rose-500 flex gap-1 items-center text-sm justify-end mt-2"
               >
                 View schedule

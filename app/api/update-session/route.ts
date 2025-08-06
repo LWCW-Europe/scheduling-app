@@ -13,9 +13,12 @@ export async function POST(req: Request) {
     return new Response("Session ID is required", { status: 400 });
   }
   const session = prepareToInsert(params);
-  const existingSessions = (await getSessions()).filter(
-    (ses) => ses.ID !== params.id
-  );
+  const allSessions = await getSessions();
+  const prevSession = allSessions.find((ses) => ses.ID === params.id)!;
+  if (!prevSession["Attendee scheduled"]) {
+    return new Response("Cannot edit via web app", { status: 400 });
+  }
+  const existingSessions = allSessions.filter((ses) => ses.ID !== params.id);
   const newHostIDs = params.hosts.map((h) => h.ID);
   const sessionValid = validateSession(session, existingSessions);
   if (sessionValid) {

@@ -14,6 +14,7 @@ import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext, EventContext } from "../context";
 import { sessionsOverlap } from "../session_utils";
 import { useScreenWidth } from "@/utils/hooks";
+import { eventNameToSlug } from "@/utils/utils";
 
 export function SessionBlock(props: {
   eventName: string;
@@ -23,7 +24,7 @@ export function SessionBlock(props: {
   guests: Guest[];
 }) {
   const { eventName, session, location, day, guests } = props;
-  const eventSlug = eventName.replace(/ /g, "-");
+  const eventSlug = eventNameToSlug(eventName);
   const { rsvpdForSession } = useContext(EventContext);
   const { user } = useContext(UserContext);
   const rsvpd = rsvpdForSession(session.ID + (user ? "" : ""));
@@ -120,11 +121,14 @@ export function RealSessionCard(props: {
   const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
   const screenWidth = useScreenWidth();
   const onMobile = screenWidth < 640;
+  const isEditable = hostStatus && session["Attendee scheduled"];
 
   const handleClick = () => {
-    if (hostStatus) {
+    if (isEditable) {
       const url = `/${eventSlug}/edit-session?sessionID=${session.ID}`;
       router.push(url);
+      return;
+    } else if (hostStatus) {
       return;
     }
 
@@ -244,7 +248,7 @@ export function RealSessionCard(props: {
         >
           {formattedHostNames}
         </p>
-        {hostStatus && (
+        {isEditable && (
           <PencilSquareIcon
             className={clsx(
               "absolute h-5 w-5 top-0 right-0",

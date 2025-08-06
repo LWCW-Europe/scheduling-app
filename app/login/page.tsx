@@ -39,6 +39,7 @@ function LoginForm() {
             error={!!state?.error}
             errorMessage={state?.error}
             className="w-full"
+            autoFocus
           />
         </div>
 

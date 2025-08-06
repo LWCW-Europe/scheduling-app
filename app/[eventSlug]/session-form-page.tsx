@@ -1,4 +1,5 @@
 import { getEventByName } from "@/db/events";
+import { eventSlugToName } from "@/utils/utils";
 import { SessionForm } from "./session-form";
 import { Suspense } from "react";
 import { getDaysByEvent } from "@/db/days";
@@ -11,7 +12,7 @@ export async function renderSessionForm(props: {
   params: { eventSlug: string };
 }) {
   const { eventSlug } = props.params;
-  const eventName = eventSlug.replace(/-/g, " ");
+  const eventName = eventSlugToName(eventSlug);
   const [event, days, sessions, guests, locations] = await Promise.all([
     getEventByName(eventName),
     getDaysByEvent(eventName),
