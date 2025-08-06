@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-export default function DeletionConfirmation() {
+export default function DeletionConfirmation(props: {
+  params: { eventSlug: string };
+}) {
+  const { eventSlug } = props.params;
   return (
     <div className="p-8 max-w-lg mx-auto flex flex-col">
       <h1 className="text-2xl font-bold">Session deleted</h1>
@@ -9,7 +12,7 @@ export default function DeletionConfirmation() {
       </p>
       <Link
         className="bg-rose-400 mt-8 text-white font-semibold py-2 rounded shadow hover:bg-rose-500 active:bg-rose-500 mx-auto px-12"
-        href="/"
+        href={`/${eventSlug}`}
       >
         Back to schedule
       </Link>
