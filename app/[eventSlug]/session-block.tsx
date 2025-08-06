@@ -14,6 +14,7 @@ import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext, EventContext } from "../context";
 import { sessionsOverlap } from "../session_utils";
 import { useScreenWidth } from "@/utils/hooks";
+import { eventNameToSlug } from "@/db/events";
 
 export function SessionBlock(props: {
   eventName: string;
@@ -23,7 +24,7 @@ export function SessionBlock(props: {
   guests: Guest[];
 }) {
   const { eventName, session, location, day, guests } = props;
-  const eventSlug = eventName.replace(/ /g, "-");
+  const eventSlug = eventNameToSlug(eventName);
   const { rsvpdForSession } = useContext(EventContext);
   const { user } = useContext(UserContext);
   const rsvpd = rsvpdForSession(session.ID + (user ? "" : ""));

@@ -19,6 +19,7 @@ import { ConfirmDeletionModal } from "../modals";
 import { UserContext } from "../context";
 import { sessionsOverlap, newEmptySession } from "../session_utils";
 import { parseSessionTime } from "../api/session-form-utils";
+import { eventNameToSlug } from "@/db/events";
 
 interface ErrorResponse {
   message: string;
@@ -184,10 +185,7 @@ export function SessionForm(props: {
     if (res.ok) {
       const actionType = sessionID ? "updated" : "added";
       router.push(
-        `/${eventName.replace(
-          / /g,
-          "-"
-        )}/add-session/confirmation?actionType=${actionType}`
+        `/${eventNameToSlug(eventName)}/add-session/confirmation?actionType=${actionType}`
       );
       console.log(`Session ${actionType} successfully`);
     } else {
@@ -222,7 +220,7 @@ export function SessionForm(props: {
     if (res.ok) {
       console.log("Session deleted successfully");
       router.push(
-        `/${eventName.replace(/ /g, "-")}/edit-session/deletion-confirmation`
+        `/${eventNameToSlug(eventName)}/edit-session/deletion-confirmation`
       );
     } else {
       let errorMessage = "Failed to delete session";

@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
-import { getEventByName } from "@/db/events";
+import { eventSlugToName, getEventByName } from "@/db/events";
 import { ProposalTable } from "./proposal-table";
 import { ProposalActionBar } from "./proposal-action-bar";
 import { UserSelect } from "@/app/user-select";
@@ -17,7 +17,7 @@ export default async function ProposalsPage({
   const { eventSlug } = params;
 
   // Convert slug to event name (simple conversion for now)
-  const eventName = eventSlug.replace(/-/g, " ");
+  const eventName = eventSlugToName(eventSlug);
   const event = await getEventByName(eventName);
 
   if (!event) {
