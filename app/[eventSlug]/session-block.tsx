@@ -14,7 +14,7 @@ import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext, EventContext } from "../context";
 import { sessionsOverlap } from "../session_utils";
 import { useScreenWidth } from "@/utils/hooks";
-import { eventNameToSlug } from "@/db/events";
+import { eventNameToSlug } from "@/utils/utils";
 
 export function SessionBlock(props: {
   eventName: string;

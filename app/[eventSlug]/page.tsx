@@ -1,5 +1,6 @@
 import { EventPhase, getCurrentPhase } from "../utils/events";
-import { eventSlugToName, getEventByName } from "@/db/events";
+import { getEventByName } from "@/db/events";
+import { eventSlugToName } from "@/utils/utils";
 import EventPage from "./event-page";
 import { redirect } from "next/navigation";
 

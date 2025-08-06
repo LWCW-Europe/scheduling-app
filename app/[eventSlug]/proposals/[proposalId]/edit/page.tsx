@@ -1,6 +1,7 @@
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
-import { eventSlugToName, getEventByName } from "@/db/events";
+import { getEventByName } from "@/db/events";
+import { eventSlugToName } from "@/utils/utils";
 import { SessionProposalForm } from "@/app/[eventSlug]/session-proposal-form";
 import { notFound } from "next/navigation";
 

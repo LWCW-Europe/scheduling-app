@@ -1,4 +1,5 @@
-import { eventSlugToName, getEventByName } from "@/db/events";
+import { getEventByName } from "@/db/events";
+import { eventSlugToName } from "@/utils/utils";
 import { SessionForm } from "./session-form";
 import { Suspense } from "react";
 import { getDaysByEvent } from "@/db/days";

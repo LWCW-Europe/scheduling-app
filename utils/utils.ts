@@ -18,3 +18,11 @@ export const dateOnDay = (date: Date, day: Day) => {
     date.getTime() <= new Date(day.End).getTime()
   );
 };
+
+export function eventNameToSlug(name: string): string {
+  return name.replace(/ /g, "-");
+}
+
+export function eventSlugToName(slug: string): string {
+  return slug.replace(/-/g, " ");
+}

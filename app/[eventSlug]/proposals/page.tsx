@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
-import { eventSlugToName, getEventByName } from "@/db/events";
+import { getEventByName } from "@/db/events";
+import { eventSlugToName } from "@/utils/utils";
 import { ProposalTable } from "./proposal-table";
 import { ProposalActionBar } from "./proposal-action-bar";
 import { UserSelect } from "@/app/user-select";
