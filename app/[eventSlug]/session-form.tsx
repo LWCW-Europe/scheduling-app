@@ -365,7 +365,7 @@ export function SessionForm(props: {
         <ConfirmDeletionModal
           btnDisabled={isSubmitting}
           confirm={Delete}
-          itemName="session proposal"
+          itemName="session"
         />
       )}
     </div>
