@@ -138,6 +138,7 @@ export function SessionProposalForm(props: {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
+            autoFocus
             placeholder="Enter a clear, descriptive title"
           />
         </div>
