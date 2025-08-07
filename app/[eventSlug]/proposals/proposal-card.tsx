@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Clock, Calendar, Pencil } from "lucide-react";
 
 import HoverTooltip from "@/app/hover-tooltip";
@@ -21,7 +22,6 @@ interface ProposalCardProps {
   event: Event;
   canEdit: (hosts: string[]) => boolean;
   formatDuration: (minutes?: number) => string;
-  visitViewPage: (proposal: ProposalWithHostNames) => void;
 }
 
 export function ProposalCard({
@@ -31,7 +31,6 @@ export function ProposalCard({
   event,
   canEdit,
   formatDuration,
-  visitViewPage,
 }: ProposalCardProps) {
   const router = useRouter();
 
@@ -39,9 +38,9 @@ export function ProposalCard({
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
 
   return (
-    <div
-      className="bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-      onClick={() => visitViewPage(proposal)}
+    <Link
+      href={`/${eventSlug}/proposals/${proposal.id}`}
+      className="block bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
     >
       <div className="space-y-3">
         <div>
@@ -107,6 +106,7 @@ export function ProposalCard({
               <div className="relative inline-block group">
                 <button
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     router.push(`/${eventSlug}/proposals/${proposal.id}/edit`);
                   }}
@@ -120,7 +120,10 @@ export function ProposalCard({
             {canEdit(proposal.hosts) && (
               <HoverTooltip text={schedDisabledText} visible={!schedEnabled}>
                 <button
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
                   disabled
                 >
@@ -132,6 +135,6 @@ export function ProposalCard({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

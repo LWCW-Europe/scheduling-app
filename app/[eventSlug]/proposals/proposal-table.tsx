@@ -434,14 +434,6 @@ export function ProposalTable({
 
   const filteredRowCount = table.getFilteredRowModel().rows.length;
 
-  // Helper function for mobile card view
-  const visitViewPage = useCallback(
-    (proposal: ProposalWithHostNames) => {
-      router.push(`/${eventSlug}/proposals/${proposal.id}`);
-    },
-    [router, eventSlug]
-  );
-
   return (
     <div className="space-y-6">
       {/* Search & Filter Section */}
@@ -539,7 +531,6 @@ export function ProposalTable({
             event={event}
             canEdit={canEdit}
             formatDuration={formatDuration}
-            visitViewPage={visitViewPage}
           />
         ))}
         {filteredProposals.length === 0 && (
