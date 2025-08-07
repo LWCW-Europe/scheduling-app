@@ -32,6 +32,10 @@ export function ViewProposal(props: {
     }
   };
 
+  const isHost = () => {
+    return currentUserId && proposal.hosts.includes(currentUserId);
+  };
+
   const votingEnabled = inVotingPhase(event);
   const schedEnabled = inSchedPhase(event);
   const votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
@@ -66,7 +70,7 @@ export function ViewProposal(props: {
       )}
 
       {/* Voting buttons section */}
-      {!canEdit() && (
+      {!isHost() && (
         <div className="mt-6 flex gap-3 flex-wrap">
           <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
             <button
