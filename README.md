@@ -106,28 +106,8 @@ In order to have these phases, you need to set their dates on the corresponding
 Event record. The way to do that is to edit Airtable manually. If none are set
 then there are no phases (i.e. sessions can be scheduled, that's it).
 
-You need to add the following columns to the Event table in your Airtable base:
-
-- `proposalPhaseStart`: Date, format ISO, Include time, Display time zone
-- `proposalPhaseEnd`: (same)
-- `votingPhaseStart`: (same)
-- `votingPhaseEnd`: (same)
-- `schedulingPhaseStart`: (same)
-- `schedulingPhaseEnd`: (same)
-
-You also need to add a SessionProposals table to your Airtable base:
-
-- Create a new table named "SessionProposals"
-- Add the following fields:
-  - `id`: Primary field, type "Formula", formula is `RECORD_ID()
-  - `description`: Long text
-  - `durationMinutes`: Number
-  - `event`: Link to another record (Events),
-    "Allow linking to multiple records" **unchecked**
-  - `hosts`: Link to another record (Guests),
-    "Allow linking to multiple records" **checked**
-  - `title`: Single line text (Primary field)
-  - `createdTime`: Created time
+The necessary changes to the Airtable schema are documented in
+[docs/SCHEMA.md](docs/SCHEMA.md).
 
 ## Development
 
@@ -138,6 +118,12 @@ automatically writes changes to the files.
 bun lint
 bun prettier
 ```
+
+### Database Migrations
+
+To apply database (Airtable) migrations see
+[migrations/README.md](migrations/README.md). If you make an Airtable schema
+change, you must create a migration file as documented there.
 
 ## Learn More
 
