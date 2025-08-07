@@ -1,16 +1,57 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Fuse from "fuse.js";
+
 import {
-  PencilIcon,
-  ClockIcon,
-  UserIcon,
-  EyeSlashIcon,
-  CheckCircleIcon,
-  CalendarIcon,
-} from "@heroicons/react/24/outline";
+  ColumnDef,
+  ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+  VisibilityState,
+} from "@tanstack/react-table";
+import {
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  ChevronDown,
+  MoreHorizontal,
+  Clock,
+  User,
+  Eye,
+  CheckCircle,
+  Calendar,
+  Pencil,
+  ChevronsRight,
+  ChevronRight,
+  ChevronLeft,
+  ChevronsLeft,
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import HoverTooltip from "@/app/hover-tooltip";
 import { UserContext } from "@/app/context";
@@ -22,12 +63,10 @@ import {
   dateStartDescription,
 } from "@/app/utils/events";
 import type { Event } from "@/db/events";
+import { ProposalCard } from "./proposal-card";
 
-const ITEMS_PER_PAGE = 1000;
-
-type SortConfig = {
-  key: keyof SessionProposal;
-  direction: "asc" | "desc";
+type ProposalWithHostNames = SessionProposal & {
+  hostNames: string[];
 };
 
 export function ProposalTable({
@@ -41,140 +80,55 @@ export function ProposalTable({
   eventSlug: string;
   event: Event;
 }) {
-  const initialProposals = paramProposals.map((proposal) => {
-    const hostNames = proposal.hosts.map(
-      (h) => guests.find((g) => g.ID === h)?.Name || ""
-    );
-    return { ...proposal, hostNames };
-  });
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [myProposals, setMyProposals] = useState(false);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: "createdTime",
-    direction: "desc",
-  });
   const { user: currentUserId } = useContext(UserContext);
   const router = useRouter();
-  const filteredProposals = initialProposals.filter((pr) => {
-    if (myProposals && currentUserId) {
-      if (!pr.hosts.includes(currentUserId)) {
-        return false;
-      }
-    }
-    return true;
+  const [myProposals, setMyProposals] = useState(false);
+
+  // 1️⃣ Build the data once, only when guests or the prop list changes
+  const proposalsWithHostNames = useMemo(() => {
+    return paramProposals.map((p) => ({
+      ...p,
+      hostNames: p.hosts
+        .map((h) => guests.find((g) => g.ID === h)?.Name ?? "")
+        .sort(),
+      duration: p.durationMinutes,
+    }));
+  }, [paramProposals, guests]);
+
+  // 2️⃣ Filter once, only when the relevant flags change
+  const filteredProposals = useMemo(() => {
+    if (myProposals && currentUserId)
+      return proposalsWithHostNames.filter((p) =>
+        p.hosts.includes(currentUserId)
+      );
+    return proposalsWithHostNames;
+  }, [proposalsWithHostNames, myProposals, currentUserId]);
+
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: "createdTime",
+      desc: true,
+    },
+  ]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    createdTime: false,
   });
-  const totalPages = Math.ceil(filteredProposals.length / ITEMS_PER_PAGE);
+  const [rowSelection, setRowSelection] = useState({});
+  const [globalFilter, setGlobalFilter] = useState("");
+
   const votingEnabled = inVotingPhase(event);
   const schedEnabled = inSchedPhase(event);
   const votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
-  function updateMyProposals(newValue: boolean) {
-    setPage(1);
-    setMyProposals(newValue);
-  }
-  useEffect(() => {
-    if (!currentUserId) {
-      setMyProposals(false);
-    }
-  }, [currentUserId]);
-  const fuse = new Fuse(filteredProposals, {
-    keys: [
-      {
-        name: "title",
-        weight: 0.6,
-      },
-      {
-        name: "hostNames",
-        weight: 0.25,
-      },
-      {
-        name: "description",
-        weight: 0.15,
-      },
-    ],
-  });
-  const searchResults = searchQuery.trim()
-    ? fuse.search(searchQuery).map((res) => res.item)
-    : filteredProposals;
-  searchResults.sort((a, b) => {
-    const { key, direction } = sortConfig;
 
-    let cmp = 0;
-    if (key === "title") {
-      cmp = a[key].localeCompare(b[key]);
-    } else if (key === "hosts") {
-      if (a[key].length === 0 && b[key].length === 0) {
-        cmp = 0;
-      } else if (a[key].length === 0) {
-        cmp = -1;
-      } else if (b[key].length === 0) {
-        cmp = 1;
-      } else {
-        const hostNames = (hosts: string[]) =>
-          guests
-            .filter((g) => hosts.includes(g.ID))
-            .map((g) => g.Name)
-            .sort()
-            .join("");
-        cmp = hostNames(a.hosts).localeCompare(hostNames(b.hosts));
-      }
-    } else if (key === "durationMinutes") {
-      cmp = (a[key] || 0) - (b[key] || 0);
-    } else if (key === "createdTime") {
-      cmp = new Date(a[key]).getTime() - new Date(b[key]).getTime();
-    }
-    return direction === "asc" ? cmp : -cmp;
-  });
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      setPage(1);
-    }
-  };
-
-  const getPageNumbers = () => {
-    const arrowCss =
-      "px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed";
-    const currentPageNumCss = "bg-blue-600 text-white";
-    const otherPageNumCss =
-      "text-gray-700 bg-white border border-gray-300 hover:bg-gray-200";
-    const pages = [
-      { display: "<<", toPage: 1, css: arrowCss },
-      { display: "<", toPage: Math.max(page - 1, 1), css: arrowCss },
-    ];
-    for (
-      let i = Math.max(1, page - 2);
-      i <= Math.min(page + 2, totalPages);
-      i++
-    ) {
-      const css = i === page ? currentPageNumCss : otherPageNumCss;
-      pages.push({
-        display: i.toString(),
-        toPage: i,
-        css,
-      });
-    }
-    pages.push({
-      display: ">",
-      toPage: Math.min(page + 1, totalPages),
-      css: arrowCss,
-    });
-    pages.push({ display: ">>", toPage: totalPages, css: arrowCss });
-    return pages;
-  };
-
-  const currentPageProposals = searchResults.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
+  // Stable helpers
+  const canEdit = useCallback(
+    (hosts: string[]): boolean =>
+      hosts.length === 0 || (!!currentUserId && hosts.includes(currentUserId)),
+    [currentUserId]
   );
-
-  const visitViewPage = (proposal: SessionProposal) => {
-    router.push(`/${eventSlug}/proposals/${proposal.id}`);
-  };
-
-  const formatDuration = (minutes?: number) => {
+  const formatDuration = useCallback((minutes?: number) => {
     if (!minutes) return "";
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
@@ -182,25 +136,311 @@ export function ProposalTable({
     return remainingMinutes > 0
       ? `${hours}h ${remainingMinutes}m`
       : `${hours}h`;
-  };
+  }, []);
 
-  const canEdit = (hosts: string[]) => {
-    if (hosts.length === 0) {
-      return true;
-    } else {
-      return currentUserId && hosts.includes(currentUserId);
+  // Now columns really is memoised
+  const columns = useMemo<ColumnDef<ProposalWithHostNames>[]>(
+    () => [
+      {
+        accessorKey: "title",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className={`h-auto p-0 ${column.getIsSorted() ? "text-gray-900 font-bold" : "text-gray-500 font-semibold"}`}
+            >
+              Title
+              {column.getIsSorted() ? (
+                column.getIsSorted() == "asc" ? (
+                  <ArrowDown className="ml-2 h-4 w-4" />
+                ) : (
+                  <ArrowUp className="ml-2 h-4 w-4" />
+                )
+              ) : (
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              )}
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const proposal = row.original;
+          return (
+            <a
+              href={`/${eventSlug}/proposals/${proposal.id}`}
+              className="block text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 max-h-[2.5rem] overflow-hidden"
+            >
+              {proposal.title}
+            </a>
+          );
+        },
+      },
+      {
+        accessorKey: "hosts",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className={`h-auto p-0 ${column.getIsSorted() ? "text-gray-900 font-bold" : "text-gray-500 font-semibold"}`}
+            >
+              Host(s)
+              {column.getIsSorted() ? (
+                column.getIsSorted() == "asc" ? (
+                  <ArrowDown className="ml-2 h-4 w-4" />
+                ) : (
+                  <ArrowUp className="ml-2 h-4 w-4" />
+                )
+              ) : (
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              )}
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const proposal = row.original;
+          return (
+            <div className="text-sm text-gray-500 truncate">
+              {proposal.hosts
+                .map(
+                  (host) => guests.find((g) => g.ID === host)?.Name || "Deleted"
+                )
+                .join(", ") || "-"}
+            </div>
+          );
+        },
+        sortingFn: (rowA, rowB) => {
+          const a = rowA.original.hostNames;
+          const b = rowB.original.hostNames;
+          if (a.length === 0 && b.length === 0) {
+            return 0;
+          } else if (a.length === 0) {
+            return -1;
+          } else if (b.length === 0) {
+            return 1;
+          } else {
+            return a.join("").localeCompare(b.join(""));
+          }
+        },
+      },
+      {
+        accessorKey: "description",
+        header: "Description",
+        cell: ({ row }) => (
+          <div className="text-sm text-gray-500 line-clamp-2">
+            {row.getValue("description") || "-"}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "duration",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className={`h-auto p-0 ${column.getIsSorted() ? "text-gray-900 font-bold" : "text-gray-500 font-semibold"}`}
+            >
+              Duration
+              {column.getIsSorted() ? (
+                column.getIsSorted() == "asc" ? (
+                  <ArrowDown className="ml-2 h-4 w-4" />
+                ) : (
+                  <ArrowUp className="ml-2 h-4 w-4" />
+                )
+              ) : (
+                <ArrowUpDown className="ml-2 h-4 w-4" />
+              )}
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const duration = row.getValue("duration");
+          return (
+            <div className="flex items-center">
+              {duration ? (
+                <>
+                  <Clock className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
+                  <span className="text-sm text-gray-500 truncate">
+                    {formatDuration(duration as number)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-gray-500">-</span>
+              )}
+            </div>
+          );
+        },
+        // For sorting
+        accessorFn: (row) => row.durationMinutes ?? 0,
+      },
+      {
+        id: "voting",
+        header: "Your vote",
+        cell: ({ row }) => {
+          const proposal = row.original;
+          if (!currentUserId || proposal.hosts.includes(currentUserId)) {
+            return <div className="h-8 w-32" />; // Placeholder to maintain consistent column width (3 buttons + 2 gaps = ~96px)
+          }
+
+          return (
+            <div className="flex gap-1 items-center">
+              <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="opacity-50 cursor-not-allowed h-8 w-8 p-0"
+                  disabled
+                >
+                  ❤️
+                </Button>
+              </HoverTooltip>
+              <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="opacity-50 cursor-not-allowed h-8 w-8 p-0"
+                  disabled
+                >
+                  ⭐
+                </Button>
+              </HoverTooltip>
+              <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="opacity-50 cursor-not-allowed h-8 w-8 p-0"
+                  disabled
+                >
+                  👋🏽
+                </Button>
+              </HoverTooltip>
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const proposal = row.original;
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                {canEdit(proposal.hosts) && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        router.push(
+                          `/${eventSlug}/proposals/${proposal.id}/edit`
+                        );
+                      }}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit proposal
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem
+                  onClick={() => {
+                    router.push(`/${eventSlug}/proposals/${proposal.id}`);
+                  }}
+                >
+                  View details
+                </DropdownMenuItem>
+                {canEdit(proposal.hosts) && (
+                  <HoverTooltip
+                    text={schedDisabledText}
+                    visible={!schedEnabled}
+                  >
+                    <DropdownMenuItem disabled>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Schedule proposal
+                    </DropdownMenuItem>
+                  </HoverTooltip>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          );
+        },
+      },
+      {
+        accessorKey: "createdTime",
+        enableHiding: false,
+      },
+    ],
+    [
+      currentUserId,
+      eventSlug,
+      guests,
+      votingEnabled,
+      votingDisabledText,
+      schedEnabled,
+      schedDisabledText,
+      canEdit,
+      formatDuration,
+      router,
+    ]
+  );
+
+  const table = useReactTable({
+    data: filteredProposals,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    globalFilterFn: "includesString",
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+      globalFilter,
+    },
+    initialState: {
+      pagination: {
+        pageSize: 50,
+      },
+    },
+  });
+  const page = table.getState().pagination.pageIndex + 1;
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setMyProposals(false);
     }
-  };
+  }, [currentUserId]);
 
-  const handleSort = (key: keyof SessionProposal) => {
-    let direction: "asc" | "desc" = "asc";
+  const filteredRowCount = table.getFilteredRowModel().rows.length;
 
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
-    }
-
-    setSortConfig({ key, direction });
-  };
+  // Helper function for mobile card view
+  const visitViewPage = useCallback(
+    (proposal: ProposalWithHostNames) => {
+      router.push(`/${eventSlug}/proposals/${proposal.id}`);
+    },
+    [router, eventSlug]
+  );
 
   return (
     <div className="space-y-6">
@@ -213,33 +453,27 @@ export function ProposalTable({
                 Filters:
               </span>
               <span className="text-xs text-gray-500">
-                ({searchResults.length} result
-                {searchResults.length !== 1 ? "s" : ""})
+                ({filteredRowCount} result
+                {filteredRowCount !== 1 ? "s" : ""})
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
               <div className="relative inline-block group">
-                <button
-                  className={`disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md transition-colors inline-flex items-center gap-2 ${
-                    myProposals
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : currentUserId
-                        ? "bg-gray-400 hover:bg-gray-500"
-                        : "bg-gray-400"
-                  }`}
-                  onClick={() => updateMyProposals(!myProposals)}
+                <Button
+                  variant={myProposals ? "default" : "secondary"}
+                  size="sm"
+                  onClick={() => setMyProposals(!myProposals)}
                   disabled={!currentUserId}
-                  aria-pressed={myProposals}
-                  aria-label={`Filter to show only your proposals${myProposals ? " (active)" : ""}`}
+                  className="inline-flex items-center gap-2"
                 >
-                  <UserIcon className="h-4 w-4" />
+                  <User className="h-4 w-4" />
                   My proposals
                   {myProposals && currentUserId && (
                     <span className="bg-blue-800 text-white text-xs px-1.5 py-0.5 rounded-full">
-                      {searchResults.length}
+                      {filteredProposals.length}
                     </span>
                   )}
-                </button>
+                </Button>
                 {!currentUserId && (
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-sm text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
                     Select a user first
@@ -247,398 +481,242 @@ export function ProposalTable({
                 )}
               </div>
               <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
-                <button
-                  className="disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md bg-gray-400 transition-colors inline-flex items-center gap-2"
+                <Button
+                  variant="secondary"
+                  size="sm"
                   disabled={!votingEnabled}
-                  aria-label="Filter to show only unvoted proposals (not available yet)"
+                  className="inline-flex items-center gap-2"
                 >
-                  <EyeSlashIcon className="h-4 w-4" />
+                  <Eye className="h-4 w-4" />
                   Only unvoted
-                </button>
+                </Button>
               </HoverTooltip>
               <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
-                <button
-                  className="disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md bg-gray-400 transition-colors inline-flex items-center gap-2"
+                <Button
+                  variant="secondary"
+                  size="sm"
                   disabled={!votingEnabled}
-                  aria-label="Filter to show only voted proposals (not available yet)"
+                  className="inline-flex items-center gap-2"
                 >
-                  <CheckCircleIcon className="h-4 w-4" />
+                  <CheckCircle className="h-4 w-4" />
                   Only voted
-                </button>
+                </Button>
               </HoverTooltip>
               {myProposals && (
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     setMyProposals(false);
-                    setPage(1);
                   }}
-                  className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 transition-colors inline-flex items-center gap-1"
-                  aria-label="Clear all active filters"
+                  className="text-xs"
                 >
                   Clear filters
-                </button>
+                </Button>
               )}
             </div>
           </div>
 
           <div className="lg:w-80">
-            <input
-              type="text"
+            <Input
               placeholder="Search proposals..."
-              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-rose-400 focus:border-transparent"
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={globalFilter}
+              onChange={(event) => setGlobalFilter(event.target.value)}
+              className="w-full"
             />
           </div>
         </div>
       </div>
 
-      {/* Desktop Table View */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="table-fixed w-full divide-y divide-gray-200 min-w-0">
-          <thead className="bg-gray-50">
-            <tr>
-              <th
-                onClick={() => handleSort("title")}
-                scope="col"
-                className={`w-[20%] text-left px-4 lg:px-6 py-3 text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
-                  ${sortConfig.key === "title" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
-              >
-                Title
-                {sortConfig.key === "title"
-                  ? sortConfig.direction === "asc"
-                    ? " ↓"
-                    : " ↑"
-                  : " ↑↓"}
-              </th>
-              <th
-                onClick={() => handleSort("hosts")}
-                scope="col"
-                className={`w-[15%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
-                  ${sortConfig.key === "hosts" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
-              >
-                Host(s)
-                {sortConfig.key === "hosts"
-                  ? sortConfig.direction === "asc"
-                    ? " ↓"
-                    : " ↑"
-                  : " ↑↓"}
-              </th>
-              <th
-                scope="col"
-                className="w-[25%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Description
-              </th>
-              <th
-                onClick={() => handleSort("durationMinutes")}
-                scope="col"
-                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
-                  ${sortConfig.key === "durationMinutes" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
-              >
-                Duration
-                {sortConfig.key === "durationMinutes"
-                  ? sortConfig.direction === "asc"
-                    ? " ↓"
-                    : " ↑"
-                  : " ↑↓"}
-              </th>
-              <th
-                scope="col"
-                className="w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Your vote
-              </th>
-              <th
-                scope="col"
-                className="w-[20%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {currentPageProposals.map((proposal) => (
-              <tr
-                key={proposal.id}
-                className="hover:bg-gray-200 cursor-pointer"
-                onClick={() => visitViewPage(proposal)}
-              >
-                <td
-                  className="px-4 lg:px-6 py-4 whitespace-nowrap"
-                  title={proposal.title}
-                >
-                  <div className="text-sm font-medium text-gray-900 truncate">
-                    {proposal.title}
-                  </div>
-                </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <div className="truncate">
-                    {proposal.hosts
-                      .map(
-                        (host) =>
-                          guests.find((g) => g.ID === host)?.Name || "Deleted"
-                      )
-                      .join(", ") || "-"}
-                  </div>
-                </td>
-                <td
-                  className="px-4 lg:px-6 py-4 whitespace-nowrap"
-                  title={proposal.description}
-                >
-                  <div className="text-sm text-gray-500 truncate">
-                    {proposal.description || "-"}
-                  </div>
-                </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    {proposal.durationMinutes ? (
-                      <>
-                        <ClockIcon className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
-                        <span className="text-sm text-gray-500 truncate">
-                          {formatDuration(proposal.durationMinutes)}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-sm text-gray-500">-</span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                  {currentUserId && !proposal.hosts.includes(currentUserId) && (
-                    <div className="flex gap-1 flex-col sm:flex-row">
-                      <HoverTooltip
-                        text={votingDisabledText}
-                        visible={!votingEnabled}
-                      >
-                        <button
-                          type="button"
-                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                          disabled
-                        >
-                          ❤️
-                        </button>
-                      </HoverTooltip>
-                      <HoverTooltip
-                        text={votingDisabledText}
-                        visible={!votingEnabled}
-                      >
-                        <button
-                          type="button"
-                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                          disabled
-                        >
-                          ⭐
-                        </button>
-                      </HoverTooltip>
-                      <HoverTooltip
-                        text={votingDisabledText}
-                        visible={!votingEnabled}
-                      >
-                        <button
-                          type="button"
-                          className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-1 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                          disabled
-                        >
-                          👋🏽
-                        </button>
-                      </HoverTooltip>
-                    </div>
-                  )}
-                </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                  <div className="flex gap-1 flex-col sm:flex-row">
-                    {canEdit(proposal.hosts) && (
-                      <div className="relative inline-block group">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(
-                              `/${eventSlug}/proposals/${proposal.id}/edit`
-                            );
-                          }}
-                          className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 transition-colors"
-                        >
-                          <PencilIcon className="h-3 w-3 mr-1" />
-                          Edit
-                        </button>
-                      </div>
-                    )}
-                    {canEdit(proposal.hosts) && (
-                      <HoverTooltip
-                        text={schedDisabledText}
-                        visible={!schedEnabled}
-                      >
-                        <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
-                          disabled
-                        >
-                          <CalendarIcon className="h-3 w-3 mr-1" />
-                          Schedule
-                        </button>
-                      </HoverTooltip>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {searchResults.length === 0 && (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-4 lg:px-6 py-4 text-center text-sm text-gray-500"
-                >
-                  No proposals found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
       {/* Mobile Card View */}
       <div className="block md:hidden space-y-4">
-        {currentPageProposals.map((proposal) => (
-          <div
+        {filteredProposals.map((proposal) => (
+          <ProposalCard
             key={proposal.id}
-            className="bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-            onClick={() => visitViewPage(proposal)}
-          >
-            <div className="space-y-3">
-              <div>
-                <h3 className="text-base font-medium text-gray-900">
-                  {proposal.title}
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Host(s):{" "}
-                  {proposal.hosts
-                    .map(
-                      (host) =>
-                        guests.find((g) => g.ID === host)?.Name || "Deleted"
-                    )
-                    .join(", ") || "-"}
-                </p>
-              </div>
-
-              {proposal.description ? (
-                <p className="text-sm text-gray-600 line-clamp-3">
-                  {proposal.description}
-                </p>
-              ) : (
-                <p className="text-sm text-gray-500">-</p>
-              )}
-
-              {proposal.durationMinutes ? (
-                <div className="flex items-center">
-                  <ClockIcon className="h-4 w-4 mr-1 text-gray-400" />
-                  <span className="text-sm text-gray-500">
-                    {formatDuration(proposal.durationMinutes)}
-                  </span>
-                </div>
-              ) : (
-                <div className="text-sm text-gray-500">-</div>
-              )}
-
-              <div className="pt-2 border-t border-gray-100 space-y-3">
-                <div className="flex gap-1">
-                  <HoverTooltip
-                    text={votingDisabledText}
-                    visible={!votingEnabled}
-                  >
-                    <button
-                      type="button"
-                      className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                      disabled
-                    >
-                      ❤️
-                    </button>
-                  </HoverTooltip>
-                  <HoverTooltip
-                    text={votingDisabledText}
-                    visible={!votingEnabled}
-                  >
-                    <button
-                      type="button"
-                      className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                      disabled
-                    >
-                      ⭐
-                    </button>
-                  </HoverTooltip>
-                  <HoverTooltip
-                    text={votingDisabledText}
-                    visible={!votingEnabled}
-                  >
-                    <button
-                      type="button"
-                      className="opacity-50 cursor-not-allowed rounded-md border border-black shadow-sm px-2 py-1 bg-white font-medium text-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 grayscale"
-                      disabled
-                    >
-                      👋🏽
-                    </button>
-                  </HoverTooltip>
-                </div>
-
-                <div className="flex gap-2">
-                  {canEdit(proposal.hosts) && (
-                    <div className="relative inline-block group">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(
-                            `/${eventSlug}/proposals/${proposal.id}/edit`
-                          );
-                        }}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-rose-400 text-rose-400 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 transition-colors"
-                      >
-                        <PencilIcon className="h-4 w-4 mr-1" />
-                        Edit
-                      </button>
-                    </div>
-                  )}
-                  {canEdit(proposal.hosts) && (
-                    <HoverTooltip
-                      text={schedDisabledText}
-                      visible={!schedEnabled}
-                    >
-                      <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
-                        disabled
-                      >
-                        <CalendarIcon className="h-4 w-4 mr-1" />
-                        Schedule
-                      </button>
-                    </HoverTooltip>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+            proposal={proposal}
+            guests={guests}
+            eventSlug={eventSlug}
+            event={event}
+            canEdit={canEdit}
+            formatDuration={formatDuration}
+            visitViewPage={visitViewPage}
+          />
         ))}
-        {searchResults.length === 0 && (
+        {filteredProposals.length === 0 && (
           <div className="text-center py-8 text-sm text-gray-500">
             No proposals found
           </div>
         )}
       </div>
-      {searchResults.length > ITEMS_PER_PAGE && (
-        <div className="flex items-center justify-center gap-1 flex-wrap">
-          {getPageNumbers().map(({ display, toPage, css }) => (
-            <button
-              key={display}
-              onClick={() => setPage(toPage)}
-              disabled={page == toPage}
-              className={
-                "px-2 sm:px-3 py-2 text-sm font-medium rounded-md " + css
-              }
-            >
-              {display}
-            </button>
-          ))}
+
+      {/* Desktop Data Table */}
+      <div className="hidden md:block space-y-4">
+        <div className="flex items-center py-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto">
+                Columns <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      )}
+        <div className="rounded-md border">
+          <div className="overflow-hidden">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No proposals found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-2">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-700">Items per page:</span>
+            <select
+              className="border border-gray-300 rounded px-2 py-1 text-sm w-20"
+              value={table.getState().pagination.pageSize}
+              onChange={(e) => table.setPageSize(Number(e.target.value))}
+            >
+              {[10, 20, 50, 100, 1000].map((pageSize) => (
+                <option key={pageSize} value={pageSize}>
+                  {pageSize}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {table.getPageCount() >= 2 && (
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="text-sm font-medium text-gray-700">
+                Page {page} of {table.getPageCount()}
+              </div>
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => table.setPageIndex(0)}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to first page</span>
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={table.previousPage}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span className="sr-only">Go to previous page</span>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                {Array.from(
+                  {
+                    length:
+                      Math.min(page + 2, table.getPageCount()) -
+                      Math.max(1, page - 2) +
+                      1,
+                  },
+                  (_, i) => i + Math.max(1, page - 2)
+                ).map((i) => (
+                  <Button
+                    key={i}
+                    variant="outline"
+                    size="icon"
+                    className={`h-8 w-8 ${page === i ? "bg-blue-600 text-white hover:bg-blue-700" : ""}`}
+                    onClick={() => table.setPageIndex(i - 1)}
+                  >
+                    {i}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={table.nextPage}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to next page</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span className="sr-only">Go to last page</span>
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
