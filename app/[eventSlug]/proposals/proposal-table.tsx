@@ -283,6 +283,7 @@ export function ProposalTable({
       {
         id: "voting",
         header: "Your vote",
+        minSize: 145,
         cell: ({ row }) => {
           const proposal = row.original;
           if (!currentUserId || proposal.hosts.includes(currentUserId)) {
@@ -290,7 +291,7 @@ export function ProposalTable({
           }
 
           return (
-            <div className="flex gap-1 items-center">
+            <div className="flex gap-1 items-center w-32">
               <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
                 <Button
                   variant="outline"

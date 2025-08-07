@@ -110,7 +110,7 @@ export function SessionProposalForm(props: {
   return (
     <div className="flex flex-col gap-4">
       <Link
-        className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
+        className="bg-rose-400 text-white font-semibold py-2 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
         href={`/${eventSlug}/proposals`}
       >
         Back to Proposals
