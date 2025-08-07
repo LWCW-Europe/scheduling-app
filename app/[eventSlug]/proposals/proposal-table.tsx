@@ -523,10 +523,10 @@ export function ProposalTable({
 
       {/* Mobile Card View */}
       <div className="block md:hidden space-y-4">
-        {filteredProposals.map((proposal) => (
+        {table.getRowModel().rows.map((row) => (
           <ProposalCard
-            key={proposal.id}
-            proposal={proposal}
+            key={row.original.id}
+            proposal={row.original}
             guests={guests}
             eventSlug={eventSlug}
             event={event}
@@ -534,7 +534,7 @@ export function ProposalTable({
             formatDuration={formatDuration}
           />
         ))}
-        {filteredProposals.length === 0 && (
+        {table.getRowModel().rows.length === 0 && (
           <div className="text-center py-8 text-sm text-gray-500">
             No proposals found
           </div>
