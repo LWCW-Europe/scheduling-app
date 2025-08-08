@@ -2,6 +2,7 @@
 
 import { useContext, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { PencilIcon, CalendarIcon } from "@heroicons/react/24/outline";
 
 import {
@@ -22,12 +23,27 @@ export function ViewProposal(props: {
   guests: Guest[];
   eventSlug: string;
   event: Event;
+  showBackBtn: boolean;
   vote: VoteChoice | null;
+  titleId?: string;
+  isInModal?: boolean;
+  onCloseModal?: () => void;
 }) {
-  const { proposal, guests, eventSlug, event, vote: initialVote } = props;
+  const {
+    proposal,
+    guests,
+    eventSlug,
+    event,
+    showBackBtn,
+    vote: initialVote,
+    titleId,
+    isInModal = false,
+    onCloseModal,
+  } = props;
   const { user: currentUserId } = useContext(UserContext);
   const [vote, setVote] = useState(initialVote);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const onClickVote = async (choice: VoteChoice) => {
     if (!votingEnabled) {
@@ -76,6 +92,18 @@ export function ViewProposal(props: {
     return currentUserId && proposal.hosts.includes(currentUserId);
   };
 
+  const handleEditClick = (e: React.MouseEvent) => {
+    if (isInModal && onCloseModal) {
+      e.preventDefault();
+      onCloseModal();
+      // Small delay to allow modal to close before navigation
+      setTimeout(() => {
+        router.push(`/${eventSlug}/proposals/${proposal.id}/edit`);
+      }, 100);
+    }
+    // If not in modal, let the Link component handle the navigation normally
+  };
+
   const votingEnabled = !!currentUserId && inVotingPhase(event) && !isLoading;
   const schedEnabled = inSchedPhase(event);
   let votingDisabledText = "";
@@ -89,12 +117,13 @@ export function ViewProposal(props: {
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
 
   return (
-    <div className="max-w-2xl mx-auto pb-24">
+    <div className="max-w-2xl mx-auto pb-24 break-words">
       <Proposal
         eventSlug={eventSlug}
         proposal={proposal}
         guests={guests}
-        showBackBtn={true}
+        showBackBtn={showBackBtn}
+        titleId={titleId}
       />
 
       {canEdit() && (
@@ -103,6 +132,7 @@ export function ViewProposal(props: {
             <Link
               href={`/${eventSlug}/proposals/${proposal.id}/edit`}
               className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 transition-colors"
+              onClick={handleEditClick}
             >
               <PencilIcon className="h-3 w-3 mr-1" />
               Edit

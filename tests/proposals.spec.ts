@@ -103,32 +103,44 @@ test("should open proposal detail page when clicking on a proposal", async ({
 
   // Get the proposal title for verification
   const proposalTitleCell = firstProposalRow.locator("td").first();
-  const proposalTitle = await proposalTitleCell.textContent();
+  const proposalTitle = (await proposalTitleCell.textContent()) || "";
   expect(proposalTitle).toBeTruthy();
 
-  // Click on the proposal row to navigate to detail page
-  await firstProposalRow.click();
+  await proposalTitleCell.click();
 
-  // Verify we're on the proposal detail page
-  // The URL should contain the proposal ID and we should see the proposal title
-  await expect(page).toHaveURL(/\/Conference-Alpha\/proposals\/[^/]+$/);
+  // Verify the modal is open using the proper ARIA role
+  const modal = page.getByRole("dialog");
 
-  // The proposal title should appear somewhere on the page
-  await expect(page.getByText(proposalTitle!)).toBeVisible();
+  await expect(modal).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
 
-  // Verify we can see the back button
+  // Verify the proposal title is displayed as a heading within the modal
   await expect(
-    page.getByRole("link", { name: /Back to Proposals/i })
+    modal.getByRole("heading", { name: proposalTitle! })
   ).toBeVisible();
 
-  // Click the "Back to Proposals" link
-  await page.getByRole("link", { name: /Back to Proposals/i }).click();
+  const closeButton = modal.getByRole("button", { name: /close/i });
+  await expect(closeButton).toBeVisible();
 
-  // Verify we're back on the proposals list page
+  // Test closing the modal by clicking the close button (real user behavior)
+  await closeButton.click();
+
+  // Verify the modal is closed by checking that the close button is no longer visible
+  await expect(closeButton).not.toBeVisible();
+
+  // Verify we're back on the proposals list page by checking URL
   await expect(page).toHaveURL(/\/Conference-Alpha\/proposals$/);
-  await expect(
-    page.getByRole("heading", { name: /Session Proposals/i })
-  ).toBeVisible();
+
+  // Test opening the modal again to verify it can be reopened
+  await proposalTitleCell.click();
+  await expect(modal).toBeVisible();
+
+  // Test closing by clicking outside the modal content (common user behavior)
+  // Click in an area that should be the backdrop
+  await page.click("body", { position: { x: 50, y: 50 } });
+
+  // Verify modal is closed again
+  await expect(modal).not.toBeVisible();
 
   // Verify the proposal we viewed is still in the list
   await expect(

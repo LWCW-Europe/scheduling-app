@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Fuse from "fuse.js";
 import {
   PencilIcon,
@@ -200,7 +201,7 @@ export function ProposalTable({
   );
 
   const visitViewPage = (proposal: SessionProposal) => {
-    router.push(`/${eventSlug}/proposals/${proposal.id}`);
+    router.push(`/${eventSlug}/proposals/${proposal.id}/view`);
   };
 
   const formatDuration = (minutes?: number) => {
@@ -490,18 +491,20 @@ export function ProposalTable({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {currentPageProposals.map((proposal) => (
-              <tr
-                key={proposal.id}
-                className="hover:bg-gray-200 cursor-pointer"
-                onClick={() => visitViewPage(proposal)}
-              >
+              <tr key={proposal.id} className="hover:bg-gray-200">
                 <td
                   className="px-4 lg:px-6 py-4 whitespace-nowrap"
                   title={proposal.title}
                 >
-                  <div className="text-sm font-medium text-gray-900 truncate">
-                    {proposal.title}
-                  </div>
+                  <Link
+                    href={`/${eventSlug}/proposals/${proposal.id}/view`}
+                    scroll={false}
+                    className="block w-full"
+                  >
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {proposal.title}
+                    </div>
+                  </Link>
                 </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="truncate">
