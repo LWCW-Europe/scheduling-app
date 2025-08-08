@@ -1,19 +1,18 @@
 import { notFound } from "next/navigation";
 
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
-import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
 import { eventSlugToName } from "@/utils/utils";
-import { ViewProposal } from "./view-proposal";
+import { ProposalModal } from "./modal";
+import { getGuests } from "@/db/guests";
 
-export default async function ViewProposalPage({
+export default async function ProposalModalPage({
   params,
 }: {
   params: { eventSlug: string; proposalId: string };
 }) {
   const { eventSlug, proposalId } = params;
 
-  // Convert slug to event name (simple conversion for now)
   const eventName = eventSlugToName(eventSlug);
   const event = await getEventByName(eventName);
 
@@ -21,24 +20,22 @@ export default async function ViewProposalPage({
     return <div>Event not found</div>;
   }
 
-  const proposals = await getSessionProposalsByEvent(eventName);
+  const [proposals, guests] = await Promise.all([
+    await getSessionProposalsByEvent(eventName),
+    await getGuests(),
+  ]);
   const proposal = proposals.find((p) => p.id === proposalId);
 
   if (!proposal) {
     notFound();
   }
 
-  const guests = await getGuestsByEvent(event.Name);
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <ViewProposal
-        proposal={proposal}
-        guests={guests}
-        eventSlug={eventSlug}
-        event={event}
-        includeBackButtons={true}
-      />
-    </div>
+    <ProposalModal
+      proposal={proposal}
+      guests={guests}
+      eventSlug={eventSlug}
+      event={event}
+    />
   );
 }
