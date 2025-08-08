@@ -448,8 +448,9 @@ export function SelectHosts(props: {
   guests: Guest[];
   hosts: Guest[];
   setHosts: (hosts: Guest[]) => void;
+  id?: string;
 }) {
-  const { guests, hosts, setHosts } = props;
+  const { guests, hosts, setHosts, id } = props;
   const [query, setQuery] = useState("");
   const filteredGuests = guests
     .filter((guest) =>
@@ -469,7 +470,10 @@ export function SelectHosts(props: {
         multiple
       >
         <div className="relative mt-1">
-          <Combobox.Button className="relative w-full min-h-12 h-fit rounded-md border px-4 shadow-sm transition-colors focus:outline-none border-gray-300 focus:ring-2 focus:ring-rose-400 focus:outline-0 focus:border-none bg-white py-2 pl-3 pr-10 text-left placeholder:text-gray-400">
+          <Combobox.Button
+            id={id}
+            className="relative w-full min-h-12 h-fit rounded-md border px-4 shadow-sm transition-colors focus:outline-none border-gray-300 focus:ring-2 focus:ring-rose-400 focus:outline-0 focus:border-none bg-white py-2 pl-3 pr-10 text-left placeholder:text-gray-400"
+          >
             <div className="flex flex-wrap gap-1 items-center">
               {hosts.length > 0 && (
                 <>
