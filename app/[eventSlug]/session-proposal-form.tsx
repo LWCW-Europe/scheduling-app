@@ -130,11 +130,12 @@ export function SessionProposalForm(props: {
         className="flex flex-col gap-4"
       >
         <div className="flex flex-col gap-1">
-          <label className="font-medium">
+          <label className="font-medium" htmlFor="proposal-title">
             Title
             <span className="text-rose-500 mx-1">*</span>
           </label>
           <Input
+            id="proposal-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -144,8 +145,11 @@ export function SessionProposalForm(props: {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="font-medium">Description</label>
+          <label className="font-medium" htmlFor="proposal-description">
+            Description
+          </label>
           <textarea
+            id="proposal-description"
             value={description}
             className="rounded-md text-sm resize-y h-24 border bg-white px-4 py-2 shadow-sm transition-colors invalid:border-red-500 invalid:text-red-900 invalid:placeholder-red-300 focus:outline-none disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-500 border-gray-300 placeholder-gray-400 focus:ring-2 focus:ring-rose-400 focus:outline-0 focus:border-none"
             onChange={(e) => setDescription(e.target.value)}
