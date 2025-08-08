@@ -40,9 +40,8 @@ test.describe("Basic Sanity Checks", () => {
       .getByRole("link", { name: "View Schedule" })
       .click();
 
-    // Should find Conference Alpha YYYY: Session Proposals where YYYY is any year
     await expect(
-      page.getByText(/Conference Alpha \d{4}: Session Proposals/)
+      page.getByText(/Conference Alpha: Session Proposals/)
     ).toBeVisible();
     await expect(
       page.getByText("Proposal 1-A").locator("visible=true")
@@ -64,7 +63,7 @@ test.describe("Basic Sanity Checks", () => {
       .click();
 
     await expect(
-      page.getByText(/Conference Beta \d{4}: Session Proposals/)
+      page.getByText(/Conference Beta: Session Proposals/)
     ).toBeVisible();
     await expect(
       page.getByText("Proposal 2-B").locator("visible=true")
@@ -85,9 +84,7 @@ test.describe("Basic Sanity Checks", () => {
       .getByRole("link", { name: "View Schedule" })
       .click();
 
-    await expect(
-      page.getByText(/Conference Gamma \d{4} Schedule/)
-    ).toBeVisible();
+    await expect(page.getByText(/Conference Gamma Schedule/)).toBeVisible();
     await expect(
       page.getByText("Opening Keynote - Conference Gamma")
     ).toBeVisible();
