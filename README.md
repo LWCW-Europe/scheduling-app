@@ -32,7 +32,6 @@ The application uses environment variables for configuration. Create the followi
 
 - `.env.development.local` - for local development
 - `.env.production.local` - for production builds
-- `.env.test.local` - for testing
 
 ### Required Variables
 
@@ -106,28 +105,8 @@ In order to have these phases, you need to set their dates on the corresponding
 Event record. The way to do that is to edit Airtable manually. If none are set
 then there are no phases (i.e. sessions can be scheduled, that's it).
 
-You need to add the following columns to the Event table in your Airtable base:
-
-- `proposalPhaseStart`: Date, format ISO, Include time, Display time zone
-- `proposalPhaseEnd`: (same)
-- `votingPhaseStart`: (same)
-- `votingPhaseEnd`: (same)
-- `schedulingPhaseStart`: (same)
-- `schedulingPhaseEnd`: (same)
-
-You also need to add a SessionProposals table to your Airtable base:
-
-- Create a new table named "SessionProposals"
-- Add the following fields:
-  - `id`: Primary field, type "Formula", formula is `RECORD_ID()
-  - `description`: Long text
-  - `durationMinutes`: Number
-  - `event`: Link to another record (Events),
-    "Allow linking to multiple records" **unchecked**
-  - `hosts`: Link to another record (Guests),
-    "Allow linking to multiple records" **checked**
-  - `title`: Single line text (Primary field)
-  - `createdTime`: Created time
+The necessary changes to the Airtable schema are documented in
+[docs/SCHEMA.md](docs/SCHEMA.md).
 
 ## Development
 
@@ -138,6 +117,22 @@ automatically writes changes to the files.
 bun lint
 bun prettier
 ```
+
+### Database Migrations
+
+To apply database (Airtable) migrations see
+[migrations/README.md](migrations/README.md). If you make an Airtable schema
+change, you must create a migration file as documented there.
+
+### Dummy Data
+
+You can create (or reset) your development database by running:
+
+```bash
+bun run dev:db:reset
+```
+
+It will seed the database with different events and other test data.
 
 ## Learn More
 
@@ -156,12 +151,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 ## Testing
 
-To run integration tests, start the app on localhost:3000 and then run:
-
-```bash
-npm run test
-# or
-npx playwright test
-```
-
-The tests expect specific values to be in the database. To set up a test database instance, run `tests/init.ts`. This will overwrite the entire database, so it is recommended to use a different airtable database specified in .env.test.local.
+See [tests/README.md](tests/README.md).
