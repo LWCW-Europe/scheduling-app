@@ -44,6 +44,7 @@ export default async function ViewProposalPage({
         guests={guests}
         eventSlug={eventSlug}
         event={event}
+        showBackBtn={true}
         vote={voteChoice}
       />
     </div>
