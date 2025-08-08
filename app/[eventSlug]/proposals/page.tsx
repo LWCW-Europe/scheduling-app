@@ -33,7 +33,9 @@ export default async function ProposalsPage({
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col gap-1">
-        <span className="text-gray-500">My name is:</span>
+        <label htmlFor="user-selection" className="text-gray-500">
+          My name is:
+        </label>
         <UserSelect guests={guests} />
       </div>
       <div className="mb-6 mt-6">
