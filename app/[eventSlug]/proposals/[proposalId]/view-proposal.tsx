@@ -21,8 +21,9 @@ export function ViewProposal(props: {
   guests: Guest[];
   eventSlug: string;
   event: Event;
+  includeBackButtons: boolean;
 }) {
-  const { proposal, guests, eventSlug, event } = props;
+  const { proposal, guests, eventSlug, event, includeBackButtons } = props;
   const { user: currentUserId } = useContext(UserContext);
   const canEdit = () => {
     if (proposal.hosts.length === 0) {
@@ -42,8 +43,13 @@ export function ViewProposal(props: {
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
 
   return (
-    <div className="max-w-2xl mx-auto pb-24">
-      <Proposal eventSlug={eventSlug} proposal={proposal} guests={guests} />
+    <div className="max-w-2xl mx-auto pb-24 break-words">
+      <Proposal
+        eventSlug={eventSlug}
+        proposal={proposal}
+        guests={guests}
+        includeBackButtons={includeBackButtons}
+      />
 
       {canEdit() && (
         <div className="mt-6 flex gap-2 flex-wrap">
