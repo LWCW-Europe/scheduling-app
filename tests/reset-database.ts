@@ -135,7 +135,7 @@ function generateEventDates() {
 
   return [
     {
-      name: "Conference Alpha 2025",
+      name: "Conference Alpha",
       description: "Event currently in proposal phase",
       start: event1Start,
       end: event1End,
@@ -147,7 +147,7 @@ function generateEventDates() {
       schedulingPhaseEnd: event1SchedulingEnd,
     },
     {
-      name: "Conference Beta 2025",
+      name: "Conference Beta",
       description: "Event currently in voting phase",
       start: event2Start,
       end: event2End,
@@ -159,7 +159,7 @@ function generateEventDates() {
       schedulingPhaseEnd: event2SchedulingEnd,
     },
     {
-      name: "Conference Gamma 2025",
+      name: "Conference Gamma",
       description: "Event currently in scheduling phase",
       start: event3Start,
       end: event3End,

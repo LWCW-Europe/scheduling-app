@@ -9,7 +9,7 @@ test("should auto-focus the title input for new proposals", async ({
 
   await expect(page.getByText("Conference Alpha")).toBeVisible();
 
-  await page.goto("/Conference-Alpha-2025/proposals/new");
+  await page.goto("/Conference-Alpha/proposals/new");
   const focusedElement = await page.evaluateHandle(
     () => document.activeElement
   );
