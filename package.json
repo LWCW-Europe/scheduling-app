@@ -8,12 +8,12 @@
     "start": "node set-env.js production next start",
     "lint": "next lint",
     "lint-watch": "watchexec -c -w app -w db -w utils \"next lint --fix\"",
-    "test": "node set-env.js test npx playwright test && npx playwright show-report",
-    "start:test": "node set-env.js test next start",
+    "dev:test": "node set-env.js development npx playwright test && npx playwright show-report",
     "prettier": "prettier --write .",
     "dev:migrate:up": "node set-env.js development tsx migrations/cli/migrate-up.ts",
     "dev:migrate:status": "node set-env.js development tsx migrations/cli/migrate-status.ts",
-    "dev:migrate:create": "node set-env.js development tsx migrations/cli/create-migration.ts"
+    "dev:migrate:create": "node set-env.js development tsx migrations/cli/create-migration.ts",
+    "dev:db:reset": "node set-env.js development tsx tests/reset-database.ts"
   },
   "dependencies": {
     "@floating-ui/react": "^0.26.28",

@@ -125,6 +125,16 @@ To apply database (Airtable) migrations see
 [migrations/README.md](migrations/README.md). If you make an Airtable schema
 change, you must create a migration file as documented there.
 
+### Dummy Data
+
+You can create (or reset) your development database by running:
+
+```bash
+bun run dev:db:reset
+```
+
+It will seed the database with different events and other test data.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
