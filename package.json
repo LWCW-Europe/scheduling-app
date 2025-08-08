@@ -8,7 +8,7 @@
     "start": "node set-env.js production next start",
     "lint": "next lint",
     "lint-watch": "watchexec -c -w app -w db -w utils \"next lint --fix\"",
-    "dev:test": "node set-env.js development npx playwright test && npx playwright show-report",
+    "dev:test": "node set-env.js development npx playwright test --headed",
     "prettier": "prettier --write .",
     "dev:migrate:up": "node set-env.js development tsx migrations/cli/migrate-up.ts",
     "dev:migrate:status": "node set-env.js development tsx migrations/cli/migrate-status.ts",
