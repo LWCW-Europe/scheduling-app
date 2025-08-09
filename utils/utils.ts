@@ -1,3 +1,5 @@
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 import { Day } from "@/db/days";
 
 export const getPercentThroughDay = (now: Date, start: Date, end: Date) =>
@@ -25,4 +27,8 @@ export function eventNameToSlug(name: string): string {
 
 export function eventSlugToName(slug: string): string {
   return slug.replace(/-/g, " ");
+}
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
