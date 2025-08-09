@@ -34,6 +34,12 @@ const allTables = [
   // Don't clear: "Migrations"
 ];
 
+var _seedForRandom = 42;
+function seededRandom() {
+  var x = Math.sin(_seedForRandom++) * 10000;
+  return x - Math.floor(x);
+}
+
 async function clearTable(tableName: string) {
   console.log(`🧹 Clearing table: ${tableName}`);
 
@@ -281,7 +287,7 @@ function generateSessionProposals(
 
       // Sometimes use multiple hosts
       const hostIds =
-        Math.random() > 0.7
+        seededRandom() > 0.7
           ? [guests[hostIndex].id, guests[(hostIndex + 1) % guests.length].id]
           : [guests[hostIndex].id];
 
