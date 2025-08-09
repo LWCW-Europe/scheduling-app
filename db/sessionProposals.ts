@@ -1,4 +1,8 @@
 import { base } from "./db";
+import {
+  deleteVotesFromProposal,
+  deleteVotesFromProposalByUsers,
+} from "./votes";
 
 export type SessionProposal = {
   id: string;
@@ -8,6 +12,7 @@ export type SessionProposal = {
   hosts: string[];
   durationMinutes?: number;
   createdTime: string;
+  votesCount: number;
 };
 
 export type NewProposalInput = {
@@ -29,6 +34,7 @@ export async function getSessionProposalsByEvent(event: string) {
         "hosts",
         "durationMinutes",
         "createdTime",
+        "votesCount",
       ],
       filterByFormula: `{event} = "${event}"`,
     })
@@ -72,6 +78,9 @@ export async function updateSessionProposal(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
     durationMinutes: patch.durationMinutes as any,
   });
+  if (patch.hosts) {
+    deleteVotesFromProposalByUsers(id, patch.hosts);
+  }
 
   return {
     ...(record.fields as Omit<SessionProposal, "id">),
@@ -81,4 +90,5 @@ export async function updateSessionProposal(
 
 export async function deleteSessionProposal(id: string) {
   await base("SessionProposals").destroy([id]);
+  deleteVotesFromProposal(id);
 }
