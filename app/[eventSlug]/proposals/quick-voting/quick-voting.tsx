@@ -90,14 +90,8 @@ export function QuickVoting(props: {
     } else {
       return (
         <p>
-          You have voted on all proposals. Go to the
-          <Link
-            className="font-semibold py-2 px-4 hover:bg-cyan-500 active:bg-cyan-500 px-4"
-            href={`/${eventSlug}/proposals`}
-          >
-            overview
-          </Link>
-          to change your votes.
+          You have voted on all proposals. Go to the overview to change your
+          votes.
         </p>
       );
     }

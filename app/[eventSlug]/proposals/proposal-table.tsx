@@ -256,11 +256,8 @@ export function ProposalTable({
       return;
     }
     const existingVote = votes.find((v) => v.proposal === proposalId);
-    if (existingVote) {
-      void deleteVote(proposalId);
-      if (existingVote.choice === choice) {
-        return;
-      }
+    if (existingVote?.choice === choice) {
+      return deleteVote(proposalId);
     }
     const votesAtStart = votes;
 

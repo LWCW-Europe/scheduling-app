@@ -2,11 +2,7 @@ import { base } from "@/db/db";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request) {
-  const { guestId, proposalId } = (await req.json()) as {
-    guestId: string;
-    proposalId: string;
-  };
+export async function deleteVote(guestId: string, proposalId: string) {
   try {
     await base("Votes")
       .select({
@@ -29,4 +25,12 @@ export async function POST(req: Request) {
   }
 
   return Response.json({ success: true });
+}
+
+export async function POST(req: Request) {
+  const { guestId, proposalId } = (await req.json()) as {
+    guestId: string;
+    proposalId: string;
+  };
+  return deleteVote(guestId, proposalId);
 }
