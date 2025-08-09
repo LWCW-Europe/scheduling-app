@@ -44,7 +44,9 @@ test.describe("Basic Sanity Checks", () => {
       page.getByText(/Conference Alpha: Session Proposals/)
     ).toBeVisible();
     await expect(
-      page.getByText("Proposal 1-A").locator("visible=true")
+      page
+        .getByText("Conference Alpha Lightning Talks: Community Showcase")
+        .locator("visible=true")
     ).toBeVisible();
   });
 
@@ -66,7 +68,9 @@ test.describe("Basic Sanity Checks", () => {
       page.getByText(/Conference Beta: Session Proposals/)
     ).toBeVisible();
     await expect(
-      page.getByText("Proposal 2-B").locator("visible=true")
+      page
+        .getByText("Conference Beta Lightning Talks: Community Showcase")
+        .locator("visible=true")
     ).toBeVisible();
   });
 
