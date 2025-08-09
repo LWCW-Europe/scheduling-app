@@ -173,6 +173,171 @@ function generateEventDates() {
   ];
 }
 
+// Helper function to generate diverse session proposals
+function generateSessionProposals(
+  events: Airtable.Records<Airtable.FieldSet>,
+  eventConfigs: any[],
+  guests: Airtable.Records<Airtable.FieldSet>
+) {
+  const proposals: Array<{
+    fields: {
+      title: string;
+      description: string;
+      event: string[];
+      hosts: string[];
+    };
+  }> = [];
+
+  // Predefined session proposal templates for variety
+  const sessionTemplates = [
+    {
+      title: "Building Scalable Web Applications with Modern React",
+      description:
+        "Dive deep into the latest React patterns and best practices for building scalable applications. We'll cover state management, performance optimization, and modern tooling.",
+    },
+    {
+      title:
+        "The Future of AI: Transforming Industries Through Machine Learning",
+      description:
+        "Artificial Intelligence is reshaping every industry from healthcare to finance. In this comprehensive session, we'll explore the current state of AI technology, emerging trends, and practical applications that are driving innovation.\n\nWe'll discuss real-world case studies, ethical considerations, and the skills needed to thrive in an AI-driven world. Whether you're a beginner or experienced professional, you'll gain valuable insights into how AI can transform your work and industry.\n\nTopics covered include natural language processing, computer vision, predictive analytics, and the intersection of AI with other emerging technologies like blockchain and IoT.",
+    },
+    {
+      title: "Workshop: Hands-on Docker and Kubernetes",
+      description:
+        "A practical workshop on containerization and orchestration. Bring your laptop and get ready to deploy!",
+    },
+    {
+      title: "Design Systems: Creating Consistency at Scale",
+      description:
+        "Learn how to build and maintain design systems that scale across teams and products.",
+    },
+    {
+      title:
+        "Cybersecurity in the Age of Remote Work: Protecting Your Digital Assets",
+      description:
+        "The shift to remote work has fundamentally changed the cybersecurity landscape. Traditional perimeter-based security models are no longer sufficient when employees access company resources from home networks, coffee shops, and co-working spaces.\n\nThis session will provide a comprehensive overview of modern cybersecurity challenges and solutions. We'll explore zero-trust architecture, endpoint protection strategies, and the human element of cybersecurity. Attendees will learn practical techniques for securing remote work environments, implementing multi-factor authentication, and creating security awareness programs.\n\nWe'll also discuss emerging threats like sophisticated phishing attacks, ransomware targeting remote workers, and supply chain vulnerabilities. Real-world examples and case studies will illustrate both successful security implementations and costly breaches, providing actionable insights for organizations of all sizes.",
+    },
+    {
+      title: "Microservices Architecture: Lessons from the Trenches",
+      description:
+        "Real-world experiences with microservices: what works, what doesn't, and when to avoid them entirely.",
+    },
+    {
+      title: "Sustainable Software Development: Green Coding Practices",
+      description:
+        "How to reduce the environmental impact of your code through efficient algorithms and sustainable practices.",
+    },
+    {
+      title: "Building Inclusive Tech Teams: Beyond Diversity Hiring",
+      description:
+        "Creating truly inclusive environments requires more than diverse hiring. This session explores psychological safety, inclusive leadership, and systemic changes needed for equity in tech.\n\nWe'll examine unconscious bias in technical interviews, the importance of sponsorship vs mentorship, and how to build cultures where everyone can thrive. Participants will leave with concrete strategies for fostering inclusion at every level of their organization.",
+    },
+    {
+      title: "API Design: RESTful vs GraphQL vs gRPC",
+      description:
+        "A comparative analysis of different API paradigms with practical examples and use cases.",
+    },
+    {
+      title:
+        "The Psychology of User Experience: Understanding Human-Computer Interaction",
+      description:
+        "User experience design is fundamentally about understanding human psychology and behavior. This session delves into cognitive psychology principles that drive effective UX design, including mental models, cognitive load theory, and decision-making processes.\n\nWe'll explore how users actually interact with digital interfaces, common usability heuristics, and the science behind user research methods. Through interactive exercises and real-world examples, attendees will learn to apply psychological principles to create more intuitive and engaging user experiences.\n\nTopics include attention and perception, memory limitations, emotional design, accessibility considerations, and cross-cultural UX patterns. Perfect for designers, developers, and product managers looking to create more human-centered digital products.",
+    },
+    {
+      title: "Blockchain Beyond Cryptocurrency: Practical Applications",
+      description:
+        "Exploring real-world blockchain applications in supply chain, healthcare, and digital identity.",
+    },
+    {
+      title: "Performance Optimization: Making Your Apps Lightning Fast",
+      description:
+        "Techniques for optimizing web and mobile applications for speed and efficiency.",
+    },
+    {
+      title: "Open Source Sustainability: Funding and Community Building",
+      description:
+        "The open source ecosystem faces sustainability challenges as projects grow in complexity and importance. This session examines successful funding models, from corporate sponsorship to foundation grants to innovative approaches like GitHub Sponsors.\n\nWe'll discuss community building strategies, maintainer burnout prevention, and the economic realities of supporting critical infrastructure projects. Case studies will include successful projects that have achieved sustainable funding and community growth.",
+    },
+    {
+      title: "DevOps Culture: Breaking Down Silos",
+      description:
+        "How to foster collaboration between development and operations teams for better software delivery.",
+    },
+    {
+      title: "Machine Learning Ethics: Bias, Fairness, and Accountability",
+      description:
+        "As machine learning systems become more prevalent in decision-making processes, ethical considerations become paramount. This session explores algorithmic bias, fairness metrics, and accountability frameworks.\n\nWe'll examine real-world cases where ML systems have perpetuated or amplified societal biases, and discuss practical approaches for building more equitable AI systems. Topics include data bias, model interpretability, fairness-aware machine learning, and the legal and regulatory landscape surrounding AI ethics.",
+    },
+  ];
+
+  // Generate proposals for each event
+  events.forEach((event, eventIndex) => {
+    const eventName = eventConfigs[eventIndex].name;
+    const numProposals = 8 + eventIndex * 2; // 8, 10, 12 proposals per event
+
+    for (let i = 0; i < numProposals; i++) {
+      const template = sessionTemplates[i % sessionTemplates.length];
+      const hostIndex = (eventIndex + i) % guests.length;
+
+      // Sometimes use multiple hosts
+      const hostIds =
+        Math.random() > 0.7
+          ? [guests[hostIndex].id, guests[(hostIndex + 1) % guests.length].id]
+          : [guests[hostIndex].id];
+
+      // Customize title and description based on event
+      const customizedTitle =
+        i < sessionTemplates.length
+          ? template.title
+          : `${template.title} - ${eventName} Special Edition`;
+
+      const customizedDescription =
+        i < sessionTemplates.length
+          ? template.description
+          : `${template.description}\n\nThis special edition for ${eventName} will include additional content tailored to our community's interests and current industry trends.`;
+
+      proposals.push({
+        fields: {
+          title: customizedTitle,
+          description: customizedDescription,
+          event: [event.id],
+          hosts: hostIds,
+        },
+      });
+    }
+
+    // Add a few event-specific proposals
+    const eventSpecificProposals = [
+      {
+        title: `${eventName} Lightning Talks: Community Showcase`,
+        description: `A fast-paced session featuring 5-minute lightning talks from ${eventName} attendees. This is your chance to share a quick tip, tool, or technique with the community.\n\nWe'll have 8-10 speakers covering diverse topics chosen by community vote. Past lightning talks have covered everything from productivity hacks to cutting-edge research findings. Whether you're a first-time speaker or seasoned presenter, lightning talks provide a low-pressure environment to share your expertise.\n\nSubmit your lightning talk proposal during the event - we'll be accepting submissions right up until the session begins!`,
+      },
+      {
+        title: `Networking & Coffee Chat: Connect with ${eventName} Peers`,
+        description: `An informal networking session designed to help ${eventName} attendees connect over coffee and conversation. This isn't a structured presentation - instead, we'll facilitate small group discussions around shared interests and challenges.\n\nWhether you're looking for career advice, collaboration opportunities, or just want to meet like-minded professionals, this session provides a welcoming environment for meaningful connections.`,
+      },
+      {
+        title: `${eventName} Panel: Industry Leaders Share Their Insights`,
+        description: `Join us for an engaging panel discussion featuring industry leaders and ${eventName} community members. Our panelists will share their perspectives on current trends, future predictions, and career advice.\n\nThis interactive session includes audience Q&A, so come prepared with your questions! Topics will be driven by audience interest but typically cover emerging technologies, leadership challenges, and navigating career transitions in tech.`,
+      },
+    ];
+
+    eventSpecificProposals.forEach((proposal, proposalIndex) => {
+      const hostIndex = (eventIndex + proposalIndex) % guests.length;
+      proposals.push({
+        fields: {
+          title: proposal.title,
+          description: proposal.description,
+          event: [event.id],
+          hosts: [guests[hostIndex].id],
+        },
+      });
+    });
+  });
+
+  return proposals;
+}
+
 async function seedTestData() {
   console.log("🌱 Seeding test data...");
 
@@ -290,35 +455,18 @@ async function seedTestData() {
     const hasSessionProposals = await tableExists("SessionProposals");
     if (hasSessionProposals) {
       console.log("  💡 Creating test session proposals...");
-      const proposals: Array<{
-        fields: {
-          title: string;
-          description: string;
-          event: string[];
-          hosts: string[];
-        };
-      }> = [];
+      const proposals = generateSessionProposals(events, eventConfigs, guests);
 
-      events.forEach((event, eventIndex) => {
-        proposals.push({
-          fields: {
-            title: `Proposal ${eventIndex + 1}-A`,
-            description: `A test session proposal for ${eventConfigs[eventIndex].name}`,
-            event: [event.id],
-            hosts: [guests[eventIndex % guests.length].id],
-          },
-        });
-        proposals.push({
-          fields: {
-            title: `Proposal ${eventIndex + 1}-B`,
-            description: `Another test session proposal for ${eventConfigs[eventIndex].name}`,
-            event: [event.id],
-            hosts: [guests[(eventIndex + 1) % guests.length].id],
-          },
-        });
-      });
+      // Create proposals in batches of 10 (Airtable limit)
+      const proposalChunks = [];
+      for (let i = 0; i < proposals.length; i += 10) {
+        proposalChunks.push(proposals.slice(i, i + 10));
+      }
 
-      await base("SessionProposals").create(proposals);
+      for (const chunk of proposalChunks) {
+        await base("SessionProposals").create(chunk);
+      }
+
       console.log(
         `  ✅ Created ${proposals.length} session proposals across ${events.length} events`
       );
