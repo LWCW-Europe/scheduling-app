@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PencilIcon, CalendarIcon } from "@heroicons/react/24/outline";
@@ -16,7 +16,7 @@ import { Proposal } from "@/app/[eventSlug]/proposal";
 import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { SessionProposal } from "@/db/sessionProposals";
-import { VoteChoice } from "@/app/votes";
+import { VotingButtons } from "@/app/[eventSlug]/proposals/voting-buttons";
 
 export function ViewProposal(props: {
   proposal: SessionProposal;
@@ -24,7 +24,6 @@ export function ViewProposal(props: {
   eventSlug: string;
   event: Event;
   showBackBtn: boolean;
-  vote: VoteChoice | null;
   titleId?: string;
   isInModal?: boolean;
   onCloseModal?: () => void;
@@ -35,50 +34,12 @@ export function ViewProposal(props: {
     eventSlug,
     event,
     showBackBtn,
-    vote: initialVote,
     titleId,
     isInModal = false,
     onCloseModal,
   } = props;
   const { user: currentUserId } = useContext(UserContext);
-  const [vote, setVote] = useState(initialVote);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-
-  const onClickVote = async (choice: VoteChoice) => {
-    if (!votingEnabled) {
-      return;
-    }
-    setIsLoading(true);
-    const previousVote = vote;
-    const newChoice = vote === choice ? null : choice;
-
-    let response: Response;
-    if (newChoice === null) {
-      response = await fetch("/api/delete-vote", {
-        method: "POST",
-        body: JSON.stringify({
-          proposalId: proposal.id,
-          guestId: currentUserId,
-        }),
-      });
-    } else {
-      response = await fetch("/api/add-vote", {
-        method: "POST",
-        body: JSON.stringify({
-          proposal: proposal.id,
-          guest: currentUserId,
-          choice: newChoice,
-        }),
-      });
-    }
-    if (response.ok) {
-      setVote(newChoice);
-    } else {
-      setVote(previousVote);
-    }
-    setIsLoading(false);
-  };
 
   const canEdit = () => {
     if (proposal.hosts.length === 0) {
@@ -104,21 +65,19 @@ export function ViewProposal(props: {
     // If not in modal, let the Link component handle the navigation normally
   };
 
-  const votingEnabled = !!currentUserId && inVotingPhase(event) && !isLoading;
+  const votingEnabled = !!currentUserId && inVotingPhase(event);
   const schedEnabled = inSchedPhase(event);
   let votingDisabledText = "";
   if (!inVotingPhase(event)) {
     votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
   } else if (!currentUserId) {
     votingDisabledText = "Select a user first";
-  } else if (isLoading) {
-    votingDisabledText = "Loading...";
   }
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
 
   return (
     <div
-      className={`${isInModal ? "w-full" : "max-w-2xl mx-auto"} pb-24 break-words overflow-hidden`}
+      className={`${isInModal ? "w-full p-6" : "max-w-2xl mx-auto"} pb-12 break-words overflow-hidden`}
     >
       <Proposal
         eventSlug={eventSlug}
@@ -156,45 +115,12 @@ export function ViewProposal(props: {
       {/* Voting buttons section */}
       {!isHost() && (
         <div className="mt-6 flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
-          <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
-            <button
-              type="button"
-              className={`rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
-                ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
-                ${vote === VoteChoice.interested ? "bg-blue-200" : "bg-white"}`}
-              disabled={!votingEnabled}
-              onClick={() => void onClickVote(VoteChoice.interested)}
-            >
-              <div className="text-sm sm:text-lg mb-1">❤️</div>
-              <div className="text-[10px] sm:text-xs">Interested</div>
-            </button>
-          </HoverTooltip>
-          <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
-            <button
-              type="button"
-              className={`rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
-                ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
-                ${vote === VoteChoice.maybe ? "bg-blue-200" : "bg-white"}`}
-              disabled={!votingEnabled}
-              onClick={() => void onClickVote(VoteChoice.maybe)}
-            >
-              <div className="text-sm sm:text-lg mb-1">⭐</div>
-              <div className="text-[10px] sm:text-xs">Maybe</div>
-            </button>
-          </HoverTooltip>
-          <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
-            <button
-              type="button"
-              className={`rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
-                ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
-                ${vote === VoteChoice.skip ? "bg-blue-200" : "bg-white"}`}
-              disabled={!votingEnabled}
-              onClick={() => void onClickVote(VoteChoice.skip)}
-            >
-              <div className="text-sm sm:text-lg mb-1">👋🏽</div>
-              <div className="text-[10px] sm:text-xs">Skip</div>
-            </button>
-          </HoverTooltip>
+          <VotingButtons
+            proposalId={proposal.id}
+            votingEnabled={votingEnabled}
+            votingDisabledText={votingDisabledText}
+            large={true}
+          />
         </div>
       )}
     </div>

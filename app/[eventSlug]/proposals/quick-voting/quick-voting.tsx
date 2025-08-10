@@ -1,11 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import Link from "next/link";
 
 import { Proposal } from "@/app/[eventSlug]/proposal";
 import { Vote, VoteChoice } from "@/app/votes";
 import type { SessionProposal } from "@/db/sessionProposals";
 import type { Guest } from "@/db/guests";
+import { VotingButtons } from "@/app/[eventSlug]/proposals/voting-buttons";
+import { VotesContext } from "@/app/context";
 
 export function QuickVoting(props: {
   proposals: SessionProposal[];
@@ -16,6 +18,7 @@ export function QuickVoting(props: {
 }) {
   const { proposals, guests, currentUser, initialVotes, eventSlug } = props;
   const [votes, setVotes] = useState(initialVotes);
+  const { addVote, removeVote, updateVote, getVote } = useContext(VotesContext);
 
   const totalProposals = proposals.length;
   const currentUserName = guests.find((g) => g.ID === currentUser)?.Name;
@@ -24,30 +27,91 @@ export function QuickVoting(props: {
     .sort((a, b) => a.votesCount - b.votesCount);
   const proposal = eligibleProposals.at(0);
 
-  // update votes optimistically
-  async function vote(proposal: string, choice: VoteChoice) {
+  // Custom vote handler for quick voting
+  async function handleVote(proposalId: string, choice: VoteChoice) {
+    const previousVote = getVote(proposalId);
+    const optimisticVote: Vote = {
+      proposal: proposalId,
+      guest: currentUser,
+      choice,
+    };
+
     try {
-      const newVote: Vote = {
-        proposal,
-        guest: currentUser,
-        choice: choice,
-      };
-      setVotes((prevVotes) => [...prevVotes, newVote]);
+      // Optimistic local state for next-proposal selection
+      setVotes((prevVotes) => {
+        const existingIndex = prevVotes.findIndex(
+          (v) => v.proposal === proposalId && v.guest === currentUser
+        );
+        if (existingIndex >= 0) {
+          const updated = [...prevVotes];
+          updated[existingIndex] = optimisticVote;
+          return updated;
+        }
+        return [...prevVotes, optimisticVote];
+      });
+
+      // Optimistic global context update for overview/UI highlight
+      if (previousVote) {
+        updateVote(proposalId, choice);
+      } else {
+        addVote(optimisticVote);
+      }
 
       const response = await fetch("/api/add-vote", {
         method: "POST",
-        body: JSON.stringify(newVote),
+        body: JSON.stringify(optimisticVote),
       });
 
       if (!response.ok) {
-        // Revert optimistic update on failure
-        setVotes(initialVotes);
+        // Revert both local and global on failure
+        setVotes((prevVotes) => {
+          // revert to previous choice if existed, else remove
+          if (previousVote) {
+            const idx = prevVotes.findIndex(
+              (v) => v.proposal === proposalId && v.guest === currentUser
+            );
+            if (idx >= 0) {
+              const reverted = [...prevVotes];
+              reverted[idx] = previousVote;
+              return reverted;
+            }
+          }
+          return prevVotes.filter(
+            (v) => !(v.proposal === proposalId && v.guest === currentUser)
+          );
+        });
+
+        if (previousVote) {
+          updateVote(proposalId, previousVote.choice);
+        } else {
+          removeVote(proposalId);
+        }
       }
       return response.ok;
     } catch (error: unknown) {
-      // Revert optimistic update on error
+      // Revert both local and global on error
       console.error("Error updating vote:", error);
-      setVotes(initialVotes);
+      setVotes((prevVotes) => {
+        if (previousVote) {
+          const idx = prevVotes.findIndex(
+            (v) => v.proposal === proposalId && v.guest === currentUser
+          );
+          if (idx >= 0) {
+            const reverted = [...prevVotes];
+            reverted[idx] = previousVote;
+            return reverted;
+          }
+        }
+        return prevVotes.filter(
+          (v) => !(v.proposal === proposalId && v.guest === currentUser)
+        );
+      });
+
+      if (previousVote) {
+        updateVote(proposalId, previousVote.choice);
+      } else {
+        removeVote(proposalId);
+      }
       return false;
     }
   }
@@ -93,32 +157,13 @@ export function QuickVoting(props: {
       {/* Fixed voting buttons - only show when there's a proposal to vote on */}
       {proposal && (
         <div className="fixed bottom-4 sm:bottom-16 left-1/2 transform -translate-x-1/2 z-30 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-lg shadow-lg p-3 sm:p-4">
-          <div className="flex gap-2 sm:gap-3 justify-center">
-            <button
-              type="button"
-              className="rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 bg-white font-medium text-black hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 active:bg-gray-300 flex flex-col items-center justify-center"
-              onClick={() => void vote(proposal.id, VoteChoice.interested)}
-            >
-              <div className="text-lg sm:text-xl mb-1">❤️</div>
-              <div className="text-[10px] sm:text-xs">Interested</div>
-            </button>
-            <button
-              type="button"
-              className="rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 bg-white font-medium text-black hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 active:bg-gray-300 flex flex-col items-center justify-center"
-              onClick={() => void vote(proposal.id, VoteChoice.maybe)}
-            >
-              <div className="text-lg sm:text-xl mb-1">⭐</div>
-              <div className="text-[10px] sm:text-xs">Maybe</div>
-            </button>
-            <button
-              type="button"
-              className="rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 bg-white font-medium text-black hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 active:bg-gray-300 flex flex-col items-center justify-center"
-              onClick={() => void vote(proposal.id, VoteChoice.skip)}
-            >
-              <div className="text-lg sm:text-xl mb-1">👋🏽</div>
-              <div className="text-[10px] sm:text-xs">Skip</div>
-            </button>
-          </div>
+          <VotingButtons
+            proposalId={proposal.id}
+            votingEnabled={true}
+            votingDisabledText=""
+            large={true}
+            onVote={handleVote}
+          />
         </div>
       )}
     </div>
