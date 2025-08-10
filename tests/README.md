@@ -11,7 +11,8 @@ bun playwright install
 
 - The tests assume the global password is `testtest` by default.
   Set it in your .env file with `SITE_PASSWORD`. You can override the password the tests use with `TEST_PASSWORD`.
-- Tests expect the app to be running on `http://localhost:3000`
+- Tests expect the app to be running on `http://localhost:3000` and will start
+  it themself otherwise.
 - The global setup automatically resets the database before each test run
 
 ## Generated Test Data
