@@ -5,6 +5,16 @@ import Link from "next/link";
 import type { Guest } from "@/db/guests";
 import type { SessionProposal } from "@/db/sessionProposals";
 
+export function displayDuration(duration: number) {
+  if (duration === 30) {
+    return "30 minutes";
+  } else {
+    const numHours = duration / 60;
+    const hoursStr = numHours === 1 ? "hour" : "hours";
+    return `${numHours} ${hoursStr}`;
+  }
+}
+
 export function Proposal(props: {
   eventSlug: string;
   proposal: SessionProposal;
@@ -13,16 +23,6 @@ export function Proposal(props: {
   titleId?: string;
 }) {
   const { eventSlug, proposal, guests, showBackBtn, titleId } = props;
-  const displayDuration = (duration: number) => {
-    if (duration === 30) {
-      return "30 minutes";
-    } else {
-      const numHours = duration / 60;
-      const hoursStr = numHours === 1 ? "hour" : "hours";
-      return `${numHours} ${hoursStr}`;
-    }
-  };
-
   return (
     <>
       {showBackBtn && (
