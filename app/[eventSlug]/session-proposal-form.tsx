@@ -174,16 +174,16 @@ export function SessionProposalForm(props: {
           <fieldset>
             <div className="grid gap-3">
               {DURATION_OPTIONS.map(({ value, label }) => (
-                <div key={value} className="flex items-center">
+                <div key={value ?? "undecided"} className="flex items-center">
                   <input
-                    id={`duration-${value}`}
+                    id={`duration-${value ?? "undecided"}`}
                     type="radio"
                     checked={value === durationMinutes}
                     onChange={() => setDurationMinutes(value)}
                     className="h-4 w-4 border-gray-300 text-rose-400 focus:ring-rose-400"
                   />
                   <label
-                    htmlFor={`duration-${value}`}
+                    htmlFor={`duration-${value ?? "undecided"}`}
                     className="ml-3 block text-sm font-medium leading-6 text-gray-900"
                   >
                     {label}
