@@ -16,6 +16,7 @@ export function UserSelect({
   return (
     (!showOnlyWhenUserSet || currentUser) && (
       <SelectHosts
+        id="user-selection"
         guests={guests}
         hosts={guests.filter((guest) => guest.ID === currentUser)}
         setHosts={(hosts) => {

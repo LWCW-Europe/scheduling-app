@@ -1,11 +1,13 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
 import { eventSlugToName } from "@/utils/utils";
-import { ProposalTable } from "./proposal-table";
+import { getVotesByUser } from "@/db/votes";
 import { ProposalActionBar } from "./proposal-action-bar";
+import { ProposalTable } from "./proposal-table";
 import { UserSelect } from "@/app/user-select";
 
 export const dynamic = "force-dynamic";
@@ -25,15 +27,27 @@ export default async function ProposalsPage({
     return <div>Event not found</div>;
   }
 
-  const [guests, proposals] = await Promise.all([
+  const currentUser = cookies().get("user")?.value;
+  const getVotes = async () => {
+    if (currentUser) {
+      return await getVotesByUser(currentUser, eventName);
+    } else {
+      return await Promise.resolve([]);
+    }
+  };
+
+  const [guests, proposals, votes] = await Promise.all([
     getGuestsByEvent(eventName),
     getSessionProposalsByEvent(eventName),
+    getVotes(),
   ]);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col gap-1">
-        <span className="text-gray-500">My name is:</span>
+        <label htmlFor="user-selection" className="text-gray-500">
+          My name is:
+        </label>
         <UserSelect guests={guests} />
       </div>
       <div className="mb-6 mt-6">
@@ -71,6 +85,7 @@ export default async function ProposalsPage({
           proposals={proposals}
           eventSlug={eventSlug}
           event={event}
+          initialVotes={votes}
         />
       )}
     </div>

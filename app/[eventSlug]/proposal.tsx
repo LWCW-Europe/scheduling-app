@@ -9,8 +9,10 @@ export function Proposal(props: {
   eventSlug: string;
   proposal: SessionProposal;
   guests: Guest[];
+  showBackBtn: boolean;
+  titleId?: string;
 }) {
-  const { eventSlug, proposal, guests } = props;
+  const { eventSlug, proposal, guests, showBackBtn, titleId } = props;
   const displayDuration = (duration: number) => {
     if (duration === 30) {
       return "30 minutes";
@@ -20,15 +22,20 @@ export function Proposal(props: {
       return `${numHours} ${hoursStr}`;
     }
   };
+
   return (
     <>
-      <Link
-        className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
-        href={`/${eventSlug}/proposals`}
-      >
-        Back to Proposals
-      </Link>
-      <p className="text-xl font-semibold mb-2 mt-5">{proposal.title}</p>
+      {showBackBtn && (
+        <Link
+          className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
+          href={`/${eventSlug}/proposals`}
+        >
+          Back to Proposals
+        </Link>
+      )}
+      <h2 className="text-xl font-semibold mb-2 mt-5" id={titleId}>
+        {proposal.title}
+      </h2>
       <p className="text-lg font-medium text-gray-700 mb-4">
         {proposal.hosts
           .map((h) => guests.find((g) => g.ID === h))

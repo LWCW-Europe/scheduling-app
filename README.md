@@ -32,7 +32,6 @@ The application uses environment variables for configuration. Create the followi
 
 - `.env.development.local` - for local development
 - `.env.production.local` - for production builds
-- `.env.test.local` - for testing
 
 ### Required Variables
 
@@ -125,6 +124,16 @@ To apply database (Airtable) migrations see
 [migrations/README.md](migrations/README.md). If you make an Airtable schema
 change, you must create a migration file as documented there.
 
+### Dummy Data
+
+You can create (or reset) your development database by running:
+
+```bash
+bun run dev:db:reset
+```
+
+It will seed the database with different events and other test data.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -142,12 +151,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 
 ## Testing
 
-To run integration tests, start the app on localhost:3000 and then run:
-
-```bash
-npm run test
-# or
-npx playwright test
-```
-
-The tests expect specific values to be in the database. To set up a test database instance, run `tests/init.ts`. This will overwrite the entire database, so it is recommended to use a different airtable database specified in .env.test.local.
+See [tests/README.md](tests/README.md).
