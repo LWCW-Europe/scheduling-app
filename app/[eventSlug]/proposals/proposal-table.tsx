@@ -313,6 +313,28 @@ export function ProposalTable({
     }
   }
 
+  useEffect(() => {
+    const listener = (event: globalThis.Event) => {
+      const { proposalId, choice } = (
+        event as CustomEvent<{
+          proposalId: string;
+          choice: VoteChoice | null;
+        }>
+      ).detail;
+      setVotes((prev) => prev.filter((v) => v.proposal !== proposalId));
+      if (choice) {
+        const newVote: Vote = {
+          proposal: proposalId,
+          choice,
+          guest: currentUserId!,
+        };
+        setVotes((prevVotes) => [...prevVotes, newVote]);
+      }
+    };
+    window.addEventListener("proposalVoted", listener);
+    return () => window.removeEventListener("proposalVoted", listener);
+  }, [currentUserId]);
+
   return (
     <div className="space-y-6">
       {/* Search & Filter Section */}

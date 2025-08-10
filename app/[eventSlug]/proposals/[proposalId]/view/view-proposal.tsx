@@ -77,6 +77,16 @@ export function ViewProposal(props: {
     } else {
       setVote(previousVote);
     }
+    if (isInModal) {
+      window.dispatchEvent(
+        new CustomEvent("proposalVoted", {
+          detail: {
+            proposalId: proposal.id,
+            choice: newChoice,
+          },
+        })
+      );
+    }
     setIsLoading(false);
   };
 
