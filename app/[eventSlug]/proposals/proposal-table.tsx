@@ -126,6 +126,9 @@ export function ProposalTable({
     ? fuse.search(searchQuery).map((res) => res.item)
     : filteredProposals;
   searchResults.sort((a, b) => {
+    if (searchQuery.trim()) {
+      return 0;
+    }
     const { key, direction } = sortConfig;
 
     let cmp = 0;
@@ -434,27 +437,29 @@ export function ProposalTable({
                 onClick={() => handleSort("title")}
                 scope="col"
                 className={`w-[20%] text-left px-4 lg:px-6 py-3 text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
-                  ${sortConfig.key === "title" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
+                  ${sortConfig.key === "title" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Title
-                {sortConfig.key === "title"
-                  ? sortConfig.direction === "asc"
-                    ? " ↓"
-                    : " ↑"
-                  : " ↑↓"}
+                {!searchQuery.trim() &&
+                  (sortConfig.key === "title"
+                    ? sortConfig.direction === "asc"
+                      ? " ↓"
+                      : " ↑"
+                    : " ↑↓")}
               </th>
               <th
                 onClick={() => handleSort("hosts")}
                 scope="col"
                 className={`w-[15%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
-                  ${sortConfig.key === "hosts" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
+                  ${sortConfig.key === "hosts" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Host(s)
-                {sortConfig.key === "hosts"
-                  ? sortConfig.direction === "asc"
-                    ? " ↓"
-                    : " ↑"
-                  : " ↑↓"}
+                {!searchQuery.trim() &&
+                  (sortConfig.key === "hosts"
+                    ? sortConfig.direction === "asc"
+                      ? " ↓"
+                      : " ↑"
+                    : " ↑↓")}
               </th>
               <th
                 scope="col"
@@ -466,14 +471,15 @@ export function ProposalTable({
                 onClick={() => handleSort("durationMinutes")}
                 scope="col"
                 className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
-                  ${sortConfig.key === "durationMinutes" ? "text-gray-900 font-semibold" : "text-gray-500"}`}
+                  ${sortConfig.key === "durationMinutes" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Duration
-                {sortConfig.key === "durationMinutes"
-                  ? sortConfig.direction === "asc"
-                    ? " ↓"
-                    : " ↑"
-                  : " ↑↓"}
+                {!searchQuery.trim() &&
+                  (sortConfig.key === "durationMinutes"
+                    ? sortConfig.direction === "asc"
+                      ? " ↓"
+                      : " ↑"
+                    : " ↑↓")}
               </th>
               <th
                 scope="col"
