@@ -38,7 +38,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={fontVars}>
-      <body className="font-monteserrat">
+      <body className="font-monteserrat flex flex-col min-h-screen">
         <UserProvider>
           {CONSTS.MULTIPLE_EVENTS && <NavBar />}
           {showLogout && !CONSTS.MULTIPLE_EVENTS && (
@@ -48,8 +48,8 @@ export default function RootLayout({
           )}
           <main
             className={clsx(
-              "lg:px-24 sm:px-10 p-6",
-              CONSTS.MULTIPLE_EVENTS ? "py-24 sm:pb-16" : "pt-12 pb-4 sm:pb-16"
+              "lg:px-24 sm:px-10 p-6 flex-1",
+              CONSTS.MULTIPLE_EVENTS ? "py-24 sm:pb-16" : "pt-12 sm:pb-16"
             )}
           >
             {children}

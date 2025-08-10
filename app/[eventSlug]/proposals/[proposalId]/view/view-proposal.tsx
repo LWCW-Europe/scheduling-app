@@ -117,7 +117,9 @@ export function ViewProposal(props: {
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
 
   return (
-    <div className="max-w-2xl mx-auto pb-24 break-words">
+    <div
+      className={`${isInModal ? "w-full" : "max-w-2xl mx-auto"} pb-24 break-words overflow-hidden`}
+    >
       <Proposal
         eventSlug={eventSlug}
         proposal={proposal}
@@ -153,44 +155,44 @@ export function ViewProposal(props: {
 
       {/* Voting buttons section */}
       {!isHost() && (
-        <div className="mt-6 flex gap-3 flex-wrap">
+        <div className="mt-6 flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
           <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
             <button
               type="button"
-              className={`rounded-md border border-black shadow-sm w-20 h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
+              className={`rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
                 ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
                 ${vote === VoteChoice.interested ? "bg-blue-200" : "bg-white"}`}
               disabled={!votingEnabled}
               onClick={() => void onClickVote(VoteChoice.interested)}
             >
-              <div className="text-lg mb-1">❤️</div>
-              <div className="text-xs">Interested</div>
+              <div className="text-sm sm:text-lg mb-1">❤️</div>
+              <div className="text-[10px] sm:text-xs">Interested</div>
             </button>
           </HoverTooltip>
           <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
             <button
               type="button"
-              className={`rounded-md border border-black shadow-sm w-20 h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
+              className={`rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
                 ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
                 ${vote === VoteChoice.maybe ? "bg-blue-200" : "bg-white"}`}
               disabled={!votingEnabled}
               onClick={() => void onClickVote(VoteChoice.maybe)}
             >
-              <div className="text-lg mb-1">⭐</div>
-              <div className="text-xs">Maybe</div>
+              <div className="text-sm sm:text-lg mb-1">⭐</div>
+              <div className="text-[10px] sm:text-xs">Maybe</div>
             </button>
           </HoverTooltip>
           <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
             <button
               type="button"
-              className={`rounded-md border border-black shadow-sm w-20 h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
+              className={`rounded-md border border-black shadow-sm w-16 h-16 sm:w-20 sm:h-20 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none flex flex-col items-center justify-center
                 ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale focus:ring-gray-200"}
                 ${vote === VoteChoice.skip ? "bg-blue-200" : "bg-white"}`}
               disabled={!votingEnabled}
               onClick={() => void onClickVote(VoteChoice.skip)}
             >
-              <div className="text-lg mb-1">👋🏽</div>
-              <div className="text-xs">Skip</div>
+              <div className="text-sm sm:text-lg mb-1">👋🏽</div>
+              <div className="text-[10px] sm:text-xs">Skip</div>
             </button>
           </HoverTooltip>
         </div>

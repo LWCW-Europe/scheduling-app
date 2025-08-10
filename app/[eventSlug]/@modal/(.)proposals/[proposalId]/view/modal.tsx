@@ -36,15 +36,15 @@ export function ProposalModal(props: {
 
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/50" onClick={onDismiss}>
-      <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="fixed inset-0 flex items-center justify-center p-2 sm:p-4">
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
-          className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-white shadow-xl"
+          className="relative max-h-[95vh] sm:max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white shadow-xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <ViewProposal
               proposal={proposal}
               guests={guests}
@@ -59,7 +59,7 @@ export function ProposalModal(props: {
           </div>
           <button
             onClick={onDismiss}
-            className="absolute right-4 top-4 rounded-full bg-gray-100 p-2 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="absolute right-2 top-2 sm:right-4 sm:top-4 rounded-full bg-gray-100 p-2 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Close modal"
           >
             ✕

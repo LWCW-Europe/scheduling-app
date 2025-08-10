@@ -20,3 +20,13 @@ bun run dev:migrate:status # Check migration status
 ```bash
 bun run dev:migrate:create add_new_field
 ```
+
+## Migrations in production
+
+```
+node set-env.js staging bun run tsx migrations/cli/migrate-status.ts
+node set-env.js staging bun run tsx migrations/cli/migrate-up.ts
+
+node set-env.js production bun run tsx migrations/cli/migrate-status.ts
+node set-env.js production bun run tsx migrations/cli/migrate-up.ts
+```
