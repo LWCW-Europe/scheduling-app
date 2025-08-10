@@ -1,11 +1,9 @@
-import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
 import { eventSlugToName } from "@/utils/utils";
-import { getVotesByUser } from "@/db/votes";
 import { ProposalActionBar } from "./proposal-action-bar";
 import { ProposalTable } from "./proposal-table";
 import { UserSelect } from "@/app/user-select";
@@ -27,19 +25,9 @@ export default async function ProposalsPage({
     return <div>Event not found</div>;
   }
 
-  const currentUser = cookies().get("user")?.value;
-  const getVotes = async () => {
-    if (currentUser) {
-      return await getVotesByUser(currentUser, eventName);
-    } else {
-      return await Promise.resolve([]);
-    }
-  };
-
-  const [guests, proposals, votes] = await Promise.all([
+  const [guests, proposals] = await Promise.all([
     getGuestsByEvent(eventName),
     getSessionProposalsByEvent(eventName),
-    getVotes(),
   ]);
 
   return (
@@ -85,7 +73,6 @@ export default async function ProposalsPage({
           proposals={proposals}
           eventSlug={eventSlug}
           event={event}
-          initialVotes={votes}
         />
       )}
     </div>
