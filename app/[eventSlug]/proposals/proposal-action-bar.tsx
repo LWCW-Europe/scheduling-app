@@ -35,7 +35,9 @@ export function ProposalActionBar({
         <Link
           href={votingEnabled ? `/${eventSlug}/proposals/quick-voting` : "#"}
           className={`bg-rose-400 text-white px-4 py-2 rounded-md flex items-center gap-2 ${
-            !votingEnabled ? "opacity-50 cursor-not-allowed" : ""
+            votingEnabled
+              ? "hover:bg-rose-500 transition-colors"
+              : "opacity-50 cursor-not-allowed"
           }`}
           {...(!votingEnabled && { onClick: (e) => e.preventDefault() })}
         >
