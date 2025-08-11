@@ -31,6 +31,7 @@ const allTables = [
   "Days",
   "RSVPs",
   "SessionProposals",
+  "Votes",
   // Don't clear: "Migrations"
 ];
 
@@ -362,6 +363,98 @@ function generateSessionProposals(
   return proposals;
 }
 
+// Helper function to create test votes for proposals in voting and scheduling phases
+async function createTestVotes(
+  events: Airtable.Records<Airtable.FieldSet>,
+  eventConfigs: any[],
+  guests: Airtable.Records<Airtable.FieldSet>
+) {
+  const votes: Array<{
+    fields: {
+      proposal: string[];
+      guest: string[];
+      choice: string;
+    };
+  }> = [];
+
+  // Vote choices with weights (more likely to be interested/maybe than skip)
+  const voteChoices = [
+    { choice: "interested", weight: 40 },
+    { choice: "maybe", weight: 35 },
+    { choice: "skip", weight: 25 },
+  ];
+
+  // Get all proposals for events in voting and scheduling phases
+  for (let eventIndex = 0; eventIndex < events.length; eventIndex++) {
+    const event = events[eventIndex];
+    const config = eventConfigs[eventIndex];
+    const eventName = config.name;
+
+    // Only create votes for Beta (voting) and Gamma (scheduling) events
+    if (eventName === "Conference Beta" || eventName === "Conference Gamma") {
+      console.log(`    Creating votes for ${eventName}...`);
+
+      // Get proposals for this event
+      const proposals = await base("SessionProposals")
+        .select({
+          fields: ["title", "event", "hosts"],
+          filterByFormula: `{event} = "${eventName}"`,
+        })
+        .all();
+
+      // Each guest votes on each proposal with some randomness
+      guests.forEach((guest) => {
+        proposals.forEach((proposal) => {
+          // Check if guest is a host of this proposal
+          const proposalHosts = (proposal.fields.hosts as string[]) || [];
+          const isHost = proposalHosts.includes(guest.id);
+
+          // 40% chance each guest votes on each proposal (reduced from 80%)
+          // Skip if guest is a host of this proposal
+          if (!isHost && seededRandom() < 0.4) {
+            // Weighted random choice selection
+            const randomValue = seededRandom() * 100;
+            let cumulativeWeight = 0;
+            let selectedChoice = "interested"; // default
+
+            for (const { choice, weight } of voteChoices) {
+              cumulativeWeight += weight;
+              if (randomValue <= cumulativeWeight) {
+                selectedChoice = choice;
+                break;
+              }
+            }
+
+            votes.push({
+              fields: {
+                proposal: [proposal.id],
+                guest: [guest.id],
+                choice: selectedChoice,
+              },
+            });
+          }
+        });
+      });
+    }
+  }
+
+  // Create votes in batches of 10 (Airtable limit)
+  if (votes.length > 0) {
+    const voteChunks = [];
+    for (let i = 0; i < votes.length; i += 10) {
+      voteChunks.push(votes.slice(i, i + 10));
+    }
+
+    for (const chunk of voteChunks) {
+      await base("Votes").create(chunk);
+    }
+
+    console.log(
+      `    ✅ Created ${votes.length} votes across voting/scheduling events`
+    );
+  }
+}
+
 async function seedTestData() {
   console.log("🌱 Seeding test data...");
 
@@ -494,6 +587,20 @@ async function seedTestData() {
       console.log(
         `  ✅ Created ${proposals.length} session proposals across ${events.length} events`
       );
+
+      // Create test votes for proposals in voting and scheduling phases
+      const hasVotes = await tableExists("Votes");
+      if (hasVotes) {
+        console.log("  🗳️  Creating test votes for proposals...");
+        await createTestVotes(events, eventConfigs, guests);
+        console.log(
+          "  ✅ Created test votes for voting and scheduling phase events"
+        );
+      } else {
+        console.log(
+          "  ⚠️  Votes table doesn't exist, skipping vote creation..."
+        );
+      }
     } else {
       console.log("  ⚠️  SessionProposals table doesn't exist, skipping...");
     }
