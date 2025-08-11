@@ -7,14 +7,16 @@ type Option = {
   value: string;
   available: boolean;
   helperText?: string;
+  display?: string;
 };
 export function MyListbox(props: {
   options: Option[];
   currValue?: string;
   setCurrValue: (value: string) => void;
   placeholder: string;
+  truncateText: boolean;
 }) {
-  const { options, currValue, setCurrValue, placeholder } = props;
+  const { options, currValue, setCurrValue, placeholder, truncateText } = props;
   const currOption = options.find((option) => option.value === currValue);
   return (
     <Listbox value={currValue} onChange={setCurrValue}>
@@ -22,7 +24,7 @@ export function MyListbox(props: {
         <Listbox.Button className="h-12 rounded-md border px-4 shadow-sm transition-colors invalid:border-red-500 invalid:text-red-900 focus:outline-none relative w-full cursor-pointer border-gray-300 focus:ring-2 focus:ring-rose-400 focus:outline-0 focus:border-none bg-white py-2 pl-3 pr-10 text-left">
           {currValue ? (
             <span className="text-gray-900 truncate flex items-center justify-between">
-              {currValue}
+              {currOption?.display ?? currValue}
               {currOption?.helperText && (
                 <span className="inline text-xs text-gray-400 truncate">
                   {currOption.helperText}
@@ -62,12 +64,13 @@ export function MyListbox(props: {
                     <>
                       <span
                         className={clsx(
-                          "flex items-end justify-between truncate",
+                          "flex items-end justify-between",
+                          truncateText ? "truncate" : "",
                           selected ? "font-medium" : "font-normal",
                           disabled ? "text-gray-400" : "text-gray-900"
                         )}
                       >
-                        {option.value}
+                        {option.display ?? option.value}
                         {option.helperText && (
                           <span className="inline text-xs text-gray-400 truncate">
                             {option.helperText}

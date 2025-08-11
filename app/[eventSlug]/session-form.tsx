@@ -1,13 +1,14 @@
 "use client";
 import clsx from "clsx";
 import { Fragment, useEffect, useState, useContext } from "react";
-import { Input } from "./input";
 import { format } from "date-fns";
 import { Combobox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/16/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { DateTime } from "luxon";
 import { useRouter, useSearchParams } from "next/navigation";
+
+import { Input } from "./input";
 import { convertParamDateTime, dateOnDay } from "@/utils/utils";
 import { MyListbox } from "./select";
 import { Day } from "@/db/days";
@@ -15,6 +16,7 @@ import { Guest } from "@/db/guests";
 import { Location } from "@/db/locations";
 import { Session } from "@/db/sessions";
 import { RSVP } from "@/db/rsvps";
+import type { SessionProposal } from "@/db/sessionProposals";
 import { ConfirmDeletionModal } from "../modals";
 import { UserContext } from "../context";
 import { sessionsOverlap, newEmptySession } from "../session_utils";
@@ -31,13 +33,16 @@ export function SessionForm(props: {
   sessions: Session[];
   locations: Location[];
   guests: Guest[];
+  proposals: SessionProposal[];
 }) {
-  const { eventName, days, sessions, locations, guests } = props;
+  const { eventName, days, sessions, locations, guests, proposals } = props;
   const searchParams = useSearchParams();
   const dayParam = searchParams?.get("day");
   const timeParam = searchParams?.get("time");
   const initLocation = searchParams?.get("location");
   const sessionID = searchParams?.get("sessionID");
+  const proposalID = searchParams?.get("proposalID");
+  const initialProposal = proposals.find((p) => p.id === proposalID) ?? null;
   const session =
     sessions.find((ses) => ses.ID === sessionID) || newEmptySession();
   const initDateTime =
@@ -53,6 +58,9 @@ export function SessionForm(props: {
         .toFormat("h:mm a")
     : undefined;
 
+  const [proposal, setProposal] = useState<SessionProposal | null>(
+    initialProposal
+  );
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState(session.Title);
   const [description, setDescription] = useState(session.Description);
@@ -111,6 +119,17 @@ export function SessionForm(props: {
   const [isFetchingRSVPs, setIsFetchingRSVPs] = useState(false);
 
   useEffect(() => {
+    if (proposal) {
+      setTitle(proposal.title);
+      setDescription(proposal.description ?? "");
+      setHosts(guests.filter((g) => proposal.hosts.includes(g.ID)));
+      if (proposal.durationMinutes) {
+        setDuration(proposal.durationMinutes);
+      }
+    }
+  }, [proposal, guests]);
+
+  useEffect(() => {
     const fetchRSVPs = async () => {
       setIsFetchingRSVPs(true);
       const entries = await Promise.all(
@@ -127,6 +146,7 @@ export function SessionForm(props: {
 
     void fetchRSVPs();
   }, [hosts]);
+
   const clashes = hosts.map((host) => {
     const sessionClashes = sessions.filter(
       (ses) =>
@@ -252,6 +272,26 @@ export function SessionForm(props: {
           reach out to you about rescheduling, relocating, or cancelling.
         </p>
       </div>
+      {proposals.length > 0 && (
+        <div className="flex flex-col gap-1 w-72">
+          <label className="font-medium">Proposal</label>
+          <MyListbox
+            currValue={proposal?.id}
+            setCurrValue={(id) =>
+              setProposal(proposals.find((p) => p.id === id)!)
+            }
+            options={proposals.map((pr) => {
+              return {
+                value: pr.id,
+                display: pr.title,
+                available: true,
+              };
+            })}
+            placeholder={"Pre-fill from proposal"}
+            truncateText={false}
+          />
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <label className="font-medium">
           Session title
@@ -294,6 +334,7 @@ export function SessionForm(props: {
             };
           })}
           placeholder={"Select a location"}
+          truncateText={true}
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -315,6 +356,7 @@ export function SessionForm(props: {
             return { value: st.formattedTime, available: st.available };
           })}
           placeholder={"Select a start time"}
+          truncateText={true}
         />
       </div>
       <div className="flex flex-col gap-1">

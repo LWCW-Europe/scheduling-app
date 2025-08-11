@@ -628,8 +628,16 @@ export function ProposalTable({
                         visible={!schedEnabled}
                       >
                         <button
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 opacity-50 cursor-not-allowed"
+                          onClick={() =>
+                            router.push(
+                              `/${eventSlug}/add-session?proposalID=${proposal.id}`
+                            )
+                          }
+                          className={`inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 ${
+                            schedEnabled
+                              ? "hover:bg-rose-50 transition-colors"
+                              : "opacity-50 cursor-not-allowed"
+                          }`}
                           disabled={!schedEnabled}
                         >
                           <CalendarIcon className="h-3 w-3 mr-1" />
