@@ -42,7 +42,7 @@ export function SessionForm(props: {
   const initLocation = searchParams?.get("location");
   const sessionID = searchParams?.get("sessionID");
   const proposalID = searchParams?.get("proposalID");
-  const proposal = proposals.find((p) => p.id === proposalID);
+  const initialProposal = proposals.find((p) => p.id === proposalID) ?? null;
   const session =
     sessions.find((ses) => ses.ID === sessionID) || newEmptySession();
   const initDateTime =
@@ -58,6 +58,9 @@ export function SessionForm(props: {
         .toFormat("h:mm a")
     : undefined;
 
+  const [proposal, setProposal] = useState<SessionProposal | null>(
+    initialProposal
+  );
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState(session.Title);
   const [description, setDescription] = useState(session.Description);
@@ -269,6 +272,26 @@ export function SessionForm(props: {
           reach out to you about rescheduling, relocating, or cancelling.
         </p>
       </div>
+      {proposals.length > 0 && (
+        <div className="flex flex-col gap-1 w-72">
+          <label className="font-medium">Proposal</label>
+          <MyListbox
+            currValue={proposal?.id}
+            setCurrValue={(id) =>
+              setProposal(proposals.find((p) => p.id === id)!)
+            }
+            options={proposals.map((pr) => {
+              return {
+                value: pr.id,
+                display: pr.title,
+                available: true,
+              };
+            })}
+            placeholder={"Pre-fill from proposal"}
+            truncateText={false}
+          />
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <label className="font-medium">
           Session title
@@ -311,6 +334,7 @@ export function SessionForm(props: {
             };
           })}
           placeholder={"Select a location"}
+          truncateText={true}
         />
       </div>
       <div className="flex flex-col gap-1">
@@ -332,6 +356,7 @@ export function SessionForm(props: {
             return { value: st.formattedTime, available: st.available };
           })}
           placeholder={"Select a start time"}
+          truncateText={true}
         />
       </div>
       <div className="flex flex-col gap-1">
