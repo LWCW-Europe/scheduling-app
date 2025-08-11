@@ -1,25 +1,31 @@
+import { Suspense } from "react";
+import { cookies } from "next/headers";
+
 import { getEventByName } from "@/db/events";
 import { eventSlugToName } from "@/utils/utils";
 import { SessionForm } from "./session-form";
-import { Suspense } from "react";
 import { getDaysByEvent } from "@/db/days";
 import { getSessionsByEvent } from "@/db/sessions";
 import { getGuestsByEvent } from "@/db/guests";
 import { getBookableLocations } from "@/db/locations";
 import { CONSTS } from "@/utils/constants";
+import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 
 export async function renderSessionForm(props: {
   params: { eventSlug: string };
 }) {
   const { eventSlug } = props.params;
+  const currentUser = cookies().get("user")?.value;
   const eventName = eventSlugToName(eventSlug);
-  const [event, days, sessions, guests, locations] = await Promise.all([
-    getEventByName(eventName),
-    getDaysByEvent(eventName),
-    getSessionsByEvent(eventName),
-    getGuestsByEvent(eventName),
-    getBookableLocations(),
-  ]);
+  const [event, days, sessions, guests, locations, allProposals] =
+    await Promise.all([
+      getEventByName(eventName),
+      getDaysByEvent(eventName),
+      getSessionsByEvent(eventName),
+      getGuestsByEvent(eventName),
+      getBookableLocations(),
+      getSessionProposalsByEvent(eventName),
+    ]);
   days.forEach((day) => {
     const dayStartMillis = new Date(day.Start).getTime();
     const dayEndMillis = new Date(day.End).getTime();
@@ -38,6 +44,9 @@ export async function renderSessionForm(props: {
         (event["Location names"] &&
           event["Location names"].includes(location.Name)))
   );
+  const proposals = allProposals.filter(
+    (p) => currentUser && p.hosts.includes(currentUser)
+  );
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div className="max-w-2xl mx-auto pb-24">
@@ -47,6 +56,7 @@ export async function renderSessionForm(props: {
           locations={filteredLocations}
           sessions={sessions}
           guests={guests}
+          proposals={proposals}
         />
       </div>
     </Suspense>
