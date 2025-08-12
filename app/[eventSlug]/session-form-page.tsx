@@ -44,9 +44,11 @@ export async function renderSessionForm(props: {
         (event["Location names"] &&
           event["Location names"].includes(location.Name)))
   );
-  const proposals = allProposals.filter(
+  const currentUserProposals = allProposals.filter(
     (p) => currentUser && p.hosts.includes(currentUser)
   );
+  const hostlessProposals = allProposals.filter((p) => p.hosts.length === 0);
+  const proposals = currentUserProposals.concat(hostlessProposals);
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div className="max-w-2xl mx-auto pb-24">
