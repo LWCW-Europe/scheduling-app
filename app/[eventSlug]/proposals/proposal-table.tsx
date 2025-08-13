@@ -367,6 +367,33 @@ export function ProposalTable({
         </div>
       </div>
 
+      {/* Mobile Sort Dropdown */}
+      <div className="block md:hidden">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-700">Sort by:</label>
+          <select
+            value={`${sortConfig.key}-${sortConfig.direction}`}
+            onChange={(e) => {
+              const [key, direction] = e.target.value.split("-") as [
+                keyof SessionProposal | "userVote",
+                "asc" | "desc",
+              ];
+              setSortConfig({ key, direction });
+            }}
+            className="block w-48 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent"
+          >
+            <option value="title-asc">Title ↓</option>
+            <option value="title-desc">Title ↑</option>
+            <option value="hosts-asc">Host(s) ↓</option>
+            <option value="hosts-desc">Host(s) ↑</option>
+            <option value="durationMinutes-asc">Duration ↓</option>
+            <option value="durationMinutes-desc">Duration ↑</option>
+            <option value="userVote-asc">Your vote ↓</option>
+            <option value="userVote-desc">Your vote ↑</option>
+          </select>
+        </div>
+      </div>
+
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="table-fixed w-full divide-y divide-gray-200 min-w-0">
