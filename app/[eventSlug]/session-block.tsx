@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { UserIcon, PencilSquareIcon } from "@heroicons/react/24/solid";
+import { UserIcon, PencilSquareIcon, EyeIcon } from "@heroicons/react/24/solid";
 import { Session } from "@/db/sessions";
 import { Day } from "@/db/days";
 import { Location } from "@/db/locations";
@@ -121,7 +121,7 @@ export function RealSessionCard(props: {
   const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
   const screenWidth = useScreenWidth();
   const onMobile = screenWidth < 640;
-  const isEditable = hostStatus && session["Attendee scheduled"];
+  const isEditable = !!hostStatus && session["Attendee scheduled"];
 
   const handleClick = () => {
     if (isEditable) {
@@ -255,6 +255,19 @@ export function RealSessionCard(props: {
               "text-gray-600 group-hover:text-black",
               "cursor-pointer"
             )}
+          />
+        )}
+        {!hostStatus && (
+          <EyeIcon
+            className={clsx(
+              "absolute h-5 w-5 top-0 right-0",
+              "text-gray-600 group-hover:text-black",
+              "cursor-pointer"
+            )}
+            onClick={(e) => {
+              router.push(`/${eventSlug}/view-session?sessionID=${session.ID}`);
+              e.stopPropagation();
+            }}
           />
         )}
         <div

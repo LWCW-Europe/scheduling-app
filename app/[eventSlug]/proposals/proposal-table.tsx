@@ -14,7 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import HoverTooltip from "@/app/hover-tooltip";
-import { UserContext } from "@/app/context";
+import { UserContext, VotesContext } from "@/app/context";
 import type { SessionProposal } from "@/db/sessionProposals";
 import type { Guest } from "@/db/guests";
 import {
@@ -23,7 +23,8 @@ import {
   dateStartDescription,
 } from "@/app/utils/events";
 import type { Event } from "@/db/events";
-import { Vote, VoteChoice } from "@/app/votes";
+
+import { VotingButtons } from "./voting-buttons";
 
 const ITEMS_PER_PAGE = 1000;
 
@@ -39,13 +40,11 @@ export function ProposalTable({
   proposals: paramProposals,
   eventSlug,
   event,
-  initialVotes,
 }: {
   guests: Guest[];
   proposals: SessionProposal[];
   eventSlug: string;
   event: Event;
-  initialVotes: Vote[];
 }) {
   const initialProposals = paramProposals.map((proposal) => {
     const hostNames = proposal.hosts.map(
@@ -56,7 +55,6 @@ export function ProposalTable({
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [resultFilter, setResultFilter] = useState<Filter>(undefined);
-  const [votes, setVotes] = useState(initialVotes);
   const [sortConfig, setSortConfig] = useState<SortConfig>(
     inVotingPhase(event)
       ? {
@@ -69,6 +67,7 @@ export function ProposalTable({
         }
   );
   const { user: currentUserId } = useContext(UserContext);
+  const { votes } = useContext(VotesContext);
   const router = useRouter();
   const filteredProposals = initialProposals.filter((pr) => {
     if (currentUserId && resultFilter) {
@@ -235,87 +234,6 @@ export function ProposalTable({
     setSortConfig({ key, direction });
   };
 
-  const eventName = eventSlug.replace(/-/g, " ");
-  useEffect(() => {
-    if (!currentUserId) {
-      return;
-    } else if (!votes.every((vote) => vote.guest !== currentUserId)) {
-      return;
-    }
-
-    const fetchVotes = async (user: string) => {
-      const res = await fetch(`/api/votes?user=${user}&event=${eventName}`);
-      const newVotes = (await res.json()) as Vote[];
-      if (!(votes.length === 0 && newVotes.length === 0)) {
-        setVotes(newVotes);
-      }
-    };
-
-    void fetchVotes(currentUserId);
-  }, [currentUserId, eventName, votes]);
-
-  // update votes optimistically
-  async function vote(proposalId: string, choice: VoteChoice) {
-    if (!votingEnabled) {
-      return;
-    }
-    setVotes((prev) => prev.filter((v) => v.proposal !== proposalId));
-    const existingVote = votes.find((v) => v.proposal === proposalId);
-    if (existingVote?.choice === choice) {
-      return deleteVote(proposalId);
-    }
-    const votesAtStart = votes;
-
-    try {
-      const newVote: Vote = {
-        proposal: proposalId,
-        guest: currentUserId,
-        choice: choice,
-      };
-      setVotes((prevVotes) => [...prevVotes, newVote]);
-
-      const response = await fetch("/api/add-vote", {
-        method: "POST",
-        body: JSON.stringify(newVote),
-      });
-
-      if (!response.ok) {
-        // Revert optimistic update on failure
-        setVotes(votesAtStart);
-      }
-      return response.ok;
-    } catch (error: unknown) {
-      // Revert optimistic update on error
-      console.error("Error updating vote: ", error);
-      setVotes(votesAtStart);
-      return false;
-    }
-  }
-
-  async function deleteVote(proposalId: string) {
-    const votesAtStart = votes;
-    try {
-      const response = await fetch("/api/delete-vote", {
-        method: "POST",
-        body: JSON.stringify({
-          proposalId,
-          guestId: currentUserId,
-        }),
-      });
-
-      if (!response.ok) {
-        // Revert optimistic update on failure
-        setVotes(votesAtStart);
-      }
-      return response.ok;
-    } catch (error: unknown) {
-      // Revert optimistic update on error
-      console.error("Error deleting vote: ", error);
-      setVotes(votesAtStart);
-      return false;
-    }
-  }
-
   return (
     <div className="space-y-6">
       {/* Search & Filter Section */}
@@ -450,7 +368,7 @@ export function ProposalTable({
               <th
                 onClick={() => handleSort("hosts")}
                 scope="col"
-                className={`w-[15%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                className={`w-[15%] px-4 lg:px-6 py-3 text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
                   ${sortConfig.key === "hosts" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Host(s)
@@ -470,7 +388,7 @@ export function ProposalTable({
               <th
                 onClick={() => handleSort("durationMinutes")}
                 scope="col"
-                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-2
                   ${sortConfig.key === "durationMinutes" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Duration
@@ -546,62 +464,11 @@ export function ProposalTable({
                 </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                   {currentUserId && !proposal.hosts.includes(currentUserId) && (
-                    <div className="flex gap-1 flex-col sm:flex-row">
-                      <HoverTooltip
-                        text={votingEnabled ? "Interested" : votingDisabledText}
-                        visible={true}
-                      >
-                        <button
-                          type="button"
-                          className={`rounded-md border border-black shadow-sm px-1 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
-                            ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-                            ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.interested) ? "bg-blue-200" : "bg-white"}`}
-                          disabled={!votingEnabled}
-                          onClick={(e) => {
-                            void vote(proposal.id, VoteChoice.interested);
-                            e.stopPropagation();
-                          }}
-                        >
-                          ❤️
-                        </button>
-                      </HoverTooltip>
-                      <HoverTooltip
-                        text={votingEnabled ? "Maybe" : votingDisabledText}
-                        visible={true}
-                      >
-                        <button
-                          type="button"
-                          className={`rounded-md border border-black shadow-sm px-1 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
-                            ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-                            ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.maybe) ? "bg-blue-200" : "bg-white"}`}
-                          disabled={!votingEnabled}
-                          onClick={(e) => {
-                            void vote(proposal.id, VoteChoice.maybe);
-                            e.stopPropagation();
-                          }}
-                        >
-                          ⭐
-                        </button>
-                      </HoverTooltip>
-                      <HoverTooltip
-                        text={votingEnabled ? "Skip" : votingDisabledText}
-                        visible={true}
-                      >
-                        <button
-                          type="button"
-                          className={`rounded-md border border-black shadow-sm px-1 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
-                            ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-                            ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.skip) ? "bg-blue-200" : "bg-white"}`}
-                          disabled={!votingEnabled}
-                          onClick={(e) => {
-                            void vote(proposal.id, VoteChoice.skip);
-                            e.stopPropagation();
-                          }}
-                        >
-                          👋🏽
-                        </button>
-                      </HoverTooltip>
-                    </div>
+                    <VotingButtons
+                      proposalId={proposal.id}
+                      votingEnabled={votingEnabled}
+                      votingDisabledText={votingDisabledText}
+                    />
                   )}
                 </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
@@ -707,62 +574,13 @@ export function ProposalTable({
               )}
 
               <div className="pt-2 border-t border-gray-100 space-y-3">
-                <div className="flex gap-1">
-                  <HoverTooltip
-                    text={votingEnabled ? "Interested" : votingDisabledText}
-                    visible={true}
-                  >
-                    <button
-                      type="button"
-                      className={`rounded-md border border-black shadow-sm px-2 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
-                        ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-                        ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.interested) ? "bg-blue-200" : "bg-white"}`}
-                      disabled={!votingEnabled}
-                      onClick={(e) => {
-                        void vote(proposal.id, VoteChoice.interested);
-                        e.stopPropagation();
-                      }}
-                    >
-                      ❤️
-                    </button>
-                  </HoverTooltip>
-                  <HoverTooltip
-                    text={votingEnabled ? "Maybe" : votingDisabledText}
-                    visible={true}
-                  >
-                    <button
-                      type="button"
-                      className={`rounded-md border border-black shadow-sm px-2 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
-                        ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-                        ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.maybe) ? "bg-blue-200" : "bg-white"}`}
-                      disabled={!votingEnabled}
-                      onClick={(e) => {
-                        void vote(proposal.id, VoteChoice.maybe);
-                        e.stopPropagation();
-                      }}
-                    >
-                      ⭐
-                    </button>
-                  </HoverTooltip>
-                  <HoverTooltip
-                    text={votingEnabled ? "Skip" : votingDisabledText}
-                    visible={true}
-                  >
-                    <button
-                      type="button"
-                      className={`rounded-md border border-black shadow-sm px-2 py-1 font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
-                        ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-                        ${votes.some((vote) => vote.proposal === proposal.id && vote.choice === VoteChoice.skip) ? "bg-blue-200" : "bg-white"}`}
-                      disabled={!votingEnabled}
-                      onClick={(e) => {
-                        void vote(proposal.id, VoteChoice.skip);
-                        e.stopPropagation();
-                      }}
-                    >
-                      👋🏽
-                    </button>
-                  </HoverTooltip>
-                </div>
+                {currentUserId && !proposal.hosts.includes(currentUserId) && (
+                  <VotingButtons
+                    proposalId={proposal.id}
+                    votingEnabled={votingEnabled}
+                    votingDisabledText={votingDisabledText}
+                  />
+                )}
 
                 <div className="flex gap-2">
                   {canEdit(proposal.hosts) && (
