@@ -146,7 +146,7 @@ export function QuickVoting(props: {
       >
         Back to Proposals
       </Link>
-      <p className="text-2xl font-bold mt-4 mb-4">{eventName} Quick Voting</p>
+      <p className="text-lg mt-4 mb-4">{eventName} Quick Voting</p>
       <div className="flex justify-between mb-6">
         <div className="text-gray-600">
           You have voted on {votes.length} / {totalProposals} proposals
