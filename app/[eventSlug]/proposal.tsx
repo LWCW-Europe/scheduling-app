@@ -33,9 +33,9 @@ export function Proposal(props: {
           Back to Proposals
         </Link>
       )}
-      <h2 className="text-xl font-semibold mb-2 mt-5" id={titleId}>
+      <h1 className="text-xl font-semibold mb-2 mt-5" id={titleId}>
         {proposal.title}
-      </h2>
+      </h1>
       <p className="text-lg font-medium text-gray-700 mb-4">
         {proposal.hosts
           .map((h) => guests.find((g) => g.ID === h))
