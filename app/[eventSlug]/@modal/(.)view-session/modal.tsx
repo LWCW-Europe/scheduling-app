@@ -1,7 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import type { Event } from "@/db/events";
@@ -19,18 +19,28 @@ export function SessionModal(props: {
 
   const router = useRouter();
 
+  const onDismiss = useCallback(() => {
+    router.back();
+  }, [router]);
+
   useEffect(() => {
     // Disable body scroll when modal is open
     document.body.style.overflow = "hidden";
 
+    // Handle Esc key press
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onDismiss();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKey);
+
     return () => {
       document.body.style.overflow = "unset";
+      document.removeEventListener("keydown", handleEscapeKey);
     };
-  }, []);
-
-  function onDismiss() {
-    router.back();
-  }
+  }, [onDismiss]);
 
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/50" onClick={onDismiss}>
