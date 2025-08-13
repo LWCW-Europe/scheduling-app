@@ -1,7 +1,7 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import type { SessionProposal } from "@/db/sessionProposals";
@@ -19,18 +19,28 @@ export function ProposalModal(props: {
 
   const router = useRouter();
 
+  const onDismiss = useCallback(() => {
+    router.back();
+  }, [router]);
+
   useEffect(() => {
     // Disable body scroll when modal is open
     document.body.style.overflow = "hidden";
 
+    // Handle Esc key press
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onDismiss();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKey);
+
     return () => {
       document.body.style.overflow = "unset";
+      document.removeEventListener("keydown", handleEscapeKey);
     };
-  }, []);
-
-  function onDismiss() {
-    router.back();
-  }
+  }, [onDismiss]);
 
   return createPortal(
     <div
