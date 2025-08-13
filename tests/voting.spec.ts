@@ -15,7 +15,7 @@ test("should allow voting on proposals with different choices", async ({
 
   // Choose a proposal created by Charlie Test
   const proposalRow = page.getByRole("row", {
-    name: /Building Inclusive Tech Teams: Beyond Diversity Hiring/,
+    name: /Networking & Coffee Chat: Connect with Conference Beta Peers/,
   });
 
   // Verify the row exists

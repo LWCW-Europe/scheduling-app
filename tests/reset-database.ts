@@ -189,6 +189,7 @@ function generateSessionProposals(
     fields: {
       title: string;
       description: string;
+      durationMinutes?: number;
       event: string[];
       hosts: string[];
     };
@@ -291,6 +292,8 @@ function generateSessionProposals(
           ? [guests[hostIndex].id, guests[(hostIndex + 1) % guests.length].id]
           : [guests[hostIndex].id];
 
+      const possibleDurations = [undefined, 30, 60, 90, 120, 150, 180];
+
       // Customize title and description based on event
       const customizedTitle =
         i < sessionTemplates.length
@@ -306,6 +309,10 @@ function generateSessionProposals(
         fields: {
           title: customizedTitle,
           description: customizedDescription,
+          durationMinutes:
+            possibleDurations[
+              Math.floor(seededRandom() * possibleDurations.length)
+            ],
           event: [event.id],
           hosts: hostIds,
         },
@@ -334,6 +341,7 @@ function generateSessionProposals(
         fields: {
           title: proposal.title,
           description: proposal.description,
+          durationMinutes: 30,
           event: [event.id],
           hosts: [guests[hostIndex].id],
         },
