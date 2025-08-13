@@ -286,11 +286,21 @@ function generateSessionProposals(
       const template = sessionTemplates[i % sessionTemplates.length];
       const hostIndex = (eventIndex + i) % guests.length;
 
-      // Sometimes use multiple hosts
-      const hostIds =
-        seededRandom() > 0.7
-          ? [guests[hostIndex].id, guests[(hostIndex + 1) % guests.length].id]
-          : [guests[hostIndex].id];
+      const hostProbability = seededRandom();
+      let hostIds: string[];
+      if (hostProbability < 0.2) {
+        // 20% probability: no host
+        hostIds = [];
+      } else if (hostProbability < 0.4) {
+        // 20% probability: multiple hosts
+        hostIds = [
+          guests[hostIndex].id,
+          guests[(hostIndex + 1) % guests.length].id,
+        ];
+      } else {
+        // 60% probability: one host
+        hostIds = [guests[hostIndex].id];
+      }
 
       const possibleDurations = [undefined, 30, 60, 90, 120, 150, 180];
 
