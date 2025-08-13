@@ -1,4 +1,4 @@
-import { base } from "./db";
+import { getBase } from "./db";
 import { CONSTS } from "@/utils/constants";
 
 export type Session = {
@@ -18,7 +18,7 @@ export type Session = {
 };
 export async function getSessions() {
   const sessions: Session[] = [];
-  await base<Session>("Sessions")
+  await getBase()<Session>("Sessions")
     .select({
       fields: [
         "Title",
@@ -55,7 +55,7 @@ export async function getSessionsByEvent(eventName: string) {
   const filterFormula = CONSTS.MULTIPLE_EVENTS
     ? `AND({Event name} = "${eventName}", ${isScheduledFilter})`
     : isScheduledFilter;
-  await base<Session>("Sessions")
+  await getBase()<Session>("Sessions")
     .select({
       fields: [
         "Title",

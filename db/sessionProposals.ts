@@ -1,4 +1,4 @@
-import { base } from "./db";
+import { getBase } from "./db";
 import {
   deleteVotesFromProposal,
   deleteVotesFromProposalByUsers,
@@ -25,7 +25,7 @@ export type NewProposalInput = {
 
 export async function getSessionProposalsByEvent(event: string) {
   const proposals: SessionProposal[] = [];
-  await base("SessionProposals")
+  await getBase()("SessionProposals")
     .select({
       fields: [
         "event",
@@ -52,7 +52,7 @@ export async function getSessionProposalsByEvent(event: string) {
 }
 
 export async function createSessionProposal(input: NewProposalInput) {
-  const record = await base("SessionProposals").create({
+  const record = await getBase()("SessionProposals").create({
     event: [input.event],
     title: input.title,
     description: input.description || "",
@@ -70,7 +70,7 @@ export async function updateSessionProposal(
   id: string,
   patch: Partial<NewProposalInput>
 ) {
-  const record = await base("SessionProposals").update(id, {
+  const record = await getBase()("SessionProposals").update(id, {
     ...patch,
     // https://github.com/Airtable/airtable.js/issues/272
     // Typescript does not let me use null here, but using null is the only
@@ -89,6 +89,6 @@ export async function updateSessionProposal(
 }
 
 export async function deleteSessionProposal(id: string) {
-  await base("SessionProposals").destroy([id]);
+  await getBase()("SessionProposals").destroy([id]);
   deleteVotesFromProposal(id);
 }

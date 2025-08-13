@@ -1,6 +1,6 @@
 import { getSessions } from "@/db/sessions";
 import { deleteRSVPsFromSessionByUsers } from "@/db/rsvps";
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 import { prepareToInsert, validateSession } from "../session-form-utils";
 import type { SessionParams } from "../session-form-utils";
 
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   const sessionValid = validateSession(session, existingSessions);
   if (sessionValid) {
     try {
-      const records = await base("Sessions").update([
+      const records = await getBase()("Sessions").update([
         {
           id: params.id,
           fields: session,

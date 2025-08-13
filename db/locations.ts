@@ -1,4 +1,4 @@
-import { base } from "./db";
+import { getBase } from "./db";
 
 export type Location = {
   Name: string;
@@ -14,7 +14,7 @@ export type Location = {
 };
 export async function getLocations() {
   const locations: Location[] = [];
-  await base<Location>("Locations")
+  await getBase()<Location>("Locations")
     .select({
       fields: [
         "Name",
@@ -41,7 +41,7 @@ export async function getLocations() {
 
 export async function getBookableLocations() {
   const locations: Location[] = [];
-  await base<Location>("Locations")
+  await getBase()<Location>("Locations")
     .select({
       fields: ["Name", "Capacity", "Color", "Hidden", "Bookable"],
       filterByFormula: `AND({Hidden} = FALSE(), {Bookable} = TRUE())`,

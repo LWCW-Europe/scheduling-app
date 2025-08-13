@@ -1,4 +1,4 @@
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 import { Migration, MigrationState, MigrationRunner } from "./types";
 import fs from "fs";
 import path from "path";
@@ -54,18 +54,18 @@ export class AirtableMigrationRunner implements MigrationRunner {
     // Try to test authorization by accessing existing tables in your base
     try {
       // Try to access the Events table - this should exist in your base
-      await base("Events").select({ maxRecords: 1 }).firstPage();
+      await getBase()("Events").select({ maxRecords: 1 }).firstPage();
       // If this succeeds, our credentials are valid, so the original error was likely table not found
       return "table-not-found";
     } catch (testError: any) {
       try {
         // If Events doesn't work, try Sessions table
-        await base("Sessions").select({ maxRecords: 1 }).firstPage();
+        await getBase()("Sessions").select({ maxRecords: 1 }).firstPage();
         return "table-not-found";
       } catch (secondTestError: any) {
         try {
           // Try Locations table as a last resort
-          await base("Locations").select({ maxRecords: 1 }).firstPage();
+          await getBase()("Locations").select({ maxRecords: 1 }).firstPage();
           return "table-not-found";
         } catch (thirdTestError: any) {
           // If all real tables fail with "not authorized", it's an auth issue
@@ -81,7 +81,7 @@ export class AirtableMigrationRunner implements MigrationRunner {
 
   async getAppliedMigrations(): Promise<MigrationState[]> {
     try {
-      const records = await base(this.migrationsTable).select().all();
+      const records = await getBase()(this.migrationsTable).select().all();
 
       return records.map((record) => ({
         id: record.get("id") as string,
@@ -109,7 +109,7 @@ export class AirtableMigrationRunner implements MigrationRunner {
 
   async markMigrationApplied(id: string): Promise<void> {
     try {
-      await base(this.migrationsTable).create([
+      await getBase()(this.migrationsTable).create([
         {
           fields: {
             id,
@@ -152,14 +152,14 @@ export class AirtableMigrationRunner implements MigrationRunner {
 
   async markMigrationRolledBack(id: string): Promise<void> {
     try {
-      const records = await base(this.migrationsTable)
+      const records = await getBase()(this.migrationsTable)
         .select({
           filterByFormula: `{id} = "${id}"`,
         })
         .all();
 
       if (records.length > 0) {
-        await base(this.migrationsTable).destroy([records[0].id]);
+        await getBase()(this.migrationsTable).destroy([records[0].id]);
       }
     } catch (error: any) {
       const errorType = await this.distinguishError(error);

@@ -12,7 +12,7 @@ function generateMigrationId(): string {
 
 function createMigrationTemplate(id: string, description: string): string {
   return `import { Migration } from "../types";
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 
 const migration: Migration = {
   id: "${id}",
@@ -37,7 +37,7 @@ const migration: Migration = {
 
     // Verify the change by trying to access the field
     // try {
-    //   await base("TableName").select({
+    //   await getBase()("TableName").select({
     //     fields: ["NewFieldName"],
     //     maxRecords: 1
     //   }).firstPage();

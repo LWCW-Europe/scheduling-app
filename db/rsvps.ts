@@ -1,4 +1,4 @@
-import { base } from "./db";
+import { getBase } from "./db";
 
 export type RSVP = {
   Session: string[];
@@ -8,7 +8,7 @@ export type RSVP = {
 export async function getRSVPsByUser(guestId?: string) {
   if (!guestId) return [];
   const rsvps: RSVP[] = [];
-  await base<RSVP>("RSVPs")
+  await getBase()<RSVP>("RSVPs")
     .select({
       fields: ["Session", "Guest"],
       filterByFormula: `{Guest ID} = "${guestId}"`,
@@ -24,7 +24,7 @@ export async function getRSVPsByUser(guestId?: string) {
 
 export async function getRSVPsBySession(sessionId: string) {
   const rsvps: RSVP[] = [];
-  await base<RSVP>("RSVPs")
+  await getBase()<RSVP>("RSVPs")
     .select({
       fields: ["Session", "Guest"],
       filterByFormula: `{Session ID} = "${sessionId}"`,
@@ -43,14 +43,14 @@ export function deleteRSVPsFromSessionByUsers(
   users: string[]
 ) {
   const isOneOfUsers = `OR(${users.map((user) => `{Guest ID} = "${user}"`).join(", ")})`;
-  void base("RSVPs")
+  void getBase()("RSVPs")
     .select({
       filterByFormula: `AND(${isOneOfUsers}, {Session ID} = "${sessionId}")`,
     })
     .eachPage(function page(records, fetchNextPage) {
       const ids = records.map((rec) => rec.getId());
       if (ids.length > 0) {
-        void base("RSVPs").destroy(ids);
+        void getBase()("RSVPs").destroy(ids);
       }
       fetchNextPage();
     });

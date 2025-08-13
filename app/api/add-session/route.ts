@@ -1,5 +1,5 @@
 import { getSessions } from "@/db/sessions";
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 import { prepareToInsert, validateSession } from "../session-form-utils";
 import type { SessionParams } from "../session-form-utils";
 
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const sessionValid = validateSession(session, existingSessions);
   if (sessionValid) {
     try {
-      const records = await base("Sessions").create([
+      const records = await getBase()("Sessions").create([
         {
           fields: session,
         },
