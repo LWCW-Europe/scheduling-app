@@ -4,7 +4,7 @@ on:
   pull_request:
 
 jobs:
-  build-and-lint:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,6 +19,23 @@ jobs:
 
       - name: Lint
         run: bun run lint
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
   check-with-prettier:
     runs-on: ubuntu-latest
 
