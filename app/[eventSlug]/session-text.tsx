@@ -19,11 +19,11 @@ export function SessionText(props: {
               {DateTime.fromISO(session["Start time"]).toFormat("EEEE")},{" "}
               {DateTime.fromISO(session["Start time"])
                 .setZone("Europe/Berlin")
-                .toFormat("h:mm a")}{" "}
+                .toFormat("HH:mm")}{" "}
               -{" "}
               {DateTime.fromISO(session["End time"])
                 .setZone("Europe/Berlin")
-                .toFormat("h:mm a")}
+                .toFormat("HH:mm")}
             </span>
           </div>
           •<span>{formattedHostNames}</span>

@@ -187,7 +187,7 @@ function TimestampCol(props: { start: Date; end: Date }) {
         >
           {DateTime.fromMillis(start.getTime() + i * 30 * 60 * 1000)
             .setZone("Europe/Berlin")
-            .toFormat("h:mm a")}
+            .toFormat("HH:mm")}
         </div>
       ))}
     </div>
