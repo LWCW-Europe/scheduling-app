@@ -13,10 +13,20 @@ export function ViewSession(props: {
   eventSlug: string;
   event: Event;
   showBackBtn: boolean;
+  isInModal?: boolean;
 }) {
-  const { session, guests, eventSlug, event, showBackBtn } = props;
+  const {
+    session,
+    guests,
+    eventSlug,
+    event,
+    showBackBtn,
+    isInModal = false,
+  } = props;
   return (
-    <div className="max-w-2xl mx-auto pb-24 break-words">
+    <div
+      className={`${isInModal ? "w-full p-6" : "max-w-2xl mx-auto"} pb-12 break-words overflow-hidden`}
+    >
       {showBackBtn && (
         <Link
           className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
