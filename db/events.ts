@@ -1,5 +1,5 @@
 import { CONSTS } from "@/utils/constants";
-import { base } from "./db";
+import { getBase } from "./db";
 
 // Private: Raw type as it comes from Airtable (all strings) - internal use only
 type _RawEvent = {
@@ -136,7 +136,7 @@ function convertEventDates(fields: _RawEvent, id: string): Event {
 export async function getEvents() {
   return await queryEventsWithFallback(async (fields) => {
     const events: Event[] = [];
-    await base<_RawEvent>("Events")
+    await getBase()<_RawEvent>("Events")
       .select({
         fields,
       })
@@ -155,7 +155,7 @@ export async function getEvents() {
 export async function getEventByName(name: string) {
   return await queryEventsWithFallback(async (fields) => {
     const events: Event[] = [];
-    await base<_RawEvent>("Events")
+    await getBase()<_RawEvent>("Events")
       .select({
         fields,
         filterByFormula: `{Name} = "${name}"`,

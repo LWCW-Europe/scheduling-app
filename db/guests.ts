@@ -1,5 +1,5 @@
 import { CONSTS } from "@/utils/constants";
-import { base } from "./db";
+import { getBase } from "./db";
 
 export type Guest = {
   Name: string;
@@ -8,7 +8,7 @@ export type Guest = {
 };
 export async function getGuests() {
   const guests: Guest[] = [];
-  await base<Guest>("Guests")
+  await getBase()<Guest>("Guests")
     .select({
       fields: ["Name", "Email"],
     })
@@ -26,7 +26,7 @@ export async function getGuestsByEvent(eventName: string) {
   const filterFormula = CONSTS.MULTIPLE_EVENTS
     ? `SEARCH("${eventName}", {Events}) != 0`
     : "1";
-  await base<Guest>("Guests")
+  await getBase()<Guest>("Guests")
     .select({
       fields: ["Name", "Email"],
       filterByFormula: filterFormula,
