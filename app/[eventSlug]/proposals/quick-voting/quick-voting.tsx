@@ -14,9 +14,11 @@ export function QuickVoting(props: {
   guests: Guest[];
   currentUser: string;
   initialVotes: Vote[];
+  eventName: string;
   eventSlug: string;
 }) {
-  const { proposals, guests, currentUser, initialVotes, eventSlug } = props;
+  const { proposals, guests, currentUser, initialVotes, eventSlug, eventName } =
+    props;
   const [votes, setVotes] = useState(initialVotes);
   const { addVote, removeVote, updateVote, getVote } = useContext(VotesContext);
 
@@ -144,7 +146,7 @@ export function QuickVoting(props: {
       >
         Back to Proposals
       </Link>
-      <p className="text-2xl font-bold mt-4 mb-4">LWCW 2025 Quick Voting</p>
+      <p className="text-2xl font-bold mt-4 mb-4">{eventName} Quick Voting</p>
       <div className="flex justify-between mb-6">
         <div className="text-gray-600">
           You have voted on {votes.length} / {totalProposals} proposals

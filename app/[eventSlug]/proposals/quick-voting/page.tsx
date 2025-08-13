@@ -41,6 +41,7 @@ export default async function ProposalQuickVoting(props: {
       guests={guests}
       currentUser={currentUser}
       initialVotes={votes}
+      eventName={eventName}
       eventSlug={eventSlug}
     />
   );
