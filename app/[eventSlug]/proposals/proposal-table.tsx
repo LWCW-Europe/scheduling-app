@@ -436,7 +436,7 @@ export function ProposalTable({
               <th
                 onClick={() => handleSort("durationMinutes")}
                 scope="col"
-                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-2
+                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
                   ${sortConfig.key === "durationMinutes" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Duration
