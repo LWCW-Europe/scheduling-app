@@ -1,5 +1,5 @@
 import { Migration } from "../types";
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 
 const migration: Migration = {
   id: "20250807_073324_add_proposal_voting",
@@ -32,7 +32,7 @@ STEP 3: Once completed, this migration will be marked as complete.
     // Verify the changes by trying to access the new fields
     try {
       // Test accessing the new Votes table
-      await base("Votes")
+      await getBase()("Votes")
         .select({
           fields: ["id", "choice", "guest", "proposal"],
           maxRecords: 1,
@@ -41,7 +41,7 @@ STEP 3: Once completed, this migration will be marked as complete.
       console.log("✅ Votes table verified");
 
       // Test accessing the new fields in SessionProposals
-      await base("SessionProposals")
+      await getBase()("SessionProposals")
         .select({
           fields: ["votes", "votesCount"],
           maxRecords: 1,

@@ -1,5 +1,5 @@
 import { CONSTS } from "@/utils/constants";
-import { base } from "./db";
+import { getBase } from "./db";
 import { Session } from "./sessions";
 
 export type Day = {
@@ -39,7 +39,7 @@ export async function getDaysByEvent(eventName: string | null) {
   if (CONSTS.MULTIPLE_EVENTS) {
     fieldsToFetch.push("Event name", "Event");
   }
-  await base<DayRecord>("Days")
+  await getBase()<DayRecord>("Days")
     .select({
       fields: fieldsToFetch,
       filterByFormula: filterFormula,

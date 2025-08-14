@@ -1,4 +1,4 @@
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 import type { Session } from "@/db/sessions";
 
 export const dynamic = "force-dynamic"; // defaults to auto
@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic"; // defaults to auto
 export async function POST(req: Request) {
   const { id } = (await req.json()) as { id: string };
   let canEdit = true;
-  await base<Session>("Sessions")
+  await getBase()<Session>("Sessions")
     .select({
       fields: ["Attendee scheduled"],
       filterByFormula: `{ID} = "${id}"`,
@@ -23,14 +23,14 @@ export async function POST(req: Request) {
 
   try {
     // This deletes all RSVPs for the session
-    await base("RSVPs")
+    await getBase()("RSVPs")
       .select({
         filterByFormula: `{Session} = "${id}"`,
       })
       .eachPage(function page(records, fetchNextPage) {
         const recordIds = records.map((record) => record.getId());
         if (recordIds.length > 0) {
-          base("RSVPs").destroy(recordIds, function (err) {
+          getBase()("RSVPs").destroy(recordIds, function (err) {
             if (err) {
               console.error("Error deleting RSVPs:", err);
             } else {
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         fetchNextPage();
       });
 
-    const records = await base("Sessions").destroy([id]);
+    const records = await getBase()("Sessions").destroy([id]);
     records?.forEach(function (record) {
       console.log(`Deleted session: ${record.getId()}`);
     });

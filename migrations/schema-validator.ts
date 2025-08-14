@@ -1,4 +1,4 @@
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 
 export interface FieldValidation {
   name: string;
@@ -17,7 +17,7 @@ export async function validateTableFields(
 
   // First check if the table exists
   try {
-    await base(tableName).select({ maxRecords: 1 }).firstPage();
+    await getBase()(tableName).select({ maxRecords: 1 }).firstPage();
   } catch (error: any) {
     if (error.message?.includes("not authorized")) {
       errors.push(`Table "${tableName}" does not exist`);
@@ -29,7 +29,7 @@ export async function validateTableFields(
   // Check each field by trying to query it
   for (const field of fields) {
     try {
-      await base(tableName)
+      await getBase()(tableName)
         .select({
           fields: [field.name],
           maxRecords: 1,

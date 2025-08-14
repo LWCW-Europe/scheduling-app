@@ -1,4 +1,4 @@
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 
 type RSVPParams = {
   sessionId: string;
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   if (!remove) {
     try {
-      const records = await base("RSVPs").create([
+      const records = await getBase()("RSVPs").create([
         {
           fields: { Session: [sessionId], Guest: [guestId] },
         },
@@ -25,14 +25,14 @@ export async function POST(req: Request) {
     }
   } else {
     console.log("REMOVING RSVP", { sessionId, guestId });
-    await base("RSVPs")
+    await getBase()("RSVPs")
       .select({
         filterByFormula: `AND({Session ID} = "${sessionId}", {Guest ID} = "${guestId}")`,
       })
       .eachPage(function page(records, fetchNextPage) {
         console.log("RECORDS", { records });
         records.forEach(function (record) {
-          base("RSVPs").destroy([record.getId()], function (err: string) {
+          getBase()("RSVPs").destroy([record.getId()], function (err: string) {
             if (err) {
               console.error(err);
               return;

@@ -7,6 +7,7 @@ import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/16/solid";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { DateTime } from "luxon";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 import { Input } from "./input";
 import { convertParamDateTime, dateOnDay } from "@/utils/utils";
@@ -260,6 +261,12 @@ export function SessionForm(props: {
   };
   return (
     <div className="flex flex-col gap-4">
+      <Link
+        className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
+        href={`/${eventNameToSlug(eventName)}`}
+      >
+        Back to schedule
+      </Link>
       <div>
         <h2 className="text-2xl font-bold">
           {eventName}: {sessionID ? "Edit" : "Add a"} session

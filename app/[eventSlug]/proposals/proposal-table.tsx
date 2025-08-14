@@ -25,11 +25,12 @@ import {
 import type { Event } from "@/db/events";
 
 import { VotingButtons } from "./voting-buttons";
+import { VoteChoice } from "@/app/votes";
 
 const ITEMS_PER_PAGE = 1000;
 
 type SortConfig = {
-  key: keyof SessionProposal;
+  key: keyof SessionProposal | "userVote";
   direction: "asc" | "desc";
 };
 
@@ -155,6 +156,26 @@ export function ProposalTable({
       cmp = new Date(a[key]).getTime() - new Date(b[key]).getTime();
     } else if (key === "votesCount") {
       cmp = (a[key] || 0) - (b[key] || 0);
+    } else if (key === "userVote") {
+      // Define vote order: interested (0), maybe (1), skip (2), no vote (3)
+      const getVoteOrder = (proposalId: string) => {
+        if (!currentUserId) return 3; // no vote
+        const userVote = votes.find(
+          (v) => v.proposal === proposalId && v.guest === currentUserId
+        );
+        if (!userVote) return 3; // no vote
+        switch (userVote.choice) {
+          case VoteChoice.interested:
+            return 0;
+          case VoteChoice.maybe:
+            return 1;
+          case VoteChoice.skip:
+            return 2;
+          default:
+            return 3; // no vote
+        }
+      };
+      cmp = getVoteOrder(a.id) - getVoteOrder(b.id);
     }
     return direction === "asc" ? cmp : -cmp;
   });
@@ -224,7 +245,7 @@ export function ProposalTable({
     }
   };
 
-  const handleSort = (key: keyof SessionProposal) => {
+  const handleSort = (key: keyof SessionProposal | "userVote") => {
     let direction: "asc" | "desc" = "asc";
 
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -346,6 +367,33 @@ export function ProposalTable({
         </div>
       </div>
 
+      {/* Mobile Sort Dropdown */}
+      <div className="block md:hidden">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-700">Sort by:</label>
+          <select
+            value={`${sortConfig.key}-${sortConfig.direction}`}
+            onChange={(e) => {
+              const [key, direction] = e.target.value.split("-") as [
+                keyof SessionProposal | "userVote",
+                "asc" | "desc",
+              ];
+              setSortConfig({ key, direction });
+            }}
+            className="block w-48 px-3 py-2 text-sm border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-rose-400 focus:border-transparent"
+          >
+            <option value="title-asc">Title ↓</option>
+            <option value="title-desc">Title ↑</option>
+            <option value="hosts-asc">Host(s) ↓</option>
+            <option value="hosts-desc">Host(s) ↑</option>
+            <option value="durationMinutes-asc">Duration ↓</option>
+            <option value="durationMinutes-desc">Duration ↑</option>
+            <option value="userVote-asc">Your vote ↓</option>
+            <option value="userVote-desc">Your vote ↑</option>
+          </select>
+        </div>
+      </div>
+
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="table-fixed w-full divide-y divide-gray-200 min-w-0">
@@ -388,7 +436,7 @@ export function ProposalTable({
               <th
                 onClick={() => handleSort("durationMinutes")}
                 scope="col"
-                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-2
+                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
                   ${sortConfig.key === "durationMinutes" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Duration
@@ -400,10 +448,18 @@ export function ProposalTable({
                     : " ↑↓")}
               </th>
               <th
+                onClick={() => handleSort("userVote")}
                 scope="col"
-                className="w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                  ${sortConfig.key === "userVote" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Your vote
+                {!searchQuery.trim() &&
+                  (sortConfig.key === "userVote"
+                    ? sortConfig.direction === "asc"
+                      ? " ↓"
+                      : " ↑"
+                    : " ↑↓")}
               </th>
               <th
                 scope="col"

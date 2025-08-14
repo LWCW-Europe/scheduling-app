@@ -1,4 +1,4 @@
-import { base } from "@/db/db";
+import { getBase } from "@/db/db";
 import { deleteVote } from "@/db/votes";
 import { VoteChoice } from "@/app/votes";
 
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const { proposal, guest, choice } = (await req.json()) as VoteParams;
   try {
     await deleteVote(guest, proposal);
-    const records = await base("Votes").create([
+    const records = await getBase()("Votes").create([
       {
         fields: { proposal: [proposal], guest: [guest], choice },
       },
