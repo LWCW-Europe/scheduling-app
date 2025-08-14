@@ -13,6 +13,7 @@ export function newEmptySession(): Session {
     Capacity: 0,
     "Num RSVPs": 0,
     "Attendee scheduled": true,
+    Blocker: false,
   };
 }
 

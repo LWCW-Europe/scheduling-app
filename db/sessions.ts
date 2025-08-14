@@ -15,6 +15,7 @@ export type Session = {
   Capacity: number;
   "Num RSVPs": number;
   "Attendee scheduled": boolean;
+  Blocker: boolean;
 };
 export async function getSessions() {
   const sessions: Session[] = [];
@@ -33,6 +34,7 @@ export async function getSessions() {
         "Capacity",
         "Num RSVPs",
         "Attendee scheduled",
+        "Blocker",
       ],
       filterByFormula: `AND({Start time}, {End time}, {Location})`,
     })
@@ -70,6 +72,7 @@ export async function getSessionsByEvent(eventName: string) {
         "Capacity",
         "Num RSVPs",
         "Attendee scheduled",
+        "Blocker",
       ],
       filterByFormula: filterFormula,
     })
@@ -79,6 +82,7 @@ export async function getSessionsByEvent(eventName: string) {
           ...record.fields,
           ID: record.id,
           "Attendee scheduled": !!record.fields["Attendee scheduled"],
+          Blocker: !!record.fields["Blocker"],
         });
       });
       fetchNextPage();
