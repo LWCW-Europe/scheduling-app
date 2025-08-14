@@ -11,12 +11,13 @@ import {
   dateStartDescription,
 } from "@/app/utils/events";
 import HoverTooltip from "@/app/hover-tooltip";
-import { UserContext } from "@/app/context";
+import { UserContext, VotesContext } from "@/app/context";
 import { Proposal } from "@/app/[eventSlug]/proposal";
 import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { SessionProposal } from "@/db/sessionProposals";
 import { VotingButtons } from "@/app/[eventSlug]/proposals/voting-buttons";
+import { VoteChoice } from "@/app/votes";
 
 export function ViewProposal(props: {
   proposal: SessionProposal;
@@ -39,6 +40,7 @@ export function ViewProposal(props: {
     onCloseModal,
   } = props;
   const { user: currentUserId } = useContext(UserContext);
+  const { proposalVoteEmoji, votes } = useContext(VotesContext);
   const router = useRouter();
 
   const canEdit = () => {
@@ -113,7 +115,7 @@ export function ViewProposal(props: {
       )}
 
       {/* Voting buttons section */}
-      {!isHost() && (
+      {!isHost() && !schedEnabled && (
         <div className="mt-6 flex gap-2 sm:gap-3 flex-wrap justify-center sm:justify-start">
           <VotingButtons
             proposalId={proposal.id}
@@ -121,6 +123,54 @@ export function ViewProposal(props: {
             votingDisabledText={votingDisabledText}
             large={true}
           />
+        </div>
+      )}
+      {schedEnabled && (
+        <div className="mt-6 space-y-3">
+          {!isHost() && (
+            <div className="text-sm text-gray-700">
+              Your vote:
+              <span
+                title={(() => {
+                  const vote = votes.find(
+                    (v) =>
+                      v.proposal === proposal.id && v.guest === currentUserId
+                  );
+                  if (!vote) return "No vote";
+                  switch (vote.choice) {
+                    case VoteChoice.interested:
+                      return "Interested";
+                    case VoteChoice.maybe:
+                      return "Maybe";
+                    case VoteChoice.skip:
+                      return "Skip";
+                    default:
+                      return "No vote";
+                  }
+                })()}
+                className="ml-1"
+              >
+                {proposalVoteEmoji(proposal.id)}
+              </span>
+            </div>
+          )}
+          <div className="text-sm text-gray-700">
+            Total votes:
+            <span className="ml-2 inline-flex items-center gap-3">
+              <span
+                title={`${proposal.interestedVotesCount} interested vote${proposal.interestedVotesCount !== 1 ? "s" : ""}`}
+                className="inline-flex items-center gap-1 text-sm text-gray-500"
+              >
+                ❤️&nbsp;{proposal.interestedVotesCount}
+              </span>
+              <span
+                title={`${proposal.maybeVotesCount} maybe vote${proposal.maybeVotesCount !== 1 ? "s" : ""}`}
+                className="inline-flex items-center gap-1 text-sm text-gray-500"
+              >
+                ⭐&nbsp;{proposal.maybeVotesCount}
+              </span>
+            </span>
+          </div>
         </div>
       )}
     </div>

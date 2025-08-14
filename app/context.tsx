@@ -13,7 +13,7 @@ import { Session } from "@/db/sessions";
 import { Location } from "@/db/locations";
 import { Guest } from "@/db/guests";
 import { RSVP } from "@/db/rsvps";
-import { Vote } from "@/app/votes";
+import { Vote, voteChoiceToEmoji } from "@/app/votes";
 
 export interface UserContextType {
   user: string | null;
@@ -66,6 +66,7 @@ export interface VotesContextType {
   updateVote: (proposalId: string, choice: Vote["choice"]) => void;
   hasVoted: (proposalId: string) => boolean;
   getVote: (proposalId: string) => Vote | undefined;
+  proposalVoteEmoji: (proposalId: string) => string;
   isLoading: boolean;
 }
 
@@ -77,6 +78,7 @@ export const VotesContext = createContext<VotesContextType>({
   updateVote: () => {},
   hasVoted: () => false,
   getVote: () => undefined,
+  proposalVoteEmoji: () => "",
   isLoading: false,
 });
 
@@ -340,6 +342,11 @@ export function VotesProvider({
     return votes.find((v) => v.proposal === proposalId && v.guest === user);
   };
 
+  const proposalVoteEmoji = (proposalId: string) => {
+    const choice = getVote(proposalId)?.choice;
+    return choice ? voteChoiceToEmoji(choice) : "-";
+  };
+
   const contextValue: VotesContextType = {
     votes,
     setVotes,
@@ -348,6 +355,7 @@ export function VotesProvider({
     updateVote,
     hasVoted,
     getVote,
+    proposalVoteEmoji,
     isLoading,
   };
 
