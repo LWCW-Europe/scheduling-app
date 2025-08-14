@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   const session = prepareToInsert(params);
   const allSessions = await getSessions();
   const prevSession = allSessions.find((ses) => ses.ID === params.id)!;
-  if (!prevSession["Attendee scheduled"]) {
+  if (!prevSession["Attendee scheduled"] || prevSession.Blocker) {
     return new Response("Cannot edit via web app", { status: 400 });
   }
   const existingSessions = allSessions.filter((ses) => ses.ID !== params.id);

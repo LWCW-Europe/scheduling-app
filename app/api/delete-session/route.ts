@@ -8,11 +8,13 @@ export async function POST(req: Request) {
   let canEdit = true;
   await getBase()<Session>("Sessions")
     .select({
-      fields: ["Attendee scheduled"],
+      fields: ["Attendee scheduled", "Blocker"],
       filterByFormula: `{ID} = "${id}"`,
     })
     .eachPage(function page(records, fetchNextPage) {
-      if (records.some((r) => !r.fields["Attendee scheduled"])) {
+      if (
+        records.some((r) => !r.fields["Attendee scheduled"] || r.fields.Blocker)
+      ) {
         canEdit = false;
       }
       fetchNextPage();
