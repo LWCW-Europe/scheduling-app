@@ -181,7 +181,7 @@ export function ProposalTable({
       cmp = getVoteOrder(a.id) - getVoteOrder(b.id);
     } else if (key === "votes") {
       const voteNum = (p: SessionProposal) =>
-        p.interestedVotesCount * 3 + p.maybeVotesCount;
+        p.interestedVotesCount * 4 + p.maybeVotesCount;
       cmp = voteNum(a) - voteNum(b);
     }
     return direction === "asc" ? cmp : -cmp;
