@@ -501,16 +501,13 @@ export function ProposalTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {currentPageProposals.map((proposal) => (
               <tr key={proposal.id} className="hover:bg-gray-200">
-                <td
-                  className="px-4 lg:px-6 py-4 whitespace-nowrap"
-                  title={proposal.title}
-                >
+                <td className="px-4 lg:px-6 py-4" title={proposal.title}>
                   <Link
                     href={`/${eventSlug}/proposals/${proposal.id}/view`}
                     scroll={false}
                     className="block w-full"
                   >
-                    <div className="text-sm font-medium text-gray-900 truncate">
+                    <div className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
                       {proposal.title}
                     </div>
                   </Link>
@@ -525,11 +522,8 @@ export function ProposalTable({
                       .join(", ") || "-"}
                   </div>
                 </td>
-                <td
-                  className="px-4 lg:px-6 py-4 whitespace-nowrap"
-                  title={proposal.description}
-                >
-                  <div className="text-sm text-gray-500 truncate">
+                <td className="px-4 lg:px-6 py-4" title={proposal.description}>
+                  <div className="text-sm text-gray-500 line-clamp-2 leading-tight">
                     {proposal.description || "-"}
                   </div>
                 </td>
