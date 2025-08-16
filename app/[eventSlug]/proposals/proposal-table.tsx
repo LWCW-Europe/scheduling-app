@@ -23,6 +23,7 @@ import {
   dateStartDescription,
 } from "@/app/utils/events";
 import type { Event } from "@/db/events";
+import { formatDuration, subtractBreakFromDuration } from "@/utils/utils";
 
 import { VotingButtons } from "./voting-buttons";
 import { VoteChoice } from "@/app/votes";
@@ -232,16 +233,6 @@ export function ProposalTable({
 
   const visitViewPage = (proposal: SessionProposal) => {
     router.push(`/${eventSlug}/proposals/${proposal.id}/view`);
-  };
-
-  const formatDuration = (minutes?: number) => {
-    if (!minutes) return "";
-    if (minutes < 60) return `${minutes}m`;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0
-      ? `${hours}h ${remainingMinutes}m`
-      : `${hours}h`;
   };
 
   const canEdit = (hosts: string[]) => {
@@ -533,7 +524,9 @@ export function ProposalTable({
                       <>
                         <ClockIcon className="h-4 w-4 mr-1 text-gray-400 flex-shrink-0" />
                         <span className="text-sm text-gray-500 truncate">
-                          {formatDuration(proposal.durationMinutes)}
+                          {formatDuration(
+                            subtractBreakFromDuration(proposal.durationMinutes)
+                          )}
                         </span>
                       </>
                     ) : (
@@ -692,7 +685,9 @@ export function ProposalTable({
                 <div className="flex items-center">
                   <ClockIcon className="h-4 w-4 mr-1 text-gray-400" />
                   <span className="text-sm text-gray-500">
-                    {formatDuration(proposal.durationMinutes)}
+                    {formatDuration(
+                      subtractBreakFromDuration(proposal.durationMinutes)
+                    )}
                   </span>
                 </div>
               ) : (

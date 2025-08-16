@@ -6,6 +6,7 @@ import { DateTime } from "luxon";
 import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { Session } from "@/db/sessions";
+import { getEndTimeMinusBreak } from "@/utils/utils";
 
 export function ViewSession(props: {
   session: Session;
@@ -54,7 +55,7 @@ export function ViewSession(props: {
             .setZone("America/Los_Angeles")
             .toFormat("h:mm a")}{" "}
           -{" "}
-          {DateTime.fromISO(session["End time"])
+          {getEndTimeMinusBreak(session)
             .setZone("America/Los_Angeles")
             .toFormat("h:mm a")}
         </span>

@@ -14,16 +14,9 @@ import { SessionProposal } from "@/db/sessionProposals";
 import { SelectHosts } from "@/app/[eventSlug]/session-form";
 import { ConfirmDeletionModal } from "../modals";
 import { Guest } from "@/db/guests";
+import { formatDuration, subtractBreakFromDuration } from "@/utils/utils";
 
-const DURATION_OPTIONS = [
-  { value: undefined, label: "Undecided" },
-  { value: 30, label: "30 minutes" },
-  { value: 60, label: "1 hour" },
-  { value: 90, label: "1.5 hours" },
-  { value: 120, label: "2 hours" },
-  { value: 150, label: "2.5 hours" },
-  { value: 180, label: "3 hours" },
-];
+const DURATION_OPTIONS = [undefined, 30, 60, 90, 120];
 
 export function SessionProposalForm(props: {
   eventID: string;
@@ -173,7 +166,7 @@ export function SessionProposalForm(props: {
           <label className="font-medium">Duration</label>
           <fieldset>
             <div className="grid gap-3">
-              {DURATION_OPTIONS.map(({ value, label }) => (
+              {DURATION_OPTIONS.map((value) => (
                 <div key={value ?? "undecided"} className="flex items-center">
                   <input
                     id={`duration-${value ?? "undecided"}`}
@@ -186,7 +179,9 @@ export function SessionProposalForm(props: {
                     htmlFor={`duration-${value ?? "undecided"}`}
                     className="ml-3 block text-sm font-medium leading-6 text-gray-900"
                   >
-                    {label}
+                    {value
+                      ? formatDuration(subtractBreakFromDuration(value), true)
+                      : "Undecided"}
                   </label>
                 </div>
               ))}

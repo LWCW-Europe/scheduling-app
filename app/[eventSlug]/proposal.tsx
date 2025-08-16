@@ -4,16 +4,7 @@ import Link from "next/link";
 
 import type { Guest } from "@/db/guests";
 import type { SessionProposal } from "@/db/sessionProposals";
-
-export function displayDuration(duration: number) {
-  if (duration === 30) {
-    return "30 minutes";
-  } else {
-    const numHours = duration / 60;
-    const hoursStr = numHours === 1 ? "hour" : "hours";
-    return `${numHours} ${hoursStr}`;
-  }
-}
+import { formatDuration, subtractBreakFromDuration } from "@/utils/utils";
 
 export function Proposal(props: {
   eventSlug: string;
@@ -45,7 +36,11 @@ export function Proposal(props: {
       <p className="mb-3 whitespace-pre-line">{proposal.description}</p>
       {proposal.durationMinutes && (
         <p className="text-sm text-gray-600 mb-4">
-          Duration: {displayDuration(proposal.durationMinutes)}
+          Duration:{" "}
+          {formatDuration(
+            subtractBreakFromDuration(proposal.durationMinutes),
+            true
+          )}
         </p>
       )}
     </>
