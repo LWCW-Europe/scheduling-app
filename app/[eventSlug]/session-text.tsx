@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { DateTime } from "luxon";
 import { Session } from "@/db/sessions";
 import { Location } from "@/db/locations";
+import { getEndTimeMinusBreak } from "@/utils/utils";
 
 export function SessionText(props: {
   session: Session;
@@ -21,7 +22,7 @@ export function SessionText(props: {
                 .setZone("America/Los_Angeles")
                 .toFormat("h:mm a")}{" "}
               -{" "}
-              {DateTime.fromISO(session["End time"])
+              {getEndTimeMinusBreak(session)
                 .setZone("America/Los_Angeles")
                 .toFormat("h:mm a")}
             </span>
