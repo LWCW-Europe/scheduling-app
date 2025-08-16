@@ -45,6 +45,9 @@ export function ViewSession(props: {
           .join(", ")}
       </p>
       <p className="mb-3 whitespace-pre-line">{session.Description}</p>
+      <div className="flex gap-1 mb-4 font-semibold">
+        {session["Location name"]}
+      </div>
       <div className="flex gap-1 mb-4">
         <span>
           {DateTime.fromISO(session["Start time"])
