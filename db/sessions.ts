@@ -16,6 +16,7 @@ export type Session = {
   "Num RSVPs": number;
   "Attendee scheduled": boolean;
   Blocker: boolean;
+  proposal: string[]; // always has 1 or 0 values (Airtable returns an array regardless)
 };
 export async function getSessions() {
   const sessions: Session[] = [];
@@ -35,6 +36,7 @@ export async function getSessions() {
         "Num RSVPs",
         "Attendee scheduled",
         "Blocker",
+        "proposal",
       ],
       filterByFormula: `AND({Start time}, {End time}, {Location})`,
     })
@@ -73,6 +75,7 @@ export async function getSessionsByEvent(eventName: string) {
         "Num RSVPs",
         "Attendee scheduled",
         "Blocker",
+        "proposal",
       ],
       filterByFormula: filterFormula,
     })

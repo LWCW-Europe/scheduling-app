@@ -3,7 +3,7 @@ import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 
-type Option = {
+export type Option = {
   value: string;
   available: boolean;
   helperText?: string;

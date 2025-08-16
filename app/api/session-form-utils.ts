@@ -14,6 +14,7 @@ export type SessionParams = {
   day: Day;
   startTimeString: string;
   duration: number;
+  proposal?: string;
 };
 export type SessionInsert = {
   Title: string;
@@ -24,6 +25,7 @@ export type SessionInsert = {
   Location: string[];
   Event?: string[];
   "Attendee scheduled": boolean;
+  proposal: string[];
 };
 export type SessionInterval = {
   start: string;
@@ -73,6 +75,7 @@ export function prepareToInsert(params: SessionParams): SessionInsert {
     "Start time": start,
     "End time": end,
     "Attendee scheduled": true,
+    proposal: params.proposal ? [params.proposal] : [],
   };
   if (CONSTS.MULTIPLE_EVENTS && day["Event"]) {
     session.Event = [day["Event"][0]];
