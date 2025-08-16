@@ -15,6 +15,7 @@ export type SessionProposal = {
   votesCount: number;
   interestedVotesCount: number;
   maybeVotesCount: number;
+  sessions: string[];
 };
 
 export type NewProposalInput = {
@@ -39,6 +40,7 @@ export async function getSessionProposalsByEvent(event: string) {
         "votesCount",
         "interestedVotesCount",
         "maybeVotesCount",
+        "sessions",
       ],
       filterByFormula: `{event} = "${event}"`,
     })

@@ -14,6 +14,7 @@ export function newEmptySession(): Session {
     "Num RSVPs": 0,
     "Attendee scheduled": true,
     Blocker: false,
+    proposal: [],
   };
 }
 
