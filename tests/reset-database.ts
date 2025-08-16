@@ -610,12 +610,13 @@ async function seedTestData() {
     const sessions: Array<{
       fields: {
         Title: string;
-        Description: string;
+        Description?: string;
         Event: string[];
-        Location: string[];
-        "Start time": string;
-        "End time": string;
-        Hosts: string[];
+        Location?: string[];
+        "Start time"?: string;
+        "End time"?: string;
+        Hosts?: string[];
+        Blocker?: boolean;
       };
     }> = [];
 
@@ -638,9 +639,39 @@ async function seedTestData() {
           Hosts: [guests[eventIndex % guests.length].id],
         },
       });
+
+      // Add lunch blocker for each day of the event
+      for (let dayIndex = 0; dayIndex < 3; dayIndex++) {
+        const lunchStart = new Date(config.start);
+        lunchStart.setDate(config.start.getDate() + dayIndex);
+        lunchStart.setHours(12, 0, 0, 0); // 12 PM
+
+        const lunchEnd = new Date(lunchStart);
+        lunchEnd.setHours(13, 0, 0, 0); // 1 PM
+
+        sessions.push({
+          fields: {
+            Title: "Lunch Break",
+            Event: [event.id],
+            Location: locations.map((l) => l.id), // All rooms
+            "Start time": lunchStart.toISOString(),
+            "End time": lunchEnd.toISOString(),
+            Blocker: true,
+          },
+        });
+      }
     });
 
-    await base("Sessions").create(sessions);
+    // Create sessions in batches of 10 (Airtable limit)
+    const sessionChunks = [];
+    for (let i = 0; i < sessions.length; i += 10) {
+      sessionChunks.push(sessions.slice(i, i + 10));
+    }
+
+    for (const chunk of sessionChunks) {
+      await base("Sessions").create(chunk);
+    }
+
     console.log(
       `  ✅ Created ${sessions.length} sessions across ${events.length} events`
     );
