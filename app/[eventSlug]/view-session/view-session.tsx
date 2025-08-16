@@ -53,7 +53,7 @@ export function ViewSession(props: {
         <span>
           {DateTime.fromISO(session["Start time"])
             .setZone("America/Los_Angeles")
-            .toFormat("h:mm a")}{" "}
+            .toFormat("EEEE h:mm a")}{" "}
           -{" "}
           {getEndTimeMinusBreak(session)
             .setZone("America/Los_Angeles")
