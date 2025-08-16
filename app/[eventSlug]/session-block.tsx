@@ -42,7 +42,8 @@ export function SessionBlock(props: {
     (!day.StartBookings ||
       startTime >= new Date(day.StartBookings as Date | string).getTime()) &&
     (!day.EndBookings ||
-      startTime < new Date(day.EndBookings as Date | string).getTime());
+      startTime < new Date(day.EndBookings as Date | string).getTime()) &&
+    !session.Blocker;
   return isBookable ? (
     <BookableSessionCard
       eventSlug={eventSlug}
@@ -52,7 +53,12 @@ export function SessionBlock(props: {
     />
   ) : (
     <>
-      {isBlank ? (
+      {session.Blocker ? (
+        <BlockerSessionCard
+          title={session.Title || "Blocked"}
+          numHalfHours={numHalfHours}
+        />
+      ) : isBlank ? (
         <BlankSessionCard numHalfHours={numHalfHours} />
       ) : (
         <RealSessionCard
@@ -96,6 +102,17 @@ export function BookableSessionCard(props: {
 function BlankSessionCard(props: { numHalfHours: number }) {
   const { numHalfHours } = props;
   return <div className={`row-span-${numHalfHours} my-0.5 min-h-12`} />;
+}
+
+function BlockerSessionCard(props: { title: string; numHalfHours: number }) {
+  const { title, numHalfHours } = props;
+  return (
+    <div
+      className={`row-span-${numHalfHours} my-0.5 min-h-12 bg-gray-300 text-black flex items-center justify-center`}
+    >
+      <p>{title}</p>
+    </div>
+  );
 }
 
 export function RealSessionCard(props: {

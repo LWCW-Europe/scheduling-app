@@ -29,8 +29,10 @@ import { VoteChoice } from "@/app/votes";
 
 const ITEMS_PER_PAGE = 1000;
 
+type SortColumn = keyof SessionProposal | "userVote" | "votes";
+
 type SortConfig = {
-  key: keyof SessionProposal | "userVote";
+  key: SortColumn;
   direction: "asc" | "desc";
 };
 
@@ -68,7 +70,7 @@ export function ProposalTable({
         }
   );
   const { user: currentUserId } = useContext(UserContext);
-  const { votes } = useContext(VotesContext);
+  const { votes, proposalVoteEmoji } = useContext(VotesContext);
   const router = useRouter();
   const filteredProposals = initialProposals.filter((pr) => {
     if (currentUserId && resultFilter) {
@@ -95,6 +97,7 @@ export function ProposalTable({
     : "Select a user first";
   const schedDisabledText =
     "Scheduling " + dateStartDescription(event.schedulingPhaseStart);
+
   function updateResultFilter(newFilter: Filter) {
     setPage(1);
     setResultFilter((oldFilter) =>
@@ -176,6 +179,10 @@ export function ProposalTable({
         }
       };
       cmp = getVoteOrder(a.id) - getVoteOrder(b.id);
+    } else if (key === "votes") {
+      const voteNum = (p: SessionProposal) =>
+        p.interestedVotesCount * 4 + p.maybeVotesCount;
+      cmp = voteNum(a) - voteNum(b);
     }
     return direction === "asc" ? cmp : -cmp;
   });
@@ -245,7 +252,7 @@ export function ProposalTable({
     }
   };
 
-  const handleSort = (key: keyof SessionProposal | "userVote") => {
+  const handleSort = (key: SortColumn) => {
     let direction: "asc" | "desc" = "asc";
 
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -375,7 +382,7 @@ export function ProposalTable({
             value={`${sortConfig.key}-${sortConfig.direction}`}
             onChange={(e) => {
               const [key, direction] = e.target.value.split("-") as [
-                keyof SessionProposal | "userVote",
+                SortColumn,
                 "asc" | "desc",
               ];
               setSortConfig({ key, direction });
@@ -390,6 +397,12 @@ export function ProposalTable({
             <option value="durationMinutes-desc">Duration ↑</option>
             <option value="userVote-asc">Your vote ↓</option>
             <option value="userVote-desc">Your vote ↑</option>
+            {schedEnabled && (
+              <>
+                <option value="votes-asc">Votes ↓</option>
+                <option value="votes-desc">Votes ↑</option>
+              </>
+            )}
           </select>
         </div>
       </div>
@@ -402,7 +415,7 @@ export function ProposalTable({
               <th
                 onClick={() => handleSort("title")}
                 scope="col"
-                className={`w-[20%] text-left px-4 lg:px-6 py-3 text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                className={`${schedEnabled ? "w-[18%]" : "w-[20%]"} text-left px-4 lg:px-6 py-3 text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
                   ${sortConfig.key === "title" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Title
@@ -429,7 +442,7 @@ export function ProposalTable({
               </th>
               <th
                 scope="col"
-                className="w-[25%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className={`${schedEnabled ? "w-[20%]" : "w-[25%]"} px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}
               >
                 Description
               </th>
@@ -450,7 +463,7 @@ export function ProposalTable({
               <th
                 onClick={() => handleSort("userVote")}
                 scope="col"
-                className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                className={`${schedEnabled ? "w-[7%]" : "w-[10%]"} px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
                   ${sortConfig.key === "userVote" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
               >
                 Your vote
@@ -461,9 +474,25 @@ export function ProposalTable({
                       : " ↑"
                     : " ↑↓")}
               </th>
+              {schedEnabled && (
+                <th
+                  onClick={() => handleSort("votes")}
+                  scope="col"
+                  className={`w-[10%] px-4 lg:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-gray-200
+                    ${sortConfig.key === "votes" && !searchQuery.trim() ? "text-gray-900 font-semibold" : "text-gray-500"}`}
+                >
+                  Votes
+                  {!searchQuery.trim() &&
+                    (sortConfig.key === "votes"
+                      ? sortConfig.direction === "asc"
+                        ? " ↓"
+                        : " ↑"
+                      : " ↑↓")}
+                </th>
+              )}
               <th
                 scope="col"
-                className="w-[20%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className={`w-[20%] px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}
               >
                 Actions
               </th>
@@ -472,16 +501,13 @@ export function ProposalTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {currentPageProposals.map((proposal) => (
               <tr key={proposal.id} className="hover:bg-gray-200">
-                <td
-                  className="px-4 lg:px-6 py-4 whitespace-nowrap"
-                  title={proposal.title}
-                >
+                <td className="px-4 lg:px-6 py-4" title={proposal.title}>
                   <Link
                     href={`/${eventSlug}/proposals/${proposal.id}/view`}
                     scroll={false}
                     className="block w-full"
                   >
-                    <div className="text-sm font-medium text-gray-900 truncate">
+                    <div className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors line-clamp-2 leading-tight">
                       {proposal.title}
                     </div>
                   </Link>
@@ -496,11 +522,8 @@ export function ProposalTable({
                       .join(", ") || "-"}
                   </div>
                 </td>
-                <td
-                  className="px-4 lg:px-6 py-4 whitespace-nowrap"
-                  title={proposal.description}
-                >
-                  <div className="text-sm text-gray-500 truncate">
+                <td className="px-4 lg:px-6 py-4" title={proposal.description}>
+                  <div className="text-sm text-gray-500 line-clamp-2 leading-tight">
                     {proposal.description || "-"}
                   </div>
                 </td>
@@ -518,15 +541,62 @@ export function ProposalTable({
                     )}
                   </div>
                 </td>
-                <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
-                  {currentUserId && !proposal.hosts.includes(currentUserId) && (
-                    <VotingButtons
-                      proposalId={proposal.id}
-                      votingEnabled={votingEnabled}
-                      votingDisabledText={votingDisabledText}
-                    />
-                  )}
-                </td>
+                {!schedEnabled && (
+                  <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                    {currentUserId &&
+                      !proposal.hosts.includes(currentUserId) && (
+                        <VotingButtons
+                          proposalId={proposal.id}
+                          votingEnabled={votingEnabled}
+                          votingDisabledText={votingDisabledText}
+                        />
+                      )}
+                  </td>
+                )}
+                {schedEnabled && (
+                  <>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                      <span
+                        title={(() => {
+                          const vote = votes.find(
+                            (v) =>
+                              v.proposal === proposal.id &&
+                              v.guest === currentUserId
+                          );
+                          if (!vote) return "No vote";
+                          switch (vote.choice) {
+                            case VoteChoice.interested:
+                              return "Interested";
+                            case VoteChoice.maybe:
+                              return "Maybe";
+                            case VoteChoice.skip:
+                              return "Skip";
+                            default:
+                              return "No vote";
+                          }
+                        })()}
+                      >
+                        {proposalVoteEmoji(proposal.id)}
+                      </span>
+                    </td>
+                    <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <span
+                          title={`${proposal.interestedVotesCount} interested vote${proposal.interestedVotesCount !== 1 ? "s" : ""}`}
+                          className="flex items-center gap-1 text-sm text-gray-500"
+                        >
+                          ❤️&nbsp;{proposal.interestedVotesCount}
+                        </span>
+                        <span
+                          title={`${proposal.maybeVotesCount} maybe vote${proposal.maybeVotesCount !== 1 ? "s" : ""}`}
+                          className="flex items-center gap-1 text-sm text-gray-500"
+                        >
+                          ⭐&nbsp;{proposal.maybeVotesCount}
+                        </span>
+                      </div>
+                    </td>
+                  </>
+                )}
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                   <div className="flex gap-1 flex-col sm:flex-row">
                     {canEdit(proposal.hosts) && (
@@ -630,12 +700,61 @@ export function ProposalTable({
               )}
 
               <div className="pt-2 border-t border-gray-100 space-y-3">
-                {currentUserId && !proposal.hosts.includes(currentUserId) && (
-                  <VotingButtons
-                    proposalId={proposal.id}
-                    votingEnabled={votingEnabled}
-                    votingDisabledText={votingDisabledText}
-                  />
+                {currentUserId &&
+                  !proposal.hosts.includes(currentUserId) &&
+                  !schedEnabled && (
+                    <VotingButtons
+                      proposalId={proposal.id}
+                      votingEnabled={votingEnabled}
+                      votingDisabledText={votingDisabledText}
+                    />
+                  )}
+                {schedEnabled && (
+                  <>
+                    {!canEdit(proposal.hosts) && (
+                      <div>
+                        Your vote:
+                        <span
+                          title={(() => {
+                            const vote = votes.find(
+                              (v) =>
+                                v.proposal === proposal.id &&
+                                v.guest === currentUserId
+                            );
+                            if (!vote) return "No vote";
+                            switch (vote.choice) {
+                              case VoteChoice.interested:
+                                return "Interested";
+                              case VoteChoice.maybe:
+                                return "Maybe";
+                              case VoteChoice.skip:
+                                return "Skip";
+                              default:
+                                return "No vote";
+                            }
+                          })()}
+                          className="ml-1"
+                        >
+                          {proposalVoteEmoji(proposal.id)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      Total votes:
+                      <span
+                        title={`${proposal.interestedVotesCount} interested vote${proposal.interestedVotesCount !== 1 ? "s" : ""}`}
+                        className="flex items-center gap-1 text-sm text-gray-500"
+                      >
+                        ❤️&nbsp;{proposal.interestedVotesCount}
+                      </span>
+                      <span
+                        title={`${proposal.maybeVotesCount} maybe vote${proposal.maybeVotesCount !== 1 ? "s" : ""}`}
+                        className="flex items-center gap-1 text-sm text-gray-500"
+                      >
+                        ⭐&nbsp;{proposal.maybeVotesCount}
+                      </span>
+                    </div>
+                  </>
                 )}
 
                 <div className="flex gap-2">

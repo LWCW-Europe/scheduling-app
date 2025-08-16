@@ -532,13 +532,15 @@ export function SelectHosts(props: {
                       className="py-1 px-2 bg-gray-100 rounded text-nowrap text-sm flex items-center gap-1"
                     >
                       {host.Name}
-                      <button
-                        onClick={() =>
-                          setHosts(hosts.filter((h) => h !== host))
-                        }
+                      <span
+                        onClick={(e) => {
+                          setHosts(hosts.filter((h) => h !== host));
+                          e.stopPropagation();
+                        }}
+                        role="button"
                       >
-                        <XMarkIcon className="h-3 w-3 text-gray-400" />
-                      </button>
+                        <XMarkIcon className="h-4 w-4 text-gray-400 hover:text-gray-700" />
+                      </span>
                     </span>
                   ))}
                 </>
