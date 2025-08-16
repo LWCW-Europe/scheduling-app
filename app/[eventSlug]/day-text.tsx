@@ -28,7 +28,9 @@ export function DayText(props: {
     return (
       includedLocations.some((location) =>
         session["Location name"].includes(location.Name)
-      ) && sessionMatchesSearch(session, search)
+      ) &&
+      sessionMatchesSearch(session, search) &&
+      !session.Blocker
     );
   });
   const sessionsSortedByLocation = includedSessions.sort((a, b) => {
