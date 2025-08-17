@@ -93,10 +93,10 @@ export function DayGrid(props: {
             ref={scrollableDivRef}
           >
             <div
-              className={clsx(
-                "grid divide-x divide-gray-100 w-full overflow-visible",
-                `grid-cols-[repeat(${numLocations},minmax(120px,2fr))]`
-              )}
+              className="grid divide-x divide-gray-100 w-full overflow-visible"
+              style={{
+                gridTemplateColumns: `repeat(${numLocations}, minmax(120px, 2fr))`,
+              }}
             >
               {includedLocations.map((loc) => (
                 <Tooltip
@@ -133,10 +133,10 @@ export function DayGrid(props: {
               ))}
             </div>
             <div
-              className={clsx(
-                "grid divide-x divide-gray-100 relative w-full",
-                `grid-cols-[repeat(${numLocations},minmax(120px,2fr))]`
-              )}
+              className="grid divide-x divide-gray-100 relative w-full"
+              style={{
+                gridTemplateColumns: `repeat(${numLocations}, minmax(120px, 2fr))`,
+              }}
             >
               {/* <NowBar start={start} end={end} /> */}
               {includedLocations.map((location) => {
