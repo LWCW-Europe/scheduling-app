@@ -108,9 +108,9 @@ function BlockerSessionCard(props: { title: string; numHalfHours: number }) {
   const { title, numHalfHours } = props;
   return (
     <div
-      className={`row-span-${numHalfHours} my-0.5 min-h-12 bg-gray-300 text-black flex items-center justify-center`}
+      className={`row-span-${numHalfHours} my-0.5 min-h-12 bg-gray-300 text-black flex items-center justify-center p-2`}
     >
-      <p>{title}</p>
+      <p className="text-center">{title}</p>
     </div>
   );
 }
