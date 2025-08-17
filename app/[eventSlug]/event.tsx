@@ -1,7 +1,11 @@
 "use client";
 import { ScheduleSettings } from "./schedule-settings";
 import { DayGrid } from "./day-grid";
-import { CalendarIcon, LinkIcon } from "@heroicons/react/24/outline";
+import {
+  CalendarIcon,
+  LinkIcon,
+  ClipboardDocumentListIcon,
+} from "@heroicons/react/24/outline";
 import { DateTime } from "luxon";
 import { useSearchParams } from "next/navigation";
 import { DayText } from "./day-text";
@@ -9,6 +13,9 @@ import { Input } from "./input";
 import { useState, useContext } from "react";
 import { CONSTS } from "@/utils/constants";
 import { EventContext } from "../context";
+import { hasPhases } from "@/app/utils/events";
+import Link from "next/link";
+import { eventNameToSlug } from "@/utils/utils";
 
 export function EventDisplay() {
   const { event, days, locations, guests, rsvps } = useContext(EventContext);
@@ -61,6 +68,17 @@ export function EventDisplay() {
         </a>
       </div>
       <p className="text-gray-900 mt-3 mb-5">{event.Description}</p>
+      {hasPhases(event) && (
+        <div className="mb-5">
+          <Link
+            href={`/${eventNameToSlug(event.Name)}/proposals`}
+            className={`bg-rose-400 hover:bg-rose-500 transition-colors text-white px-4 py-2 rounded-md flex items-center gap-2`}
+          >
+            <ClipboardDocumentListIcon className="h-4 w-4" />
+            View Session Proposals
+          </Link>
+        </div>
+      )}
       <div className="mb-10 w-full">
         <ScheduleSettings guests={guests} />
       </div>

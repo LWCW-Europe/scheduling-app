@@ -21,6 +21,7 @@ import {
   inSchedPhase,
   inVotingPhase,
   dateStartDescription,
+  inProposalPhase,
 } from "@/app/utils/events";
 import type { Event } from "@/db/events";
 import { formatDuration, subtractBreakFromDuration } from "@/utils/utils";
@@ -93,9 +94,14 @@ export function ProposalTable({
   const totalPages = Math.ceil(filteredProposals.length / ITEMS_PER_PAGE);
   const votingEnabled = !!currentUserId && inVotingPhase(event);
   const schedEnabled = inSchedPhase(event);
-  const votingDisabledText = !inVotingPhase(event)
-    ? `Voting ${dateStartDescription(event.votingPhaseStart)}`
-    : "Select a user first";
+  let votingDisabledText = "";
+  if (inSchedPhase(event)) {
+    votingDisabledText = `The voting phase is over`;
+  } else if (inProposalPhase(event)) {
+    votingDisabledText = `Voting ${dateStartDescription(event.votingPhaseStart)}`;
+  } else if (!currentUserId) {
+    votingDisabledText = "Select a user first";
+  }
   const schedDisabledText =
     "Scheduling " + dateStartDescription(event.schedulingPhaseStart);
 
