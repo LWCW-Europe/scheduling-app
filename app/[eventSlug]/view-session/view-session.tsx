@@ -53,7 +53,7 @@ export function ViewSession(props: {
         <span>
           {DateTime.fromISO(session["Start time"])
             .setZone("Europe/Berlin")
-            .toFormat("HH:mm")}{" "}
+            .toFormat("EEEE HH:mm")}{" "}
           -{" "}
           {getEndTimeMinusBreak(session)
             .setZone("Europe/Berlin")
@@ -63,6 +63,18 @@ export function ViewSession(props: {
       <p>
         {session["Num RSVPs"]} RSVP{session["Num RSVPs"] === 1 ? "" : "s"}
       </p>
+      {session.proposal && (
+        <p className="text-sm text-gray-600 mt-5">
+          This session was scheduled from a proposal. See it{" "}
+          <a
+            href={`/${eventSlug}/proposals/${session.proposal[0]}/view`}
+            className="text-rose-500 underline hover:text-rose-600 transition-colors"
+          >
+            here
+          </a>
+          .
+        </p>
+      )}
     </div>
   );
 }

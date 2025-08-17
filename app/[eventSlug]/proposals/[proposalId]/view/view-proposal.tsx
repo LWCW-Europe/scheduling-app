@@ -16,12 +16,15 @@ import { Proposal } from "@/app/[eventSlug]/proposal";
 import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { SessionProposal } from "@/db/sessionProposals";
+import type { Session } from "@/db/sessions";
 import { VotingButtons } from "@/app/[eventSlug]/proposals/voting-buttons";
 import { VoteChoice } from "@/app/votes";
+import { DateTime } from "luxon";
 
 export function ViewProposal(props: {
   proposal: SessionProposal;
   guests: Guest[];
+  sessions: Session[];
   eventSlug: string;
   event: Event;
   showBackBtn: boolean;
@@ -34,6 +37,7 @@ export function ViewProposal(props: {
     guests,
     eventSlug,
     event,
+    sessions: allSessions,
     showBackBtn,
     titleId,
     isInModal = false,
@@ -76,6 +80,10 @@ export function ViewProposal(props: {
     votingDisabledText = "Select a user first";
   }
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
+
+  const sessions = (proposal.sessions || []).map(
+    (ses) => allSessions.find((s) => s.ID === ses)!
+  );
 
   return (
     <div
@@ -171,6 +179,50 @@ export function ViewProposal(props: {
               </span>
             </span>
           </div>
+        </div>
+      )}
+      {schedEnabled && (
+        <div className="mt-6 text-sm text-gray-600">
+          {sessions.length === 0 ? (
+            <p>This proposal has not been scheduled yet.</p>
+          ) : sessions.length === 1 ? (
+            <p>
+              This proposal was scheduled on{" "}
+              <Link
+                href={`/${eventSlug}/view-session?sessionID=${sessions[0].ID}`}
+                className="text-rose-500 underline hover:text-rose-600 transition-colors"
+              >
+                {DateTime.fromISO(sessions[0]["Start time"])
+                  .setZone("Europe/Berlin")
+                  .toFormat("EEEE")}{" "}
+                at{" "}
+                {DateTime.fromISO(sessions[0]["Start time"])
+                  .setZone("Europe/Berlin")
+                  .toFormat("HH:mm")}{" "}
+                in {sessions[0]["Location name"]}
+              </Link>
+              .
+            </p>
+          ) : (
+            <div>
+              <p>This proposal was scheduled several times:</p>
+              <ul className="mt-2 space-y-1 ml-4">
+                {sessions.map((session) => (
+                  <li key={session.ID}>
+                    <Link
+                      href={`/${eventSlug}/view-session?sessionID=${session.ID}`}
+                      className="text-rose-500 underline hover:text-rose-600 transition-colors"
+                    >
+                      {DateTime.fromISO(session["Start time"])
+                        .setZone("Europe/Berlin")
+                        .toFormat("EEEE HH:mm")}{" "}
+                      in {session["Location name"]}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

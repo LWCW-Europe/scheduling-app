@@ -18,7 +18,7 @@ import {
   formatDuration,
   subtractBreakFromDuration,
 } from "@/utils/utils";
-import { MyListbox } from "./select";
+import { MyListbox, type Option } from "./select";
 import { Day } from "@/db/days";
 import { Guest } from "@/db/guests";
 import { Location } from "@/db/locations";
@@ -125,6 +125,7 @@ export function SessionForm(props: {
   const [hostRSVPs, setHostRSVPs] = useState<Record<string, RSVP[]>>({});
   const [isFetchingRSVPs, setIsFetchingRSVPs] = useState(false);
 
+  const [usedProposal, setUsedProposal] = useState(false);
   useEffect(() => {
     if (proposal) {
       setTitle(proposal.title);
@@ -133,7 +134,14 @@ export function SessionForm(props: {
       if (proposal.durationMinutes) {
         setDuration(proposal.durationMinutes);
       }
+      setUsedProposal(true);
+    } else if (usedProposal) {
+      // Triggered only when deselecting proposal
+      setTitle("");
+      setDescription("");
+      setHosts(initialHosts);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposal, guests]);
 
   useEffect(() => {
@@ -207,6 +215,7 @@ export function SessionForm(props: {
         startTimeString: startTime,
         duration,
         hosts: hosts,
+        proposal: proposal?.id,
       }),
     });
     if (res.ok) {
@@ -265,6 +274,22 @@ export function SessionForm(props: {
     }
     setIsSubmitting(false);
   };
+
+  const nullProposalOpts: Option[] = [
+    {
+      value: "",
+      display: "[none]",
+      available: true,
+    },
+  ];
+  const proposalSelectOpts = nullProposalOpts.concat(
+    proposals.map((pr) => ({
+      value: pr.id,
+      display: pr.title,
+      available: true,
+    }))
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <Link
@@ -285,21 +310,15 @@ export function SessionForm(props: {
           reach out to you about rescheduling, relocating, or cancelling.
         </p>
       </div>
-      {proposals.length > 0 && (
+      {proposals.length > 0 && !sessionID && (
         <div className="flex flex-col gap-1 w-72">
           <label className="font-medium">Proposal</label>
           <MyListbox
-            currValue={proposal?.id}
+            currValue={proposal?.id ?? ""}
             setCurrValue={(id) =>
-              setProposal(proposals.find((p) => p.id === id)!)
+              setProposal(proposals.find((p) => p.id === id) ?? null)
             }
-            options={proposals.map((pr) => {
-              return {
-                value: pr.id,
-                display: pr.title,
-                available: true,
-              };
-            })}
+            options={proposalSelectOpts}
             placeholder={"Pre-fill from proposal"}
             truncateText={false}
           />
@@ -383,6 +402,18 @@ export function SessionForm(props: {
           maxDuration={maxDuration}
         />
       </div>
+      {sessionID && session.proposal && (
+        <p className="text-sm text-gray-600">
+          This session was scheduled from a proposal. See it{" "}
+          <a
+            href={`/${eventNameToSlug(eventName)}/proposals/${session.proposal[0]}/view`}
+            className="text-rose-500 underline hover:text-rose-600 transition-colors"
+          >
+            here
+          </a>
+          .
+        </p>
+      )}
       {clashErrors.length > 0 && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
           <p className="text-sm font-medium">Warning: schedule clash</p>

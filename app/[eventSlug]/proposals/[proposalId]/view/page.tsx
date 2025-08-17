@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
+import { getSessionsByEvent } from "@/db/sessions";
 import { eventSlugToName } from "@/utils/utils";
 import { ViewProposal } from "./view-proposal";
 
@@ -14,26 +15,26 @@ export default async function ViewProposalPage({
   const { eventSlug, proposalId } = params;
 
   const eventName = eventSlugToName(eventSlug);
-  const event = await getEventByName(eventName);
 
-  if (!event) {
-    return <div>Event not found</div>;
-  }
+  const [event, proposals, guests, sessions] = await Promise.all([
+    getEventByName(eventName),
+    getSessionProposalsByEvent(eventName),
+    getGuestsByEvent(eventName),
+    getSessionsByEvent(eventName),
+  ]);
 
-  const proposals = await getSessionProposalsByEvent(eventName);
   const proposal = proposals.find((p) => p.id === proposalId);
 
-  if (!proposal) {
-    notFound();
+  if (!event || !proposal) {
+    return notFound();
   }
-
-  const guests = await getGuestsByEvent(event.Name);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <ViewProposal
         proposal={proposal}
         guests={guests}
+        sessions={sessions}
         eventSlug={eventSlug}
         event={event}
         showBackBtn={true}

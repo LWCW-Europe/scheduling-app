@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 
 import { getSessionProposalsByEvent } from "@/db/sessionProposals";
 import { getEventByName } from "@/db/events";
+import { getSessionsByEvent } from "@/db/sessions";
 import { eventSlugToName } from "@/utils/utils";
 import { ProposalModal } from "./modal";
-import { getGuests } from "@/db/guests";
+import { getGuestsByEvent } from "@/db/guests";
 
 export default async function ProposalModalPage({
   params,
@@ -14,19 +15,17 @@ export default async function ProposalModalPage({
   const { eventSlug, proposalId } = params;
 
   const eventName = eventSlugToName(eventSlug);
-  const event = await getEventByName(eventName);
 
-  if (!event) {
-    return <div>Event not found</div>;
-  }
-
-  const [proposals, guests] = await Promise.all([
-    await getSessionProposalsByEvent(eventName),
-    await getGuests(),
+  const [event, proposals, guests, sessions] = await Promise.all([
+    getEventByName(eventName),
+    getSessionProposalsByEvent(eventName),
+    getGuestsByEvent(eventName),
+    getSessionsByEvent(eventName),
   ]);
+
   const proposal = proposals.find((p) => p.id === proposalId);
 
-  if (!proposal) {
+  if (!event || !proposal) {
     notFound();
   }
 
@@ -34,6 +33,7 @@ export default async function ProposalModalPage({
     <ProposalModal
       proposal={proposal}
       guests={guests}
+      sessions={sessions}
       eventSlug={eventSlug}
       event={event}
     />
