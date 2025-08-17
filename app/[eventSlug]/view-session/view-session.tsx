@@ -6,6 +6,7 @@ import { DateTime } from "luxon";
 import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { Session } from "@/db/sessions";
+import { getEndTimeMinusBreak } from "@/utils/utils";
 
 export function ViewSession(props: {
   session: Session;
@@ -45,13 +46,16 @@ export function ViewSession(props: {
           .join(", ")}
       </p>
       <p className="mb-3 whitespace-pre-line">{session.Description}</p>
+      <div className="flex gap-1 mb-4 font-semibold">
+        {session["Location name"]}
+      </div>
       <div className="flex gap-1 mb-4">
         <span>
           {DateTime.fromISO(session["Start time"])
             .setZone("Europe/Berlin")
             .toFormat("HH:mm")}{" "}
           -{" "}
-          {DateTime.fromISO(session["End time"])
+          {getEndTimeMinusBreak(session)
             .setZone("Europe/Berlin")
             .toFormat("HH:mm")}
         </span>

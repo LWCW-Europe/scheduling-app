@@ -14,7 +14,7 @@ import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext, EventContext } from "../context";
 import { sessionsOverlap } from "../session_utils";
 import { useScreenWidth } from "@/utils/hooks";
-import { eventNameToSlug } from "@/utils/utils";
+import { eventNameToSlug, getEndTimeMinusBreak } from "@/utils/utils";
 
 export function SessionBlock(props: {
   eventName: string;
@@ -198,7 +198,7 @@ export function RealSessionCard(props: {
               .setZone("Europe/Berlin")
               .toFormat("HH:mm")}{" "}
             -{" "}
-            {DateTime.fromISO(session["End time"])
+            {getEndTimeMinusBreak(session)
               .setZone("Europe/Berlin")
               .toFormat("HH:mm")}
           </span>
