@@ -155,7 +155,7 @@ export function RealSessionCard(props: {
     if (!rsvpd && overlappingSession) {
       setClashingSession(overlappingSession);
       setConfirmRSVPModalOpen(true);
-    } else if (currentUser && !onMobile) {
+    } else if (currentUser) {
       doRsvp();
     } else {
       setUserModalOpen(true);
