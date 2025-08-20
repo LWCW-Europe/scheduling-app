@@ -14,8 +14,9 @@ export function DayText(props: {
   day: Day;
   search: string;
   rsvps: RSVP[];
+  eventSlug: string;
 }) {
-  const { day, locations, search, rsvps } = props;
+  const { day, locations, search, rsvps, eventSlug } = props;
   const searchParams = useSearchParams();
   const { user: currentUser } = useContext(UserContext);
   const locParams = searchParams?.getAll("loc");
@@ -73,6 +74,7 @@ export function DayText(props: {
                 locations={locations.filter((loc) =>
                   session["Location name"].includes(loc.Name)
                 )}
+                eventSlug={eventSlug}
               />
             ))}
           </>
