@@ -1,11 +1,6 @@
 import clsx from "clsx";
 import { ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
-import {
-  UserIcon,
-  PencilSquareIcon,
-  EyeIcon,
-  AcademicCapIcon,
-} from "@heroicons/react/24/solid";
+import { UserIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
 import { Session } from "@/db/sessions";
 import { Day } from "@/db/days";
 import { Location } from "@/db/locations";
@@ -18,7 +13,6 @@ import { useContext, useState } from "react";
 import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext, EventContext } from "../context";
 import { sessionsOverlap } from "../session_utils";
-import { useScreenWidth } from "@/utils/hooks";
 import { eventNameToSlug, getEndTimeMinusBreak } from "@/utils/utils";
 
 export function SessionBlock(props: {
@@ -137,51 +131,85 @@ export function RealSessionCard(props: {
 }) {
   const { eventSlug, session, numHalfHours, location, guests, rsvpd } = props;
   const { user: currentUser } = useContext(UserContext);
-  const { updateRsvp, localSessions, userBusySessions } =
+  const { localSessions, updateRsvp, userBusySessions } =
     useContext(EventContext);
   const router = useRouter();
   const [isRsvping, setIsRsvping] = useState(false);
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [clashingSession, setClashingSession] = useState<Session | null>(null);
+  const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
 
   const hostStatus = currentUser && session.Hosts?.includes(currentUser);
   const lowerOpacity = !rsvpd && !hostStatus;
   const formattedHostNames = session["Host name"]?.join(", ") ?? "No hosts";
-  const [userModalOpen, setUserModalOpen] = useState(false);
-  const [clashingSession, setClashingSession] = useState<Session | null>(null);
-  const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
-  const screenWidth = useScreenWidth();
-  const onMobile = screenWidth < 640;
-  const isEditable = !!hostStatus && session["Attendee scheduled"];
 
   const handleClick = () => {
-    if (isEditable) {
-      const url = `/${eventSlug}/edit-session?sessionID=${session.ID}`;
-      router.push(url);
-      return;
-    } else if (hostStatus) {
+    // Preserve current search parameters including view
+    const searchParams = new URLSearchParams(window.location.search);
+    const url = `/${eventSlug}/view-session?sessionID=${session.ID}&${searchParams.toString()}`;
+    router.push(url);
+  };
+
+  const handleRSVP = (event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent opening the session modal
+
+    if (!currentUser) {
+      setUserModalOpen(true);
       return;
     }
 
-    const overlappingSession = userBusySessions().find((ses) =>
-      sessionsOverlap(session, ses)
-    );
-    if (!rsvpd && overlappingSession) {
-      setClashingSession(overlappingSession);
-      setConfirmRSVPModalOpen(true);
-    } else if (currentUser) {
-      doRsvp();
-    } else {
-      setUserModalOpen(true);
+    if (isRsvping) return;
+
+    const currentSession =
+      localSessions.find((s) => s.ID === session.ID) ?? session;
+
+    if (currentSession.Hosts?.includes(currentUser)) {
+      // Can't RSVP to your own session
+      return;
+    }
+
+    // Check for scheduling conflicts when RSVPing
+    if (!rsvpd) {
+      const clashing = userBusySessions().find((busySession: Session) =>
+        sessionsOverlap(currentSession, busySession)
+      );
+
+      if (clashing) {
+        setClashingSession(clashing);
+        setConfirmRSVPModalOpen(true);
+        return;
+      }
+    }
+
+    void doRsvp();
+  };
+
+  const doRsvp = async () => {
+    if (!currentUser || isRsvping) return;
+
+    setIsRsvping(true);
+
+    // Get the current RSVP status at the time of the action
+    const currentRsvpStatus = rsvpd;
+
+    try {
+      const result = await updateRsvp(
+        currentUser,
+        session.ID,
+        currentRsvpStatus
+      );
+      if (!result) {
+        console.error("Failed to update RSVP");
+      }
+    } finally {
+      setIsRsvping(false);
     }
   };
 
-  const doRsvp = () => {
-    if (!currentUser) {
-      return;
-    }
-    setIsRsvping(true);
-    void updateRsvp(currentUser, session.ID, rsvpd).then(() =>
-      setIsRsvping(false)
-    );
+  const handleConfirmRSVP = () => {
+    setConfirmRSVPModalOpen(false);
+    setClashingSession(null);
+    void doRsvp();
   };
 
   // Get the current number of RSVPs from the context
@@ -224,28 +252,9 @@ export function RealSessionCard(props: {
   );
   return (
     <Tooltip
-      content={onMobile ? undefined : <SessionInfoDisplay />}
+      content={<SessionInfoDisplay />}
       className={`row-span-${numHalfHours} my-0.5 overflow-hidden group`}
     >
-      <CurrentUserModal
-        close={() => setUserModalOpen(false)}
-        open={userModalOpen}
-        rsvp={handleClick}
-        guests={guests}
-        hosts={session.Hosts || []}
-        rsvpd={rsvpd}
-        sessionInfoDisplay={<SessionInfoDisplay />}
-      />
-      <ConfirmationModal
-        open={confirmRSVPModalOpen}
-        close={() => setConfirmRSVPModalOpen(false)}
-        confirm={doRsvp}
-        message={
-          `Warning: that session clashes with ${clashingSession?.Title}, which you ` +
-          `are ${clashingSession?.Hosts?.includes(currentUser || "") ? "hosting" : "attending"}. ` +
-          "Are you sure you want to proceed?"
-        }
-      />
       <button
         className={clsx(
           "py-1 px-1 rounded font-roboto h-full min-h-10 cursor-pointer flex flex-col relative w-full group",
@@ -259,7 +268,6 @@ export function RealSessionCard(props: {
           !lowerOpacity && "text-white"
         )}
         onClick={handleClick}
-        disabled={isRsvping}
       >
         <p
           className={clsx(
@@ -281,28 +289,6 @@ export function RealSessionCard(props: {
         >
           {formattedHostNames}
         </p>
-        {isEditable && (
-          <PencilSquareIcon
-            className={clsx(
-              "absolute h-5 w-5 top-0 right-0",
-              "text-gray-600 group-hover:text-black",
-              "cursor-pointer"
-            )}
-          />
-        )}
-        {!hostStatus && (
-          <EyeIcon
-            className={clsx(
-              "absolute h-5 w-5 top-0 right-0",
-              "text-gray-600 group-hover:text-black",
-              "cursor-pointer"
-            )}
-            onClick={(e) => {
-              router.push(`/${eventSlug}/view-session?sessionID=${session.ID}`);
-              e.stopPropagation();
-            }}
-          />
-        )}
         <div className="absolute bottom-0 right-0 flex gap-1 items-end">
           {hostStatus && (
             <div
@@ -314,15 +300,39 @@ export function RealSessionCard(props: {
           )}
           <div
             className={clsx(
-              "py-[1px] px-1 rounded-tl text-[10px] flex gap-0.5 items-center",
+              "py-[1px] px-1 rounded-tl text-[10px] flex gap-0.5 items-center cursor-pointer hover:opacity-80",
               `bg-${location.Color}-400`
             )}
+            onClick={handleRSVP}
           >
             <UserIcon className="h-.5 w-2.5" />
             {numRSVPs}
           </div>
         </div>
       </button>
+
+      {/* Modals for RSVP functionality */}
+      <CurrentUserModal
+        open={userModalOpen}
+        close={() => setUserModalOpen(false)}
+        guests={guests}
+        hosts={session["Host name"] || []}
+        rsvp={() => void doRsvp()}
+        rsvpd={rsvpd}
+        portal={true}
+      />
+
+      <ConfirmationModal
+        open={confirmRSVPModalOpen}
+        close={() => setConfirmRSVPModalOpen(false)}
+        message={
+          clashingSession
+            ? `This session conflicts with "${clashingSession.Title}". Do you want to RSVP anyway?`
+            : "This session conflicts with another session you're attending. Do you want to RSVP anyway?"
+        }
+        confirm={handleConfirmRSVP}
+        portal={true}
+      />
     </Tooltip>
   );
 }
