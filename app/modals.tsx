@@ -1,6 +1,7 @@
 "use client";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useContext, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
   ArrowTopRightOnSquareIcon,
@@ -42,9 +43,21 @@ export function CurrentUserModal(props: {
   rsvp: () => void;
   sessionInfoDisplay?: React.ReactNode;
   rsvpd: boolean;
+  zIndex?: string;
+  portal?: boolean; // For nested modal contexts
 }) {
   const { user: currentUser } = useContext(UserContext);
-  const { guests, hosts, open, close, rsvp, sessionInfoDisplay, rsvpd } = props;
+  const {
+    guests,
+    hosts,
+    open,
+    close,
+    rsvp,
+    sessionInfoDisplay,
+    rsvpd,
+    zIndex,
+    portal,
+  } = props;
   const isDisabled = hosts.includes(currentUser || "");
   const { user } = useContext(UserContext);
   const onClickHandler = () => {
@@ -52,7 +65,13 @@ export function CurrentUserModal(props: {
     close();
   };
   return (
-    <Modal open={open} setOpen={close} hideClose={!!user}>
+    <Modal
+      open={open}
+      setOpen={close}
+      hideClose={!!user}
+      zIndex={zIndex}
+      portal={portal}
+    >
       {sessionInfoDisplay}
       {
         <div className="mt-2">
@@ -175,15 +194,23 @@ export function ConfirmationModal(props: {
   close: () => void;
   confirm: () => void;
   message: string;
+  zIndex?: string;
+  portal?: boolean; // For nested modal contexts
 }) {
-  const { open, close, confirm, message } = props;
+  const { open, close, confirm, message, zIndex, portal } = props;
   const clickHandler = () => {
     confirm();
     close();
   };
   return (
     <>
-      <Modal open={open} setOpen={close} hideClose={true}>
+      <Modal
+        open={open}
+        setOpen={close}
+        hideClose={true}
+        zIndex={zIndex}
+        portal={portal}
+      >
         <p>{message}</p>
         <div className="mt-4">
           <button
@@ -211,16 +238,26 @@ export function Modal(props: {
   setOpen: (value: boolean) => void;
   children: React.ReactNode;
   hideClose?: boolean;
+  zIndex?: string;
+  portal?: boolean; // Explicitly control portaling behavior
 }) {
-  const { open, setOpen, children, hideClose } = props;
+  const {
+    open,
+    setOpen,
+    children,
+    hideClose,
+    zIndex = "z-10",
+    portal = false,
+  } = props;
   const fakeRef = useRef(null);
-  return (
+
+  const modalContent = (
     <div>
       <Transition.Root show={open} as={Fragment}>
         <Dialog
           as="div"
           initialFocus={fakeRef}
-          className="fixed inset-0 z-10 overflow-y-auto"
+          className={`fixed inset-0 ${zIndex} overflow-y-auto`}
           onClose={() => setOpen(false)}
         >
           <button ref={fakeRef} className="hidden" />
@@ -235,7 +272,7 @@ export function Modal(props: {
           >
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
           </Transition.Child>
-          <div className="fixed inset-0 z-10 w-full overflow-y-auto">
+          <div className={`fixed inset-0 ${zIndex} w-full overflow-y-auto`}>
             <div className="flex min-h-full w-full items-center justify-center p-4 text-center sm:p-0">
               <Transition.Child
                 as={Fragment}
@@ -267,4 +304,20 @@ export function Modal(props: {
       </Transition.Root>
     </div>
   );
+
+  // If explicitly requested to portal (for nested modals), use a separate container
+  if (portal && typeof document !== "undefined") {
+    // Create or get a high-priority modal root
+    let highPriorityModalRoot = document.getElementById(
+      "high-priority-modal-root"
+    );
+    if (!highPriorityModalRoot) {
+      highPriorityModalRoot = document.createElement("div");
+      highPriorityModalRoot.id = "high-priority-modal-root";
+      document.body.appendChild(highPriorityModalRoot);
+    }
+    return createPortal(modalContent, highPriorityModalRoot);
+  }
+
+  return modalContent;
 }

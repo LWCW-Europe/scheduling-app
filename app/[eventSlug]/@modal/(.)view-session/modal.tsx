@@ -81,6 +81,7 @@ export function SessionModal(props: {
           event={event}
           showBackBtn={false}
           isInModal={true}
+          onCloseModal={onDismiss}
         />
       </div>
     </div>,
