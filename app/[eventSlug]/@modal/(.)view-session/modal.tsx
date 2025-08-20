@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { Session } from "@/db/sessions";
+import { EventProvider, EventContextType } from "../../../context";
 import { ViewSession } from "../../view-session/view-session";
 
 export function SessionModal(props: {
@@ -14,8 +15,12 @@ export function SessionModal(props: {
   guests: Guest[];
   eventSlug: string;
   event: Event;
+  eventContextValue: Omit<
+    EventContextType,
+    "localSessions" | "userBusySessions" | "rsvpdForSession" | "updateRsvp"
+  >;
 }) {
-  const { session, guests, eventSlug, event } = props;
+  const { session, guests, eventSlug, event, eventContextValue } = props;
 
   const router = useRouter();
 
@@ -43,47 +48,50 @@ export function SessionModal(props: {
   }, [onDismiss]);
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Session details"
-    >
+    <EventProvider value={eventContextValue}>
       <div
-        className="fixed inset-0 bg-black bg-opacity-50"
-        onClick={onDismiss}
-      />
-      <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <button
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Session details"
+      >
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50"
           onClick={onDismiss}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-          aria-label="Close"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-        <ViewSession
-          session={session}
-          guests={guests}
-          eventSlug={eventSlug}
-          event={event}
-          showBackBtn={false}
-          isInModal={true}
         />
+        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <button
+            onClick={onDismiss}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            aria-label="Close"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          <ViewSession
+            session={session}
+            guests={guests}
+            eventSlug={eventSlug}
+            event={event}
+            showBackBtn={false}
+            isInModal={true}
+            onCloseModal={onDismiss}
+          />
+        </div>
       </div>
-    </div>,
+    </EventProvider>,
     document.getElementById("modal-root")!
   );
 }
