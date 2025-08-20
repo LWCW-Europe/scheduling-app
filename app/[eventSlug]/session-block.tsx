@@ -107,10 +107,17 @@ function BlankSessionCard(props: { numHalfHours: number }) {
 function BlockerSessionCard(props: { title: string; numHalfHours: number }) {
   const { title, numHalfHours } = props;
   return (
-    <div
-      className={`row-span-${numHalfHours} my-0.5 min-h-12 bg-gray-300 text-black flex items-center justify-center p-2`}
-    >
-      <p className="text-center">{title}</p>
+    <div className={`row-span-${numHalfHours} my-0.5 overflow-hidden`}>
+      <div className="py-1 px-1 rounded font-roboto h-full min-h-10 flex flex-col justify-center bg-gray-300 border-2 border-gray-400 text-black">
+        <p
+          className={clsx(
+            "font-medium text-xs leading-[1.15] text-center",
+            numHalfHours > 1 ? "line-clamp-2" : "line-clamp-1"
+          )}
+        >
+          {title}
+        </p>
+      </div>
     </div>
   );
 }
