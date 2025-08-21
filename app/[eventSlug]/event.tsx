@@ -25,6 +25,8 @@ export function EventDisplay() {
 
   if (!event) return <div>No event data available</div>;
 
+  const eventSlug = eventNameToSlug(event.Name);
+
   const daysForEvent = days.filter(
     (day) =>
       !CONSTS.MULTIPLE_EVENTS ||
@@ -106,6 +108,7 @@ export function EventDisplay() {
                 search={search}
                 locations={locationsForEvent}
                 rsvps={view === "rsvp" ? rsvps : []}
+                eventSlug={eventSlug}
               />
             )}
           </div>
