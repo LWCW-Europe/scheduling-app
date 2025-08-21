@@ -254,7 +254,7 @@ export function RealSessionCard(props: {
       >
         <p
           className={clsx(
-            "font-medium text-xs leading-[1.15] text-left",
+            "font-medium text-xs leading-[1.15] text-left pr-3",
             numHalfHours > 1 ? "line-clamp-2" : "line-clamp-1"
           )}
         >
