@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     // This deletes all RSVPs for the session
     await getBase()("RSVPs")
       .select({
-        filterByFormula: `{Session} = "${id}"`,
+        filterByFormula: `{Session ID} = "${id}"`,
       })
       .eachPage(function page(records, fetchNextPage) {
         const recordIds = records.map((record) => record.getId());
