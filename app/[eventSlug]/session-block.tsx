@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { UserIcon, PencilSquareIcon, EyeIcon } from "@heroicons/react/24/solid";
+import { UserIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
 import { Session } from "@/db/sessions";
 import { Day } from "@/db/days";
 import { Location } from "@/db/locations";
@@ -9,11 +9,8 @@ import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useContext, useState } from "react";
-import { CurrentUserModal, ConfirmationModal } from "../modals";
+import { useContext } from "react";
 import { UserContext, EventContext } from "../context";
-import { sessionsOverlap } from "../session_utils";
-import { useScreenWidth } from "@/utils/hooks";
 import { eventNameToSlug, getEndTimeMinusBreak } from "@/utils/utils";
 
 export function SessionBlock(props: {
@@ -130,53 +127,20 @@ export function RealSessionCard(props: {
   guests: Guest[];
   rsvpd: boolean;
 }) {
-  const { eventSlug, session, numHalfHours, location, guests, rsvpd } = props;
+  const { eventSlug, session, numHalfHours, location, rsvpd } = props;
   const { user: currentUser } = useContext(UserContext);
-  const { updateRsvp, localSessions, userBusySessions } =
-    useContext(EventContext);
+  const { localSessions } = useContext(EventContext);
   const router = useRouter();
-  const [isRsvping, setIsRsvping] = useState(false);
 
   const hostStatus = currentUser && session.Hosts?.includes(currentUser);
   const lowerOpacity = !rsvpd && !hostStatus;
   const formattedHostNames = session["Host name"]?.join(", ") ?? "No hosts";
-  const [userModalOpen, setUserModalOpen] = useState(false);
-  const [clashingSession, setClashingSession] = useState<Session | null>(null);
-  const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
-  const screenWidth = useScreenWidth();
-  const onMobile = screenWidth < 640;
-  const isEditable = !!hostStatus && session["Attendee scheduled"];
 
   const handleClick = () => {
-    if (isEditable) {
-      const url = `/${eventSlug}/edit-session?sessionID=${session.ID}`;
-      router.push(url);
-      return;
-    } else if (hostStatus) {
-      return;
-    }
-
-    const overlappingSession = userBusySessions().find((ses) =>
-      sessionsOverlap(session, ses)
-    );
-    if (!rsvpd && overlappingSession) {
-      setClashingSession(overlappingSession);
-      setConfirmRSVPModalOpen(true);
-    } else if (currentUser) {
-      doRsvp();
-    } else {
-      setUserModalOpen(true);
-    }
-  };
-
-  const doRsvp = () => {
-    if (!currentUser) {
-      return;
-    }
-    setIsRsvping(true);
-    void updateRsvp(currentUser, session.ID, rsvpd).then(() =>
-      setIsRsvping(false)
-    );
+    // Preserve current search parameters including view
+    const searchParams = new URLSearchParams(window.location.search);
+    const url = `/${eventSlug}/view-session?sessionID=${session.ID}&${searchParams.toString()}`;
+    router.push(url);
   };
 
   // Get the current number of RSVPs from the context
@@ -215,28 +179,9 @@ export function RealSessionCard(props: {
   );
   return (
     <Tooltip
-      content={onMobile ? undefined : <SessionInfoDisplay />}
+      content={<SessionInfoDisplay />}
       className={`row-span-${numHalfHours} my-0.5 overflow-hidden group`}
     >
-      <CurrentUserModal
-        close={() => setUserModalOpen(false)}
-        open={userModalOpen}
-        rsvp={handleClick}
-        guests={guests}
-        hosts={session.Hosts || []}
-        rsvpd={rsvpd}
-        sessionInfoDisplay={<SessionInfoDisplay />}
-      />
-      <ConfirmationModal
-        open={confirmRSVPModalOpen}
-        close={() => setConfirmRSVPModalOpen(false)}
-        confirm={doRsvp}
-        message={
-          `Warning: that session clashes with ${clashingSession?.Title}, which you ` +
-          `are ${clashingSession?.Hosts?.includes(currentUser || "") ? "hosting" : "attending"}. ` +
-          "Are you sure you want to proceed?"
-        }
-      />
       <button
         className={clsx(
           "py-1 px-1 rounded font-roboto h-full min-h-10 cursor-pointer flex flex-col relative w-full group",
@@ -250,7 +195,6 @@ export function RealSessionCard(props: {
           !lowerOpacity && "text-white"
         )}
         onClick={handleClick}
-        disabled={isRsvping}
       >
         <p
           className={clsx(
@@ -272,36 +216,24 @@ export function RealSessionCard(props: {
         >
           {formattedHostNames}
         </p>
-        {isEditable && (
-          <PencilSquareIcon
-            className={clsx(
-              "absolute h-5 w-5 top-0 right-0",
-              "text-gray-600 group-hover:text-black",
-              "cursor-pointer"
-            )}
-          />
-        )}
-        {!hostStatus && (
-          <EyeIcon
-            className={clsx(
-              "absolute h-5 w-5 top-0 right-0",
-              "text-gray-600 group-hover:text-black",
-              "cursor-pointer"
-            )}
-            onClick={(e) => {
-              router.push(`/${eventSlug}/view-session?sessionID=${session.ID}`);
-              e.stopPropagation();
-            }}
-          />
-        )}
-        <div
-          className={clsx(
-            "absolute py-[1px] px-1 rounded-tl text-[10px] bottom-0 right-0 flex gap-0.5 items-center",
-            `bg-${location.Color}-400`
+        <div className="absolute bottom-0 right-0 flex gap-1 items-end">
+          {hostStatus && (
+            <div
+              className="py-[2px] flex items-center"
+              title="You are hosting this session"
+            >
+              <AcademicCapIcon className="h-3 w-3 text-white" />
+            </div>
           )}
-        >
-          <UserIcon className="h-.5 w-2.5" />
-          {numRSVPs}
+          <div
+            className={clsx(
+              "py-[1px] px-1 rounded-tl text-[10px] flex gap-0.5 items-center",
+              `bg-${location.Color}-400`
+            )}
+          >
+            <UserIcon className="h-.5 w-2.5" />
+            {numRSVPs}
+          </div>
         </div>
       </button>
     </Tooltip>
