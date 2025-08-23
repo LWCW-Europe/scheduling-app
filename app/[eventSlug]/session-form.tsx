@@ -473,11 +473,15 @@ function getAvailableStartTimes(
   location?: string
 ) {
   const locationSelected = !!location;
-  const filteredSessions = locationSelected
-    ? sessions.filter(
-        (s) => s["Location name"][0] === location && s.ID != currentSession.ID
-      )
-    : sessions;
+  const filteredSessions = (
+    locationSelected
+      ? sessions.filter(
+          (s) => s["Location name"][0] === location && s.ID != currentSession.ID
+        )
+      : sessions
+  ).filter(
+    (s) => new Date(s["Start time"]).getTime() < new Date(day.End).getTime()
+  );
   const sortedSessions = filteredSessions.sort(
     (a, b) =>
       new Date(a["Start time"]).getTime() - new Date(b["Start time"]).getTime()

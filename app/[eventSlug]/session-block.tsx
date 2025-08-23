@@ -1,6 +1,11 @@
 import clsx from "clsx";
 import { ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { UserIcon, PencilSquareIcon, EyeIcon } from "@heroicons/react/24/solid";
+import {
+  UserIcon,
+  PencilSquareIcon,
+  EyeIcon,
+  AcademicCapIcon,
+} from "@heroicons/react/24/solid";
 import { Session } from "@/db/sessions";
 import { Day } from "@/db/days";
 import { Location } from "@/db/locations";
@@ -294,14 +299,24 @@ export function RealSessionCard(props: {
             }}
           />
         )}
-        <div
-          className={clsx(
-            "absolute py-[1px] px-1 rounded-tl text-[10px] bottom-0 right-0 flex gap-0.5 items-center",
-            `bg-${location.Color}-400`
+        <div className="absolute bottom-0 right-0 flex gap-1 items-end">
+          {hostStatus && (
+            <div
+              className="py-[2px] flex items-center"
+              title="You are hosting this session"
+            >
+              <AcademicCapIcon className="h-3 w-3 text-white" />
+            </div>
           )}
-        >
-          <UserIcon className="h-.5 w-2.5" />
-          {numRSVPs}
+          <div
+            className={clsx(
+              "py-[1px] px-1 rounded-tl text-[10px] flex gap-0.5 items-center",
+              `bg-${location.Color}-400`
+            )}
+          >
+            <UserIcon className="h-.5 w-2.5" />
+            {numRSVPs}
+          </div>
         </div>
       </button>
     </Tooltip>
