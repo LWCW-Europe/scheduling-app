@@ -9,7 +9,7 @@ jobs:
 
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install bun
         uses: oven-sh/setup-bun@v2
@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install bun
         uses: oven-sh/setup-bun@v2
@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - name: Checkout Source Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Check the code with Prettier
         uses: creyD/prettier_action@v4.6
