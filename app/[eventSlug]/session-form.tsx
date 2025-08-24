@@ -167,8 +167,12 @@ export function SessionForm(props: {
       (ses) =>
         ses.Hosts?.includes(host.ID) && sessionsOverlap(ses, dummySession)
     );
+    // 'hostRSVPs' can contain RSVPs for other events while 'sessions' will
+    // only include sessions for the current event. Such RSVPs will lead to
+    // sessions.find() returning undefined, which we then have to filter out.
     const rsvpClashes = (hostRSVPs[host.ID] || [])
-      .map((rsvp) => sessions.find((ses) => ses.ID === rsvp.Session[0])!)
+      .map((rsvp) => sessions.find((ses) => ses.ID === rsvp.Session[0]))
+      .filter((ses): ses is Session => ses !== undefined)
       .filter((ses) => sessionsOverlap(ses, dummySession));
 
     return {
