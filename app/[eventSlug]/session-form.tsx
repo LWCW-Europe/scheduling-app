@@ -147,22 +147,8 @@ export function SessionForm(props: {
   useEffect(() => {
     const fetchRSVPs = async () => {
       setIsFetchingRSVPs(true);
-
-      // Filter out any invalid hosts before processing
-      const validHosts = hosts.filter((host): host is Guest => Boolean(host && host.ID));
-      console.log(
-        "Fetching RSVPs for hosts:",
-        validHosts.map((h) => ({ ID: h.ID, Name: h.Name }))
-      );
-
-      if (validHosts.length !== hosts.length) {
-        console.error(
-          "Some hosts are invalid and were filtered out during RSVP fetch!"
-        );
-      }
-
       const entries = await Promise.all(
-        validHosts.map(async (host) => {
+        hosts.map(async (host) => {
           const res = await fetch(`/api/rsvps?user=${host.ID}`);
           const rsvps = (await res.json()) as RSVP[];
           return [host.ID, rsvps] as const;
@@ -176,32 +162,25 @@ export function SessionForm(props: {
     void fetchRSVPs();
   }, [hosts]);
 
-  const clashes = hosts
-    .filter((host): host is Guest => host && !!host.ID)
-    .map((host) => {
-      const sessionClashes = sessions.filter(
-        (ses) =>
-          ses.Hosts?.includes(host.ID) && sessionsOverlap(ses, dummySession)
-      );
-      const rsvpClashes = (hostRSVPs[host.ID] || [])
-        .map((rsvp) => sessions.find((ses) => ses.ID === rsvp.Session[0])!)
-        .filter((ses) => sessionsOverlap(ses, dummySession));
+  const clashes = hosts.map((host) => {
+    const sessionClashes = sessions.filter(
+      (ses) =>
+        ses.Hosts?.includes(host.ID) && sessionsOverlap(ses, dummySession)
+    );
+    const rsvpClashes = (hostRSVPs[host.ID] || [])
+      .map((rsvp) => sessions.find((ses) => ses.ID === rsvp.Session[0])!)
+      .filter((ses) => sessionsOverlap(ses, dummySession));
 
-      return {
-        id: host.ID,
-        sessionClashes,
-        rsvpClashes,
-      };
-    });
+    return {
+      id: host.ID,
+      sessionClashes,
+      rsvpClashes,
+    };
+  });
   const clashErrors = clashes
     .map((hostClashes) => {
       const { id, sessionClashes, rsvpClashes } = hostClashes;
-      const host = hosts.find((host) => host.ID === id);
-      if (!host) {
-        console.error(`Host with ID ${id} not found in hosts array`);
-        return [];
-      }
-      const hostName = host.Name;
+      const hostName = hosts.find((host) => host.ID === id)!.Name;
       const formatTime = (d: DateTime) =>
         d.setZone("Europe/Berlin").toFormat("HH:mm");
       const displayInterval = (ses: Session) =>
