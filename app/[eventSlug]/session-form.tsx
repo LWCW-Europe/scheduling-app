@@ -554,30 +554,7 @@ export function SelectHosts(props: {
       <Combobox
         value={hosts}
         onChange={(newHosts) => {
-          console.log("=== DEBUGGING HOST SELECTION ===");
-          console.log("New hosts array:", newHosts);
-          console.log(
-            "Hosts with issues:",
-            newHosts.map((h, i) => ({
-              index: i,
-              host: h,
-              hasID: h?.ID !== undefined,
-              hasName: h?.Name !== undefined,
-              isValid: h && h.ID && h.Name,
-            }))
-          );
-
-          // Filter out any undefined/invalid hosts
-          const validHosts = newHosts.filter((h): h is Guest =>
-            Boolean(h && h.ID && h.Name)
-          );
-          console.log("Valid hosts after filtering:", validHosts);
-
-          if (newHosts.length !== validHosts.length) {
-            console.error("Some hosts were invalid and filtered out!");
-          }
-
-          setHosts(validHosts);
+          setHosts(newHosts);
           setQuery("");
         }}
         multiple
@@ -590,7 +567,7 @@ export function SelectHosts(props: {
             <div className="flex flex-wrap gap-1 items-center">
               {hosts.length > 0 && (
                 <>
-                  {hosts.filter(Boolean).map((host) => (
+                  {hosts.map((host) => (
                     <span
                       key={host.ID}
                       className="py-1 px-2 bg-gray-100 rounded text-nowrap text-sm flex items-center gap-1"
