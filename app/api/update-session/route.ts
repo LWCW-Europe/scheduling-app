@@ -14,7 +14,11 @@ export async function POST(req: Request) {
   }
   const session = prepareToInsert(params);
   const allSessions = await getSessions();
-  const prevSession = allSessions.find((ses) => ses.ID === params.id)!;
+  const prevSession = allSessions.find((ses) => ses.ID === params.id);
+  if (prevSession === undefined) {
+    const msg = `Cannot find session with ID ${params.id}`;
+    return new Response(msg, { status: 404 });
+  }
   if (!prevSession["Attendee scheduled"] || prevSession.Blocker) {
     return new Response("Cannot edit via web app", { status: 400 });
   }
