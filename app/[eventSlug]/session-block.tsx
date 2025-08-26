@@ -195,7 +195,11 @@ export function RealSessionCard(props: {
       <p className="text-xs text-gray-500 mb-2 mt-1">
         Hosted by {formattedHostNames}
       </p>
-      <p className="text-sm whitespace-pre-line">{session.Description}</p>
+      <p className="text-sm whitespace-pre-line">
+        {session.Description?.length > 210
+          ? session.Description.substring(0, 200) + "..."
+          : session.Description}
+      </p>
       <div className="flex justify-between mt-2 gap-4 text-xs text-gray-500">
         <div className="flex gap-1">
           <UserIcon className="h-4 w-4" />
