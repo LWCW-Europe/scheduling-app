@@ -43,6 +43,7 @@ export function Tooltip(props: {
 
   const { x, y, refs, strategy, middlewareData, context, placement } =
     useFloating({
+      strategy: "fixed",
       open: open,
       onOpenChange: setOpen,
       whileElementsMounted: autoUpdate,
@@ -92,7 +93,7 @@ export function Tooltip(props: {
         role="tooltip"
         ref={refs.setFloating}
         style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
-        className="z-20 max-w-lg w-72 whitespace-normal rounded bg-white px-2 py-1 border shadow-md border-gray-100"
+        className="z-40 max-w-lg w-72 whitespace-normal rounded bg-white px-2 py-1 border shadow-md border-gray-100"
         suppressHydrationWarning={suppressHydrationWarning}
         {...getFloatingProps()}
       >
