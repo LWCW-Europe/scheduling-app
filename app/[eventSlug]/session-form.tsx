@@ -352,7 +352,12 @@ export function SessionForm(props: {
           You and any cohosts who have agreed to host this session with you. All
           hosts will get an email confirmation when this form is submitted.
         </p>
-        <SelectHosts guests={guests} hosts={hosts} setHosts={setHosts} />
+        <SelectHosts
+          guests={guests}
+          hosts={hosts}
+          setHosts={setHosts}
+          selectMany={true}
+        />
       </div>
       <div className="flex flex-col gap-1 w-72">
         <label className="font-medium">
@@ -543,8 +548,9 @@ export function SelectHosts(props: {
   hosts: Guest[];
   setHosts: (hosts: Guest[]) => void;
   id?: string;
+  selectMany: boolean;
 }) {
-  const { guests, hosts, setHosts, id } = props;
+  const { guests, hosts, setHosts, id, selectMany } = props;
   const [query, setQuery] = useState("");
   const filteredGuests = guests
     .filter((guest) =>
@@ -553,104 +559,120 @@ export function SelectHosts(props: {
     .filter((guest) => guest["Name"].trim().length > 0)
     .sort((a, b) => a["Name"].localeCompare(b["Name"]))
     .slice(0, 20);
+
+  const comboboxContent = (
+    <div className="relative mt-1">
+      <Combobox.Button
+        id={id}
+        className="relative w-full min-h-12 h-fit rounded-md border px-4 shadow-sm transition-colors focus:outline-none border-gray-300 focus:ring-2 focus:ring-rose-400 focus:outline-0 focus:border-none bg-white py-2 pl-3 pr-10 text-left placeholder:text-gray-400"
+      >
+        <div className="flex flex-wrap gap-1 items-center">
+          {hosts.length > 0 && (
+            <>
+              {hosts.map((host) => (
+                <span
+                  key={host.ID}
+                  className="py-1 px-2 bg-gray-100 rounded text-nowrap text-sm flex items-center gap-1"
+                >
+                  {host.Name}
+                  <span
+                    onClick={(e) => {
+                      setHosts(hosts.filter((h) => h !== host));
+                      e.stopPropagation();
+                    }}
+                    role="button"
+                  >
+                    <XMarkIcon className="h-4 w-4 text-gray-400 hover:text-gray-700" />
+                  </span>
+                </span>
+              ))}
+            </>
+          )}
+          <Combobox.Input
+            onChange={(event) => setQuery(event.target.value)}
+            value={query}
+            className="border-none focus:ring-0 px-0 py-1 text-sm focus:w-fit w-0 placeholder:text-gray-400"
+          />
+        </div>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+          <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+        </div>
+      </Combobox.Button>
+      <Transition
+        as={Fragment}
+        leave="transition ease-in duration-100"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+        afterLeave={() => setQuery("")}
+      >
+        <Combobox.Options className="absolute mt-1 max-h-60 z-10 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+          {filteredGuests.length === 0 && query !== "" ? (
+            <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
+              Nothing found.
+            </div>
+          ) : (
+            filteredGuests.map((guest) => (
+              <Combobox.Option
+                key={guest["ID"]}
+                className={({ active }) =>
+                  clsx(
+                    "relative cursor-pointer select-none py-2 pl-10 pr-4 z-10",
+                    active
+                      ? "bg-rose-100 text-rose-900"
+                      : "text-gray-900 bg-white"
+                  )
+                }
+                value={guest}
+              >
+                {({ selected, disabled }) => (
+                  <>
+                    <span
+                      className={clsx(
+                        "block truncate",
+                        selected ? "font-medium" : "font-normal",
+                        disabled ? "text-gray-400" : "text-gray-900"
+                      )}
+                    >
+                      {guest.Name}
+                    </span>
+                    {selected ? (
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-rose-400">
+                        <CheckIcon className="h-5 w-5" />
+                      </span>
+                    ) : null}
+                  </>
+                )}
+              </Combobox.Option>
+            ))
+          )}
+        </Combobox.Options>
+      </Transition>
+    </div>
+  );
   return (
     <div className="w-full">
-      <Combobox
-        value={hosts}
-        onChange={(newHosts) => {
-          setHosts(newHosts);
-          setQuery("");
-        }}
-        multiple
-      >
-        <div className="relative mt-1">
-          <Combobox.Button
-            id={id}
-            className="relative w-full min-h-12 h-fit rounded-md border px-4 shadow-sm transition-colors focus:outline-none border-gray-300 focus:ring-2 focus:ring-rose-400 focus:outline-0 focus:border-none bg-white py-2 pl-3 pr-10 text-left placeholder:text-gray-400"
-          >
-            <div className="flex flex-wrap gap-1 items-center">
-              {hosts.length > 0 && (
-                <>
-                  {hosts.map((host) => (
-                    <span
-                      key={host.ID}
-                      className="py-1 px-2 bg-gray-100 rounded text-nowrap text-sm flex items-center gap-1"
-                    >
-                      {host.Name}
-                      <span
-                        onClick={(e) => {
-                          setHosts(hosts.filter((h) => h !== host));
-                          e.stopPropagation();
-                        }}
-                        role="button"
-                      >
-                        <XMarkIcon className="h-4 w-4 text-gray-400 hover:text-gray-700" />
-                      </span>
-                    </span>
-                  ))}
-                </>
-              )}
-              <Combobox.Input
-                onChange={(event) => setQuery(event.target.value)}
-                value={query}
-                className="border-none focus:ring-0 px-0 py-1 text-sm focus:w-fit w-0 placeholder:text-gray-400"
-              />
-            </div>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
-            </div>
-          </Combobox.Button>
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-            afterLeave={() => setQuery("")}
-          >
-            <Combobox.Options className="absolute mt-1 max-h-60 z-10 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-              {filteredGuests.length === 0 && query !== "" ? (
-                <div className="relative cursor-default select-none px-4 py-2 text-gray-700">
-                  Nothing found.
-                </div>
-              ) : (
-                filteredGuests.map((guest) => (
-                  <Combobox.Option
-                    key={guest["ID"]}
-                    className={({ active }) =>
-                      clsx(
-                        "relative cursor-pointer select-none py-2 pl-10 pr-4 z-10",
-                        active
-                          ? "bg-rose-100 text-rose-900"
-                          : "text-gray-900 bg-white"
-                      )
-                    }
-                    value={guest}
-                  >
-                    {({ selected, disabled }) => (
-                      <>
-                        <span
-                          className={clsx(
-                            "block truncate",
-                            selected ? "font-medium" : "font-normal",
-                            disabled ? "text-gray-400" : "text-gray-900"
-                          )}
-                        >
-                          {guest.Name}
-                        </span>
-                        {selected ? (
-                          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-rose-400">
-                            <CheckIcon className="h-5 w-5" />
-                          </span>
-                        ) : null}
-                      </>
-                    )}
-                  </Combobox.Option>
-                ))
-              )}
-            </Combobox.Options>
-          </Transition>
-        </div>
-      </Combobox>
+      {selectMany ? (
+        <Combobox
+          value={hosts}
+          onChange={(newHosts) => {
+            setHosts(newHosts);
+            setQuery("");
+          }}
+          multiple
+        >
+          {comboboxContent}
+        </Combobox>
+      ) : (
+        <Combobox
+          value={hosts[0]}
+          onChange={(newHosts) => {
+            setHosts([newHosts]);
+            setQuery("");
+          }}
+        >
+          {comboboxContent}
+        </Combobox>
+      )}
     </div>
   );
 }
