@@ -16,7 +16,9 @@ export type Session = {
   "Num RSVPs": number;
   "Attendee scheduled": boolean;
   Blocker: boolean;
+  // TODO: wrong type - this might be undefined (#278) - I believe that it always has 1 element or is undefined. The next comment is wrong.
   proposal: string[]; // always has 1 or 0 values (Airtable returns an array regardless)
+  Event?: string;
 };
 
 const isScheduledFilter = "AND({Start time}, {End time}, {Location})";
@@ -51,6 +53,7 @@ async function getSessionsByFormula(filterFormula: string) {
         "Attendee scheduled",
         "Blocker",
         "proposal",
+        "Event",
       ],
       filterByFormula: filterFormula,
     })
@@ -61,6 +64,7 @@ async function getSessionsByFormula(filterFormula: string) {
           ID: record.id,
           "Attendee scheduled": !!record.fields["Attendee scheduled"],
           Blocker: !!record.fields["Blocker"],
+          Event: record.fields.Event?.[0],
         });
       });
       fetchNextPage();
