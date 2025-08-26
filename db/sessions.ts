@@ -16,49 +16,26 @@ export type Session = {
   "Num RSVPs": number;
   "Attendee scheduled": boolean;
   Blocker: boolean;
+  // TODO: wrong type - this might be undefined (#278) - I believe that it always has 1 element or is undefined. The next comment is wrong.
   proposal: string[]; // always has 1 or 0 values (Airtable returns an array regardless)
+  Event?: string;
 };
-export async function getSessions() {
-  const sessions: Session[] = [];
-  await getBase()<Session>("Sessions")
-    .select({
-      fields: [
-        "Title",
-        "Description",
-        "Start time",
-        "End time",
-        "Hosts",
-        "Host name",
-        "Host email",
-        "Location",
-        "Location name",
-        "Capacity",
-        "Num RSVPs",
-        "Attendee scheduled",
-        "Blocker",
-        "proposal",
-      ],
-      filterByFormula: `AND({Start time}, {End time}, {Location})`,
-    })
-    .eachPage(function page(records, fetchNextPage) {
-      records.forEach(function (record) {
-        sessions.push({
-          ...record.fields,
-          ID: record.id,
-          "Attendee scheduled": !!record.fields["Attendee scheduled"],
-        });
-      });
-      fetchNextPage();
-    });
-  return sessions;
+
+const isScheduledFilter = "AND({Start time}, {End time}, {Location})";
+
+export function getSessions() {
+  return getSessionsByFormula(isScheduledFilter);
 }
 
-export async function getSessionsByEvent(eventName: string) {
-  const sessions: Session[] = [];
-  const isScheduledFilter = "AND({Start time}, {End time}, {Location})";
+export function getSessionsByEvent(eventName: string) {
   const filterFormula = CONSTS.MULTIPLE_EVENTS
     ? `AND({Event name} = "${eventName}", ${isScheduledFilter})`
     : isScheduledFilter;
+  return getSessionsByFormula(filterFormula);
+}
+
+async function getSessionsByFormula(filterFormula: string) {
+  const sessions: Session[] = [];
   await getBase()<Session>("Sessions")
     .select({
       fields: [
@@ -76,6 +53,7 @@ export async function getSessionsByEvent(eventName: string) {
         "Attendee scheduled",
         "Blocker",
         "proposal",
+        "Event",
       ],
       filterByFormula: filterFormula,
     })
@@ -86,6 +64,7 @@ export async function getSessionsByEvent(eventName: string) {
           ID: record.id,
           "Attendee scheduled": !!record.fields["Attendee scheduled"],
           Blocker: !!record.fields["Blocker"],
+          Event: record.fields.Event?.[0],
         });
       });
       fetchNextPage();

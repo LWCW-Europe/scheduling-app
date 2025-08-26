@@ -9,7 +9,9 @@ export async function POST(req: Request) {
   const params = (await req.json()) as SessionParams;
   const session = prepareToInsert(params);
   console.log(session);
-  const existingSessions = await getSessions();
+  const existingSessions = (await getSessions()).filter(
+    (s) => !session.Event || session.Event[0] === s.Event
+  );
   const sessionValid = validateSession(session, existingSessions);
   if (sessionValid) {
     try {

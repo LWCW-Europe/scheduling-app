@@ -159,6 +159,7 @@ export function SessionProposalForm(props: {
             guests={guests}
             hosts={guests.filter((g) => hosts.some((h) => h === g.ID))}
             setHosts={(nextHosts) => setHosts(nextHosts.map((h) => h.ID))}
+            selectMany={true}
           />
         </div>
 

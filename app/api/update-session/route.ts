@@ -13,8 +13,14 @@ export async function POST(req: Request) {
     return new Response("Session ID is required", { status: 400 });
   }
   const session = prepareToInsert(params);
-  const allSessions = await getSessions();
-  const prevSession = allSessions.find((ses) => ses.ID === params.id)!;
+  const allSessions = (await getSessions()).filter(
+    (s) => !session.Event || session.Event[0] === s.Event
+  );
+  const prevSession = allSessions.find((ses) => ses.ID === params.id);
+  if (prevSession === undefined) {
+    const msg = `Cannot find session with ID ${params.id}`;
+    return new Response(msg, { status: 404 });
+  }
   if (!prevSession["Attendee scheduled"] || prevSession.Blocker) {
     return new Response("Cannot edit via web app", { status: 400 });
   }
