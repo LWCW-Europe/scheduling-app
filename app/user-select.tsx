@@ -22,6 +22,7 @@ export function UserSelect({
         setHosts={(hosts) => {
           setUser?.(hosts?.at(-1)?.ID || null);
         }}
+        selectMany={false}
       />
     )
   );
