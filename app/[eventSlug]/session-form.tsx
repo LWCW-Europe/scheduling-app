@@ -349,8 +349,7 @@ export function SessionForm(props: {
           <RequiredStar />
         </label>
         <p className="text-sm text-gray-500">
-          You and any cohosts who have agreed to host this session with you. All
-          hosts will get an email confirmation when this form is submitted.
+          You and any cohosts who have agreed to host this session with you.
         </p>
         <SelectHosts guests={guests} hosts={hosts} setHosts={setHosts} />
       </div>
