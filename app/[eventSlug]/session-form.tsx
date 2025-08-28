@@ -219,7 +219,7 @@ export function SessionForm(props: {
         startTimeString: startTime,
         duration,
         hosts: hosts,
-        proposal: proposal?.id,
+        proposal: proposal?.id ?? session.proposal?.[0],
       }),
     });
     if (res.ok) {
