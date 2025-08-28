@@ -18,7 +18,7 @@ export function Proposal(props: {
     <>
       {showBackBtn && (
         <Link
-          className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
+          className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12 mt-4 mb-2 block"
           href={`/${eventSlug}/proposals`}
         >
           Back to Proposals
