@@ -8,6 +8,7 @@ import { useState, useContext } from "react";
 import { useSearchParams } from "next/navigation";
 import { UserContext, EventContext } from "../context";
 import { CheckCircleIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
+import { LockIcon } from "../lock-icon";
 
 export function SessionText(props: {
   session: Session;
@@ -44,9 +45,12 @@ export function SessionText(props: {
     <div className="px-1.5 rounded h-full min-h-10 pt-5 pb-8 relative">
       <div className="flex items-start gap-2">
         <h1
-          className="font-bold leading-tight cursor-pointer hover:text-blue-600 transition-colors flex-1"
+          className="font-bold leading-tight cursor-pointer hover:text-blue-600 transition-colors flex-1 flex items-center gap-1"
           onClick={handleTitleClick}
         >
+          {session.Closed && (
+            <LockIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
+          )}
           {session.Title}
         </h1>
         <div className="flex gap-1">

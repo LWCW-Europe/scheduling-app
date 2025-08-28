@@ -16,7 +16,7 @@ export default async function Page(props: { params: { eventSlug: string } }) {
   const phase = getCurrentPhase(event);
 
   if (phase === EventPhase.SCHEDULING) {
-    return <EventPage event={event} />;
+    return <EventPage />;
   } else if (phase === EventPhase.VOTING || phase === EventPhase.PROPOSAL) {
     redirect(`/${eventSlug}/proposals`);
   } else {

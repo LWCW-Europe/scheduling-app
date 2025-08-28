@@ -1,7 +1,8 @@
 import SummaryPage from "./summary-page";
-import EventPage from "./[eventSlug]/event-page";
 import { getEvents } from "@/db/events";
 import { CONSTS } from "@/utils/constants";
+import { redirect } from "next/navigation";
+import { eventNameToSlug } from "@/utils/utils";
 
 export default async function Home() {
   const events = await getEvents();
@@ -11,6 +12,8 @@ export default async function Home() {
   if (CONSTS.MULTIPLE_EVENTS) {
     return <SummaryPage events={sortedEvents} />;
   } else {
-    return <EventPage event={sortedEvents[0]} />;
+    // Redirect to the single event page instead of rendering EventPage directly
+    const eventSlug = eventNameToSlug(sortedEvents[0].Name);
+    redirect(`/${eventSlug}`);
   }
 }

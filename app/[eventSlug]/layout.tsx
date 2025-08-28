@@ -1,6 +1,6 @@
-"use client";
-
 import { VotesProvider } from "@/app/context";
+import { Suspense } from "react";
+import { EventLayoutContent } from "./layout-content";
 
 export default function EventLayout({
   modal,
@@ -13,9 +13,13 @@ export default function EventLayout({
 }) {
   return (
     <VotesProvider eventSlug={params.eventSlug}>
-      {modal}
-      {children}
-      <div id="modal-root" />
+      <Suspense fallback={<div>Loading...</div>}>
+        <EventLayoutContent eventSlug={params.eventSlug}>
+          {modal}
+          {children}
+          <div id="modal-root" />
+        </EventLayoutContent>
+      </Suspense>
     </VotesProvider>
   );
 }

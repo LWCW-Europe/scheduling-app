@@ -4,6 +4,7 @@ import { eventSlugToName } from "@/utils/utils";
 import { getEventByName } from "@/db/events";
 import { getGuestsByEvent } from "@/db/guests";
 import { getSessionsByEvent } from "@/db/sessions";
+import { getRSVPsBySession } from "@/db/rsvps";
 import { SessionModal } from "./modal";
 
 export default async function SessionModalPage({
@@ -23,9 +24,10 @@ export default async function SessionModalPage({
     return <div>Event not found</div>;
   }
 
-  const [sessions, guests] = await Promise.all([
+  const [sessions, guests, rsvps] = await Promise.all([
     getSessionsByEvent(eventName),
     getGuestsByEvent(event.Name),
+    getRSVPsBySession(sessionID),
   ]);
   const session = sessions.find((p) => p.ID === sessionID);
 
@@ -37,6 +39,7 @@ export default async function SessionModalPage({
     <SessionModal
       session={session}
       guests={guests}
+      rsvps={rsvps}
       eventSlug={eventSlug}
       event={event}
     />

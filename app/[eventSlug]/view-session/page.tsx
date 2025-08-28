@@ -4,6 +4,7 @@ import { getGuestsByEvent } from "@/db/guests";
 import { getEventByName } from "@/db/events";
 import { eventSlugToName } from "@/utils/utils";
 import { getSessionsByEvent } from "@/db/sessions";
+import { getRSVPsBySession } from "@/db/rsvps";
 import { ViewSession } from "./view-session";
 
 export default async function ViewSessionPage({
@@ -23,9 +24,10 @@ export default async function ViewSessionPage({
     return <div>Event not found</div>;
   }
 
-  const [sessions, guests] = await Promise.all([
+  const [sessions, guests, rsvps] = await Promise.all([
     getSessionsByEvent(eventName),
     getGuestsByEvent(event.Name),
+    getRSVPsBySession(sessionID),
   ]);
   const session = sessions.find((p) => p.ID === sessionID);
 
@@ -38,6 +40,7 @@ export default async function ViewSessionPage({
       <ViewSession
         session={session}
         guests={guests}
+        rsvps={rsvps}
         eventSlug={eventSlug}
         event={event}
         showBackBtn={true}

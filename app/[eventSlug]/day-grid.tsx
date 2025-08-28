@@ -159,10 +159,10 @@ export function DayGrid(props: {
             </div>
           </div>
           {!scrolledToRightEnd && (
-            <div className="bg-gradient-to-r from-transparent to-white h-full absolute right-0 w-12" />
+            <div className="bg-gradient-to-r from-transparent to-white h-full absolute right-0 w-3" />
           )}
           {!scrolledToLeftEnd && (
-            <div className="bg-gradient-to-l from-transparent to-white h-full absolute left-14 w-12" />
+            <div className="bg-gradient-to-l from-transparent to-white h-full absolute left-14 w-3" />
           )}
         </div>
       )}

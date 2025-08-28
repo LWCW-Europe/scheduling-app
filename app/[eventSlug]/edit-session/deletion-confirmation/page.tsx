@@ -11,7 +11,7 @@ export default function DeletionConfirmation(props: {
         Your session has been deleted successfully.
       </p>
       <Link
-        className="bg-rose-400 mt-8 text-white font-semibold py-2 rounded shadow hover:bg-rose-500 active:bg-rose-500 mx-auto px-12"
+        className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12"
         href={`/${eventSlug}`}
       >
         Back to schedule
