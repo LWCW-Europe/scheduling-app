@@ -15,6 +15,7 @@ import { getEndTimeMinusBreak } from "@/utils/utils";
 import { UserContext, EventContext } from "../../context";
 import { CurrentUserModal, ConfirmationModal } from "../../modals";
 import { sessionsOverlap } from "../../session_utils";
+import { LockIcon } from "../../lock-icon";
 
 export function ViewSession(props: {
   session: Session;
@@ -163,7 +164,12 @@ export function ViewSession(props: {
         portal={true} // Explicitly portal this modal to escape the session modal
         sessionInfoDisplay={
           <div>
-            <h1 className="text-lg font-bold leading-tight">{session.Title}</h1>
+            <h1 className="text-lg font-bold leading-tight flex items-center gap-1">
+              {session.Closed && (
+                <LockIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
+              )}
+              {session.Title}
+            </h1>
             <p className="text-xs text-gray-500 mb-2 mt-1">
               Hosted by{" "}
               {session
@@ -196,7 +202,13 @@ export function ViewSession(props: {
       )}
       {/* Title with status indicators */}
       <div className="flex items-start gap-2 mb-2 mt-5">
-        <p className="text-xl font-semibold flex-1" id="title">
+        <p
+          className="text-xl font-semibold flex-1 flex items-center gap-2"
+          id="title"
+        >
+          {session.Closed && (
+            <LockIcon className="h-5 w-5 text-gray-600 flex-shrink-0" />
+          )}
           {session.Title}
         </p>
         <div className="flex gap-1">
@@ -218,6 +230,20 @@ export function ViewSession(props: {
           )}
         </div>
       </div>
+      {/* Closed session information */}
+      {session.Closed && (
+        <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm text-yellow-800">
+          <div className="flex items-center gap-2 font-medium mb-1">
+            <LockIcon className="h-4 w-4" />
+            Closed Session
+          </div>
+          <p>
+            This is a closed session, meaning you can at most arrive 5 minutes
+            late. If you arrive later you may not join and please do not knock
+            or otherwise disrupt the session.
+          </p>
+        </div>
+      )}
       {/* Action buttons */}
       <div className="mt-2 mb-6 flex gap-2 flex-wrap">
         {!isHost && (

@@ -9,6 +9,7 @@ export type SessionParams = {
   id?: string;
   title: string;
   description: string;
+  closed: boolean;
   hosts: Guest[];
   location: Location;
   day: Day;
@@ -25,6 +26,7 @@ export type SessionInsert = {
   Location: string[];
   Event?: string[];
   "Attendee scheduled": boolean;
+  Closed: boolean;
   proposal: string[];
 };
 export type SessionInterval = {
@@ -60,6 +62,7 @@ export function prepareToInsert(params: SessionParams): SessionInsert {
   const {
     title,
     description,
+    closed,
     hosts,
     location,
     day,
@@ -70,6 +73,7 @@ export function prepareToInsert(params: SessionParams): SessionInsert {
   const session: SessionInsert = {
     Title: title,
     Description: description,
+    Closed: closed,
     Hosts: hosts.map((host) => host.ID),
     Location: [location.ID],
     "Start time": start,

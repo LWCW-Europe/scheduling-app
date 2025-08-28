@@ -83,6 +83,7 @@ function insertBlankSessions(
         ID: "",
         "Attendee scheduled": false,
         Blocker: false,
+        Closed: false,
         proposal: [],
       });
     }

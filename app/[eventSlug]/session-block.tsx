@@ -14,6 +14,7 @@ import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext, EventContext } from "../context";
 import { sessionsOverlap } from "../session_utils";
 import { eventNameToSlug, getEndTimeMinusBreak } from "@/utils/utils";
+import { LockIcon } from "../lock-icon";
 
 export function SessionBlock(props: {
   eventName: string;
@@ -219,7 +220,12 @@ export function RealSessionCard(props: {
 
   const SessionInfoDisplay = () => (
     <>
-      <h1 className="text-lg font-bold leading-tight">{session.Title}</h1>
+      <h1 className="text-lg font-bold leading-tight flex items-center gap-1">
+        {session.Closed && (
+          <LockIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
+        )}
+        {session.Title}
+      </h1>
       <p className="text-xs text-gray-500 mb-2 mt-1">
         Hosted by {formattedHostNames}
       </p>
@@ -271,11 +277,14 @@ export function RealSessionCard(props: {
       >
         <p
           className={clsx(
-            "font-medium text-xs leading-[1.15] text-left",
+            "font-medium text-xs leading-[1.15] text-left flex items-start gap-1",
             numHalfHours > 1 ? "line-clamp-2" : "line-clamp-1"
           )}
         >
-          {session.Title}
+          {session.Closed && (
+            <LockIcon className="h-3 w-3 flex-shrink-0 mt-0" />
+          )}
+          <span className="flex-1">{session.Title}</span>
         </p>
         <p
           className={clsx(

@@ -71,6 +71,7 @@ export function SessionForm(props: {
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState(session.Title);
   const [description, setDescription] = useState(session.Description);
+  const [closed, setClosed] = useState(session.Closed || false);
   const [day, setDay] = useState(initDay ?? days[0]);
   const [location, setLocation] = useState(
     locations.find((l) => l.Name === initLocation)?.Name ??
@@ -214,6 +215,7 @@ export function SessionForm(props: {
         id: sessionID,
         title,
         description,
+        closed,
         day: day,
         location: locations.find((loc) => loc.Name === location),
         startTimeString: startTime,
@@ -343,6 +345,25 @@ export function SessionForm(props: {
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
+
+      {/* Closed session checkbox */}
+      <div className="flex flex-col gap-2">
+        <label className="flex items-center gap-2 font-medium cursor-pointer">
+          <input
+            type="checkbox"
+            checked={closed}
+            onChange={(e) => setClosed(e.target.checked)}
+            className="h-4 w-4 text-rose-400 focus:ring-rose-400 border-gray-300 rounded"
+          />
+          Closed session
+        </label>
+        <p className="text-sm text-gray-500 ml-6">
+          Check this if participants can at most arrive 5 minutes late. If they
+          arrive later they may not join and should not knock or otherwise
+          disrupt the session.
+        </p>
+      </div>
+
       <div className="flex flex-col gap-1">
         <label className="font-medium">
           Hosts
