@@ -278,7 +278,7 @@ export function RealSessionCard(props: {
         <p
           className={clsx(
             "font-medium text-xs leading-[1.15] text-left flex items-start gap-1",
-            numHalfHours > 1 ? "line-clamp-2" : "line-clamp-1"
+            numHalfHours >= 3 ? "line-clamp-2" : "line-clamp-1"
           )}
         >
           {session.Closed && (
@@ -286,18 +286,20 @@ export function RealSessionCard(props: {
           )}
           <span className="flex-1">{session.Title}</span>
         </p>
-        <p
-          className={clsx(
-            "text-[10px] leading-tight text-left ",
-            numHalfHours > 2
-              ? "line-clamp-3"
-              : numHalfHours > 1
-                ? "line-clamp-2"
-                : "line-clamp-1"
-          )}
-        >
-          {formattedHostNames}
-        </p>
+        {numHalfHours > 1 && (
+          <p
+            className={clsx(
+              "text-[10px] leading-tight text-left",
+              numHalfHours >= 4
+                ? "line-clamp-3"
+                : numHalfHours >= 3
+                  ? "line-clamp-2"
+                  : "line-clamp-1"
+            )}
+          >
+            {formattedHostNames}
+          </p>
+        )}
         <div className="absolute bottom-0 right-0 flex gap-1 items-end">
           {hostStatus && (
             <div
