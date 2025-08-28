@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { DateTime } from "luxon";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PencilIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
@@ -10,6 +10,7 @@ import { CheckCircleIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
 import type { Event } from "@/db/events";
 import type { Guest } from "@/db/guests";
 import type { Session } from "@/db/sessions";
+import type { RSVP } from "@/db/rsvps";
 import { getEndTimeMinusBreak } from "@/utils/utils";
 import { UserContext, EventContext } from "../../context";
 import { CurrentUserModal, ConfirmationModal } from "../../modals";
@@ -18,6 +19,7 @@ import { sessionsOverlap } from "../../session_utils";
 export function ViewSession(props: {
   session: Session;
   guests: Guest[];
+  rsvps: RSVP[];
   eventSlug: string;
   event: Event;
   showBackBtn: boolean;
@@ -27,6 +29,7 @@ export function ViewSession(props: {
   const {
     session,
     guests,
+    rsvps,
     eventSlug,
     event,
     showBackBtn,
@@ -35,8 +38,42 @@ export function ViewSession(props: {
   } = props;
 
   const { user: currentUser } = useContext(UserContext);
-  const { rsvpdForSession, updateRsvp, userBusySessions } =
-    useContext(EventContext);
+  const {
+    rsvpdForSession,
+    updateRsvp,
+    userBusySessions,
+    rsvps: userRsvps,
+  } = useContext(EventContext);
+
+  // Merge server RSVPs with user's optimistic updates
+  // If user has an RSVP in context, use that; otherwise use server data
+  const [optimisticRsvps, setOptimisticRsvps] = useState<RSVP[]>(rsvps);
+
+  useEffect(() => {
+    // When context RSVPs change, update our optimistic state
+    if (currentUser) {
+      const userRsvpForThisSession = userRsvps.find(
+        (rsvp) => rsvp.Session && rsvp.Session.includes(session.ID)
+      );
+
+      if (userRsvpForThisSession) {
+        // User has RSVP'd - add/update their RSVP in the list
+        setOptimisticRsvps((prev) => {
+          const withoutUserRsvp = prev.filter(
+            (rsvp) => !rsvp.Guest || !rsvp.Guest.includes(currentUser)
+          );
+          return [...withoutUserRsvp, userRsvpForThisSession];
+        });
+      } else {
+        // User has un-RSVP'd - remove their RSVP from the list
+        setOptimisticRsvps((prev) =>
+          prev.filter(
+            (rsvp) => !rsvp.Guest || !rsvp.Guest.includes(currentUser)
+          )
+        );
+      }
+    }
+  }, [userRsvps, currentUser, session.ID]);
   const router = useRouter();
   const [isRsvping, setIsRsvping] = useState(false);
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -47,6 +84,15 @@ export function ViewSession(props: {
   const rsvpd = currentUser ? rsvpdForSession(session.ID + "") : false;
   const isHost = currentUser && session.Hosts?.includes(currentUser);
   const isEditable = !!isHost && session["Attendee scheduled"];
+
+  // Get attendee names from optimistic RSVPs - updates in real-time
+  const attendeeIds = optimisticRsvps.flatMap((rsvp: RSVP) => rsvp.Guest);
+  const guestMap = new Map(guests.map((guest) => [guest.ID, guest.Name]));
+
+  const attendeeNames = attendeeIds
+    .map((id: string) => guestMap.get(id))
+    .filter((name): name is string => name !== undefined)
+    .sort();
 
   const handleRsvp = () => {
     if (!currentUser) {
@@ -223,8 +269,14 @@ export function ViewSession(props: {
           </span>
         </div>
         <div className="flex gap-2">
-          <span className="font-medium">Attendees:</span>
-          <span>{session["Num RSVPs"]}</span>
+          <span className="font-medium">
+            Attendees ({attendeeNames.length}):
+          </span>
+          <span>
+            {attendeeNames.length === 0
+              ? "No attendees yet"
+              : `${attendeeNames.join(", ")}`}
+          </span>
         </div>
       </div>
       {/* Description (potentially long) */}
