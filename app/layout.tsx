@@ -48,7 +48,7 @@ export default function RootLayout({
           )}
           <main
             className={clsx(
-              "lg:px-24 sm:px-10 p-6 flex-1",
+              "lg:px-24 p-3 flex-1",
               CONSTS.MULTIPLE_EVENTS ? "py-24 lg:pb-16" : "pt-12 lg:pb-16"
             )}
           >
