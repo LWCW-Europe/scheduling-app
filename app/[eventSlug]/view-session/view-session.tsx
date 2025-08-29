@@ -16,6 +16,7 @@ import { UserContext, EventContext } from "../../context";
 import { CurrentUserModal, ConfirmationModal } from "../../modals";
 import { sessionsOverlap } from "../../session_utils";
 import { LockIcon } from "../../lock-icon";
+import { LocationTag } from "../session-text";
 
 export function ViewSession(props: {
   session: Session;
@@ -44,6 +45,7 @@ export function ViewSession(props: {
     updateRsvp,
     userBusySessions,
     rsvps: userRsvps,
+    locations,
   } = useContext(EventContext);
 
   // Merge server RSVPs with user's optimistic updates
@@ -94,6 +96,10 @@ export function ViewSession(props: {
     .map((id: string) => guestMap.get(id))
     .filter((name): name is string => name !== undefined)
     .sort();
+
+  const location = locations.find(
+    (loc) => loc.Name === session["Location name"]?.[0]
+  );
 
   const handleRsvp = () => {
     if (!currentUser) {
@@ -280,7 +286,7 @@ export function ViewSession(props: {
         </div>
         <div className="flex gap-2">
           <span className="font-medium">Location:</span>
-          <span>{session["Location name"]}</span>
+          <span>{location && LocationTag({ location })}</span>
         </div>
         <div className="flex gap-2">
           <span className="font-medium">Time:</span>
