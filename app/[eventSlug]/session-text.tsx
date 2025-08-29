@@ -109,7 +109,7 @@ export function SessionText(props: {
   );
 }
 
-function LocationTag(props: { location: Location }) {
+export function LocationTag(props: { location: Location }) {
   const { location } = props;
   return (
     <div
