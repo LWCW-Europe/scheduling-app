@@ -9,6 +9,7 @@ import { DateTime } from "luxon";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+import { CONSTS } from "@/utils/constants";
 import { Input } from "./input";
 import {
   convertParamDateTime,
@@ -19,14 +20,13 @@ import {
   subtractBreakFromDuration,
 } from "@/utils/utils";
 import { MyListbox, type Option } from "./select";
-import { Day } from "@/db/days";
-import { Guest } from "@/db/guests";
-import { Location } from "@/db/locations";
-import { Session } from "@/db/sessions";
-import { RSVP } from "@/db/rsvps";
+import type { Day } from "@/db/days";
+import type { RSVP } from "@/db/rsvps";
+import type { Session } from "@/db/sessions";
+import type { Guest } from "@/db/guests";
 import type { SessionProposal } from "@/db/sessionProposals";
 import { ConfirmDeletionModal } from "../modals";
-import { UserContext } from "../context";
+import { UserContext, EventContext } from "../context";
 import { sessionsOverlap, newEmptySession } from "../session_utils";
 import { parseSessionTime } from "../api/session-form-utils";
 
@@ -34,22 +34,52 @@ interface ErrorResponse {
   message: string;
 }
 
-export function SessionForm(props: {
-  eventName: string;
-  days: Day[];
-  sessions: Session[];
-  locations: Location[];
-  guests: Guest[];
-  proposals: SessionProposal[];
-}) {
-  const { eventName, days, sessions, locations, guests, proposals } = props;
+export function SessionForm(props: { eventName: string }) {
+  const { eventName } = props;
+  const {
+    event,
+    days,
+    sessions,
+    guests,
+    locations: allLocations,
+  } = useContext(EventContext);
+  const { user: currentUser } = useContext(UserContext);
+  const locations = allLocations.filter(
+    (location) =>
+      location.Bookable &&
+      (!CONSTS.MULTIPLE_EVENTS ||
+        (event!["Location names"] &&
+          event!["Location names"].includes(location.Name)))
+  );
+  const [proposals, setProposals] = useState<SessionProposal[]>([]);
+  const [proposalsLoading, setProposalsLoading] = useState(true);
+  useEffect(() => {
+    const fetchProposals = async () => {
+      setProposalsLoading(true);
+      const response = await fetch(`/api/get-proposals?eventName=${eventName}`);
+      if (response.ok) {
+        const allProposals = (await response.json()) as SessionProposal[];
+        const currentUserProposals = allProposals.filter(
+          (p) => currentUser && p.hosts.includes(currentUser)
+        );
+        const hostlessProposals = allProposals.filter(
+          (p) => p.hosts.length === 0
+        );
+        const proposalsToShow = currentUserProposals.concat(hostlessProposals);
+        setProposals(proposalsToShow);
+      }
+      setProposalsLoading(false);
+    };
+
+    void fetchProposals();
+  }, [eventName, currentUser]);
+
   const searchParams = useSearchParams();
   const dayParam = searchParams?.get("day");
   const timeParam = searchParams?.get("time");
   const initLocation = searchParams?.get("location");
   const sessionID = searchParams?.get("sessionID");
   const proposalID = searchParams?.get("proposalID");
-  const initialProposal = proposals.find((p) => p.id === proposalID) ?? null;
   const session =
     sessions.find((ses) => ses.ID === sessionID) || newEmptySession();
   const initDateTime =
@@ -65,9 +95,11 @@ export function SessionForm(props: {
         .toFormat("h:mm a")
     : undefined;
 
-  const [proposal, setProposal] = useState<SessionProposal | null>(
-    initialProposal
-  );
+  const [proposal, setProposal] = useState<SessionProposal | null>(null);
+  useEffect(() => {
+    const pr = proposals.find((p) => p.id === proposalID) ?? null;
+    setProposal(pr);
+  }, [proposals, proposalID]);
   const [error, setError] = useState<string | null>(null);
   const [title, setTitle] = useState(session.Title);
   const [description, setDescription] = useState(session.Description);
@@ -86,7 +118,6 @@ export function SessionForm(props: {
     (st) => st.formattedTime === startTime
   )?.maxDuration;
   const [duration, setDuration] = useState(Math.min(maxDuration ?? 60, 60));
-  const { user: currentUser } = useContext(UserContext);
   let initialHosts: Guest[] = [];
   if (!sessionID) {
     initialHosts = guests.filter((g) => g.ID == currentUser);
@@ -296,6 +327,9 @@ export function SessionForm(props: {
     }))
   );
 
+  if (proposalID && proposalsLoading) {
+    return <div className="flex flex-col gap-4">Loading proposals...</div>;
+  }
   return (
     <div className="flex flex-col gap-4">
       <Link
@@ -316,19 +350,25 @@ export function SessionForm(props: {
           reach out to you about rescheduling, relocating, or cancelling.
         </p>
       </div>
-      {proposals.length > 0 && !sessionID && (
-        <div className="flex flex-col gap-1 w-72">
-          <label className="font-medium">Proposal</label>
-          <MyListbox
-            currValue={proposal?.id ?? ""}
-            setCurrValue={(id) =>
-              setProposal(proposals.find((p) => p.id === id) ?? null)
-            }
-            options={proposalSelectOpts}
-            placeholder={"Pre-fill from proposal"}
-            truncateText={false}
-          />
-        </div>
+      {(proposals.length > 0 || proposalsLoading) && !sessionID && (
+        <>
+          {proposalsLoading ? (
+            <div className="flex flex-col gap-1 w-72">Loading proposals...</div>
+          ) : (
+            <div className="flex flex-col gap-1 w-72">
+              <label className="font-medium">Proposal</label>
+              <MyListbox
+                currValue={proposal?.id ?? ""}
+                setCurrValue={(id) =>
+                  setProposal(proposals.find((p) => p.id === id) ?? null)
+                }
+                options={proposalSelectOpts}
+                placeholder={"Pre-fill from proposal"}
+                truncateText={false}
+              />
+            </div>
+          )}
+        </>
       )}
       <div className="flex flex-col gap-1">
         <label className="font-medium">
