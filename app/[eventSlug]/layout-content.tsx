@@ -4,7 +4,7 @@ import { getEventByName } from "@/db/events";
 import { getDaysByEvent } from "@/db/days";
 import { getSessionsByEvent } from "@/db/sessions";
 import { getLocations } from "@/db/locations";
-import { getGuests } from "@/db/guests";
+import { getGuestsByEvent } from "@/db/guests";
 import { getRSVPsByUser } from "@/db/rsvps";
 import { EventProviderWrapper } from "./event-provider-wrapper";
 
@@ -29,7 +29,7 @@ export async function EventLayoutContent({
     getDaysByEvent(event.Name),
     getSessionsByEvent(event.Name),
     getLocations(),
-    getGuests(),
+    getGuestsByEvent(event.Name),
     getRSVPsByUser(currentUser),
   ]);
 
