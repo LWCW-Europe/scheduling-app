@@ -16,9 +16,6 @@ import { sessionsOverlap } from "../../session_utils";
 import { LockIcon } from "../../lock-icon";
 import { LocationTag } from "../session-text";
 
-// I'm doing this because otherwise the linter complains about EVERYTHING
-//   because of that return statement that happens if the session does not exist.
-/* eslint-disable react-hooks/rules-of-hooks */
 export function ViewSession(props: {
   eventSlug: string;
   showBackBtn: boolean;
@@ -42,15 +39,17 @@ export function ViewSession(props: {
   // Merge server RSVPs with user's optimistic updates
   // If user has an RSVP in context, use that; otherwise use server data
   const [optimisticRsvps, setOptimisticRsvps] = useState<RSVP[]>([]);
-
   const [rsvpsLoading, setRsvpsLoading] = useState(true);
+  const router = useRouter();
+  const [isRsvping, setIsRsvping] = useState(false);
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [clashingSession, setClashingSession] = useState<Session | null>(null);
+  const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
 
   const searchParams = useSearchParams();
   const sessionID = searchParams.get("sessionID")!;
   const session = sessions.find((ses) => ses.ID === sessionID);
-  if (!session) {
-    return <div>No session found with this ID</div>;
-  }
+
   useEffect(() => {
     const fetchRsvps = async () => {
       setRsvpsLoading(true);
@@ -73,8 +72,7 @@ export function ViewSession(props: {
     };
 
     void fetchRsvps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionID]);
+  }, [sessionID, userRsvps]);
 
   useEffect(() => {
     // When context RSVPs change, update our optimistic state
@@ -101,11 +99,10 @@ export function ViewSession(props: {
       }
     }
   }, [userRsvps, currentUser, sessionID]);
-  const router = useRouter();
-  const [isRsvping, setIsRsvping] = useState(false);
-  const [userModalOpen, setUserModalOpen] = useState(false);
-  const [clashingSession, setClashingSession] = useState<Session | null>(null);
-  const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
+
+  if (!session) {
+    return <div>No session found with this ID</div>;
+  }
 
   // Determine user status for this session
   const rsvpd = currentUser ? rsvpdForSession(sessionID + "") : false;
