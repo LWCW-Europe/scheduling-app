@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { DateTime } from "luxon";
 import { useContext, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PencilIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
 
-import type { Event } from "@/db/events";
-import type { Guest } from "@/db/guests";
 import type { Session } from "@/db/sessions";
 import type { RSVP } from "@/db/rsvps";
 import { getEndTimeMinusBreak } from "@/utils/utils";
@@ -19,25 +17,12 @@ import { LockIcon } from "../../lock-icon";
 import { LocationTag } from "../session-text";
 
 export function ViewSession(props: {
-  session: Session;
-  guests: Guest[];
-  rsvps: RSVP[];
   eventSlug: string;
-  event: Event;
   showBackBtn: boolean;
   isInModal?: boolean;
   onCloseModal?: () => void;
 }) {
-  const {
-    session,
-    guests,
-    rsvps,
-    eventSlug,
-    event,
-    showBackBtn,
-    isInModal = false,
-    onCloseModal,
-  } = props;
+  const { eventSlug, showBackBtn, isInModal = false, onCloseModal } = props;
 
   const { user: currentUser } = useContext(UserContext);
   const {
@@ -46,17 +31,54 @@ export function ViewSession(props: {
     userBusySessions,
     rsvps: userRsvps,
     locations,
+    guests,
+    sessions,
+    event,
   } = useContext(EventContext);
 
   // Merge server RSVPs with user's optimistic updates
   // If user has an RSVP in context, use that; otherwise use server data
-  const [optimisticRsvps, setOptimisticRsvps] = useState<RSVP[]>(rsvps);
+  const [optimisticRsvps, setOptimisticRsvps] = useState<RSVP[]>([]);
+  const [rsvpsLoading, setRsvpsLoading] = useState(true);
+  const router = useRouter();
+  const [isRsvping, setIsRsvping] = useState(false);
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [clashingSession, setClashingSession] = useState<Session | null>(null);
+  const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
+
+  const searchParams = useSearchParams();
+  const sessionID = searchParams.get("sessionID")!;
+  const session = sessions.find((ses) => ses.ID === sessionID);
+
+  useEffect(() => {
+    const fetchRsvps = async () => {
+      setRsvpsLoading(true);
+      const response = await fetch(
+        `/api/rsvps-for-session?session=${sessionID}`
+      );
+      if (response.ok) {
+        const sessionRsvps = (await response.json()) as RSVP[];
+        const userRsvpForThisSession = userRsvps.find(
+          (rsvp) =>
+            rsvp.Session?.includes(sessionID) &&
+            !sessionRsvps.some((r) => r.Guest?.[0] === rsvp.Guest?.[0])
+        );
+        if (userRsvpForThisSession) {
+          sessionRsvps.unshift(userRsvpForThisSession);
+        }
+        setOptimisticRsvps(sessionRsvps);
+      }
+      setRsvpsLoading(false);
+    };
+
+    void fetchRsvps();
+  }, [sessionID, userRsvps]);
 
   useEffect(() => {
     // When context RSVPs change, update our optimistic state
     if (currentUser) {
       const userRsvpForThisSession = userRsvps.find(
-        (rsvp) => rsvp.Session && rsvp.Session.includes(session.ID)
+        (rsvp) => rsvp.Session && rsvp.Session.includes(sessionID)
       );
 
       if (userRsvpForThisSession) {
@@ -76,15 +98,14 @@ export function ViewSession(props: {
         );
       }
     }
-  }, [userRsvps, currentUser, session.ID]);
-  const router = useRouter();
-  const [isRsvping, setIsRsvping] = useState(false);
-  const [userModalOpen, setUserModalOpen] = useState(false);
-  const [clashingSession, setClashingSession] = useState<Session | null>(null);
-  const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
+  }, [userRsvps, currentUser, sessionID]);
+
+  if (!session) {
+    return <div>No session found with this ID</div>;
+  }
 
   // Determine user status for this session
-  const rsvpd = currentUser ? rsvpdForSession(session.ID + "") : false;
+  const rsvpd = currentUser ? rsvpdForSession(sessionID + "") : false;
   const isHost = currentUser && session.Hosts?.includes(currentUser);
   const isEditable = !!isHost && session["Attendee scheduled"];
 
@@ -130,9 +151,9 @@ export function ViewSession(props: {
     setIsRsvping(true);
 
     // Get the current RSVP status at the time of the action
-    const currentRsvpStatus = rsvpdForSession(session.ID + "");
+    const currentRsvpStatus = rsvpdForSession(sessionID + "");
 
-    void updateRsvp(currentUser, session.ID, currentRsvpStatus)
+    void updateRsvp(currentUser, sessionID, currentRsvpStatus)
       .then((result) => {
         if (!result) {
           console.error("Failed to update RSVP");
@@ -149,7 +170,7 @@ export function ViewSession(props: {
       onCloseModal();
       // Small delay to allow modal to close before navigation
       setTimeout(() => {
-        router.push(`/${eventSlug}/edit-session?sessionID=${session.ID}`);
+        router.push(`/${eventSlug}/edit-session?sessionID=${sessionID}`);
       }, 100);
     }
     // If not in modal, let the Link component handle the navigation normally
@@ -203,7 +224,7 @@ export function ViewSession(props: {
           className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12 mt-4 mb-2 block"
           href={`/${eventSlug}`}
         >
-          Back to {event.Name}
+          Back to {event?.Name}
         </Link>
       )}
       {/* Title with status indicators */}
@@ -264,7 +285,7 @@ export function ViewSession(props: {
 
         {isEditable && (
           <Link
-            href={`/${eventSlug}/edit-session?sessionID=${session.ID}`}
+            href={`/${eventSlug}/edit-session?sessionID=${sessionID}`}
             className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 transition-colors"
             onClick={handleEditClick}
           >
@@ -301,14 +322,20 @@ export function ViewSession(props: {
           </span>
         </div>
         <div className="flex gap-2">
-          <span className="font-medium">
-            Attendees ({attendeeNames.length}):
-          </span>
-          <span>
-            {attendeeNames.length === 0
-              ? "No attendees yet"
-              : `${attendeeNames.join(", ")}`}
-          </span>
+          {rsvpsLoading ? (
+            <span className="font-medium">Loading RSVPs...</span>
+          ) : (
+            <>
+              <span className="font-medium">
+                Attendees ({attendeeNames.length}):
+              </span>
+              <span>
+                {attendeeNames.length === 0
+                  ? "No attendees yet"
+                  : `${attendeeNames.join(", ")}`}
+              </span>
+            </>
+          )}
         </div>
       </div>
       {/* Description (potentially long) */}

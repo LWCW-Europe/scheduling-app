@@ -4,20 +4,10 @@ import { createPortal } from "react-dom";
 import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import type { Event } from "@/db/events";
-import type { Guest } from "@/db/guests";
-import type { Session } from "@/db/sessions";
-import type { RSVP } from "@/db/rsvps";
 import { ViewSession } from "../../view-session/view-session";
 
-export function SessionModal(props: {
-  session: Session;
-  guests: Guest[];
-  rsvps: RSVP[];
-  eventSlug: string;
-  event: Event;
-}) {
-  const { session, guests, rsvps, eventSlug, event } = props;
+export function SessionModal(props: { eventSlug: string }) {
+  const { eventSlug } = props;
 
   const router = useRouter();
 
@@ -77,11 +67,7 @@ export function SessionModal(props: {
           </svg>
         </button>
         <ViewSession
-          session={session}
-          guests={guests}
-          rsvps={rsvps}
           eventSlug={eventSlug}
-          event={event}
           showBackBtn={false}
           isInModal={true}
           onCloseModal={onDismiss}
