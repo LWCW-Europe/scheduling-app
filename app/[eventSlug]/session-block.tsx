@@ -260,6 +260,7 @@ export function RealSessionCard(props: {
     <Tooltip
       content={<SessionInfoDisplay />}
       className={`row-span-${numHalfHours} my-0.5 overflow-hidden group`}
+      noTap={true}
     >
       <button
         className={clsx(
