@@ -1,154 +1,103 @@
-This project is a public open-source fork of [rachelweinberg12/scheduling-app](https://github.com/rachelweinberg12/scheduling-app). Rachel Weinberg, the original author, does not wish to maintain a public open-source project herself but agreed to this fork serving that role. See [LICENSING_HISTORY.md](LICENSING_HISTORY.md) for details.
+# Scheduling App
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+A web app for managing event scheduling — attendees can propose sessions, vote on them, and view the final schedule. Built with Next.js and Airtable as the backend.
+
+This is a public open-source fork of [rachelweinberg12/scheduling-app](https://github.com/rachelweinberg12/scheduling-app). Rachel Weinberg, the original author, does not wish to maintain a public open-source project herself but agreed to this fork serving that role. See [LICENSING_HISTORY.md](LICENSING_HISTORY.md) for details.
+
+## Features
+
+- **Session proposals** — attendees submit and browse session ideas
+- **Voting** — attendees express interest (interested / maybe / skip) before the schedule is set
+- **Scheduling board** — drag sessions onto a time/location grid
+- **Event phases** — proposal, voting, and scheduling phases with configurable date ranges
+- **Multi-event support** — host multiple events from one deployment
+- **Site password protection** — optional single-password gate for the whole app
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js / Bun
+- An [Airtable](https://airtable.com) base set up with the required schema (see [docs/SCHEMA.md](docs/SCHEMA.md))
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repo and install dependencies:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+   ```bash
+   bun install
+   ```
+
+2. Create `.env.development.local` with your credentials:
+
+   ```bash
+   AIRTABLE_API_KEY=your_airtable_api_key
+   AIRTABLE_BASE_ID=your_airtable_base_id
+   ```
+
+3. Seed the development database:
+
+   ```bash
+   bun run dev:db:reset
+   ```
+
+4. Start the dev server:
+
+   ```bash
+   bun dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Environment Variables
 
-The application uses environment variables for configuration. Create the following files for different environments:
+### Required
 
-- `.env.development.local` - for local development
-- `.env.production.local` - for production builds
+| Variable           | Description                        |
+| ------------------ | ---------------------------------- |
+| `AIRTABLE_API_KEY` | Your Airtable personal access token |
+| `AIRTABLE_BASE_ID` | The ID of your Airtable base        |
 
-### Required Variables
+### Optional
 
-```bash
-AIRTABLE_API_KEY=your_airtable_api_key
-AIRTABLE_BASE_ID=your_airtable_base_id
-```
+| Variable                      | Description                                                                 |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| `SITE_PASSWORD`               | Enables site-wide password protection. Omit to disable.                     |
+| `NEXT_PUBLIC_FOOTER_RIGHT_HTML` | HTML for the right side of the footer (e.g. links to GitHub or a bug tracker). |
 
-### Optional Variables
+`NEXT_PUBLIC_` variables are exposed to the browser; all others are server-side only.
 
-#### Site Protection
+### Deploying to Vercel
 
-You can add basic password protection to your entire site:
-
-```bash
-# Site-wide password protection (leave unset to disable protection)
-SITE_PASSWORD=your_secure_password
-```
-
-When `SITE_PASSWORD` is set, users must enter this password to access any part of the application. The authentication persists for 7 days via secure cookies. If this variable is not set, no protection is applied (useful for development).
-
-#### Footer Configuration
-
-You can customize the footer content that appears on the right side next to the version information:
-
-```bash
-# Footer right content (HTML supported)
-NEXT_PUBLIC_FOOTER_RIGHT_HTML='<a href="https://github.com/yourusername/your-repo" target="_blank" rel="noopener noreferrer" class="text-gray-500 hover:text-gray-700 underline">GitHub</a> | <a href="mailto:support@yourdomain.com" class="text-gray-500 hover:text-gray-700 underline">Report Bug</a>'
-```
-
-**Examples:**
-
-- Simple link: `NEXT_PUBLIC_FOOTER_RIGHT_HTML='<a href="https://github.com/user/repo" target="_blank">GitHub</a>'`
-- Multiple links: `NEXT_PUBLIC_FOOTER_RIGHT_HTML='<a href="https://github.com/user/repo">GitHub</a> | <a href="mailto:bugs@example.com">Support</a>'`
-- Plain text: `NEXT_PUBLIC_FOOTER_RIGHT_HTML='© 2025 Your Organization'`
-
-If not set, only the version information will be displayed in the footer.
-
-### Setting Environment Variables on Vercel
-
-When deploying to Vercel, set your environment variables in the Vercel dashboard:
-
-1. Go to your project in the [Vercel Dashboard](https://vercel.com/dashboard)
-2. Navigate to **Settings** → **Environment Variables**
-3. Add the required variables:
-   - `AIRTABLE_API_KEY` (keep this secret)
-   - `AIRTABLE_BASE_ID`
-   - `SITE_PASSWORD` (optional, for site protection)
-   - `NEXT_PUBLIC_FOOTER_RIGHT_HTML` (optional)
-4. Set the appropriate environment (Production, Preview, Development)
-5. Deploy your application
-
-**Note:** Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser, while others remain server-side only.
+Set the variables above in **Vercel Dashboard → Settings → Environment Variables**, then deploy.
 
 ## Event Phases
 
-It is possible to have multiple phases for your event to enable hosts to get
-feedback on their session ideas.
+Events can progress through three optional phases:
 
-There are three such phases:
+| Phase        | What it enables                                                        |
+| ------------ | ---------------------------------------------------------------------- |
+| **Proposal** | Attendees submit and browse session proposals                          |
+| **Voting**   | Attendees vote on proposals (votes hidden from hosts until scheduling) |
+| **Scheduling** | Hosts see vote counts and can place sessions on the schedule grid    |
 
-- Proposal Phase: Users can create session proposals and others can view them.
-- Voting Phase: Users can indicate interest in session proposals. This is not
-  yet visible to the hosts of the proposals. It makes sense for proposals to
-  keep going during voting.
-- Scheduling Phase: Hosts can view how many people were interested in their
-  sessions. Also, the sessions board is unlocked, making it possible to turn
-  your proposals into planned sessions.
-
-In order to have these phases, you need to set their dates on the corresponding
-Event record. The way to do that is to edit Airtable manually. If none are set
-then there are no phases (i.e. sessions can be scheduled, that's it).
-
-The necessary changes to the Airtable schema are documented in
-[docs/SCHEMA.md](docs/SCHEMA.md).
+Phase dates are set directly on the Event record in Airtable. If no dates are set, the app skips phases and goes straight to scheduling. See [docs/SCHEMA.md](docs/SCHEMA.md) for the required Airtable fields.
 
 ## Development
 
-Lint and run prettier locally. Note that `prettier` is configured so that it
-automatically writes changes to the files.
-
-```
-bun lint
-bun prettier
+```bash
+bun lint       # lint
+bun prettier   # format (writes changes in place)
 ```
 
 ### Database Migrations
 
-To apply database (Airtable) migrations see
-[migrations/README.md](migrations/README.md). If you make an Airtable schema
-change, you must create a migration file as documented there.
+When making Airtable schema changes, create a migration file as described in [migrations/README.md](migrations/README.md).
 
-### Dummy Data
+### Testing
 
-You can create (or reset) your development database by running:
-
-```bash
-bun run dev:db:reset
-```
-
-It will seed the database with different events and other test data.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+See [tests/README.md](tests/README.md).
 
 ## License
 
 MIT. See [LICENSE.txt](LICENSE.txt) and [LICENSING_HISTORY.md](LICENSING_HISTORY.md).
-
-## Testing
-
-See [tests/README.md](tests/README.md).
