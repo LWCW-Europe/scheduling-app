@@ -1,12 +1,8 @@
 import { cookies } from "next/headers";
 import { eventSlugToName } from "@/utils/utils";
-import { getEventByName } from "@/db/events";
-import { getDaysByEvent } from "@/db/days";
-import { getSessionsByEvent } from "@/db/sessions";
-import { getLocations } from "@/db/locations";
-import { getGuests } from "@/db/guests";
-import { getRSVPsByUser } from "@/db/rsvps";
+import { getRepositories } from "@/db/container";
 import { EventProviderWrapper } from "./event-provider-wrapper";
+import type { DayWithSessions } from "@/app/context";
 
 export async function EventLayoutContent({
   eventSlug,
@@ -16,7 +12,8 @@ export async function EventLayoutContent({
   children: React.ReactNode;
 }) {
   const eventName = eventSlugToName(eventSlug);
-  const event = await getEventByName(eventName);
+  const repos = getRepositories();
+  const event = await repos.events.findByName(eventName);
 
   if (!event) {
     return <div>Event not found</div>;
@@ -26,29 +23,27 @@ export async function EventLayoutContent({
   const currentUser = cookieStore.get("user")?.value;
 
   const [days, sessions, locations, guests, rsvps] = await Promise.all([
-    getDaysByEvent(event.Name),
-    getSessionsByEvent(event.Name),
-    getLocations(),
-    getGuests(),
-    getRSVPsByUser(currentUser),
+    repos.days.listByEvent(event.id),
+    repos.sessions.listByEvent(event.id),
+    repos.locations.listVisible(),
+    repos.guests.list(),
+    currentUser ? repos.rsvps.listByGuest(currentUser) : Promise.resolve([]),
   ]);
 
-  // Prepare the days with sessions
-  days.forEach((day) => {
-    const dayStartMillis = new Date(day.Start).getTime();
-    const dayEndMillis = new Date(day.End).getTime();
-    day.Sessions = sessions.filter((s) => {
-      const sessionStartMillis = new Date(s["Start time"]).getTime();
-      const sessionEndMillis = new Date(s["End time"]).getTime();
+  const daysWithSessions: DayWithSessions[] = days.map((day) => ({
+    ...day,
+    sessions: sessions.filter((s) => {
+      if (!s.startTime || !s.endTime) return false;
       return (
-        dayStartMillis <= sessionStartMillis && dayEndMillis >= sessionEndMillis
+        day.start.getTime() <= s.startTime.getTime() &&
+        day.end.getTime() >= s.endTime.getTime()
       );
-    });
-  });
+    }),
+  }));
 
   const eventContextValue = {
     event,
-    days,
+    days: daysWithSessions,
     sessions,
     locations,
     guests,

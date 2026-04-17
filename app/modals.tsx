@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { UserSelect } from "./user-select";
 import { UserContext } from "./context";
-import { Guest } from "@/db/guests";
+import type { Guest } from "@/db/repositories/interfaces";
 
 export function MapModal() {
   const [open, setOpen] = useState(false);

@@ -47,3 +47,6 @@ package-lock.json
 
 # IDE files
 /.vscode
+
+# Database
+data.db

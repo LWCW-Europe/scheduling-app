@@ -33,7 +33,10 @@ export class SqliteRsvpsRepository implements RsvpsRepository {
 
   async create(data: { sessionId: string; guestId: string }): Promise<Rsvp> {
     const id = nanoid();
-    this.db.insert(schema.rsvps).values({ id, ...data }).run();
+    this.db
+      .insert(schema.rsvps)
+      .values({ id, ...data })
+      .run();
     return { id, ...data };
   }
 

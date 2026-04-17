@@ -1,14 +1,7 @@
-export enum VoteChoice {
-  interested = "interested",
-  maybe = "maybe",
-  skip = "skip",
-}
+export { VoteChoice } from "@/db/repositories/interfaces";
+export type { Vote } from "@/db/repositories/interfaces";
 
-export type Vote = {
-  proposal: string;
-  guest: string;
-  choice: VoteChoice;
-};
+import { VoteChoice } from "@/db/repositories/interfaces";
 
 export function voteChoiceToEmoji(choice: VoteChoice): string {
   switch (choice) {

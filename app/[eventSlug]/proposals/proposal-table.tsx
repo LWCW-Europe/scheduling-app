@@ -15,15 +15,14 @@ import {
 
 import HoverTooltip from "@/app/hover-tooltip";
 import { UserContext, VotesContext } from "@/app/context";
-import type { SessionProposal } from "@/db/sessionProposals";
-import type { Guest } from "@/db/guests";
+import type { SessionProposal } from "@/db/repositories/interfaces";
 import {
   inSchedPhase,
   inVotingPhase,
   dateStartDescription,
   inProposalPhase,
 } from "@/app/utils/events";
-import type { Event } from "@/db/events";
+import type { Event } from "@/db/repositories/interfaces";
 import { formatDuration, subtractBreakFromDuration } from "@/utils/utils";
 
 import { VotingButtons } from "./voting-buttons";
@@ -41,20 +40,16 @@ type SortConfig = {
 type Filter = "mine" | "voted" | "unvoted" | undefined;
 
 export function ProposalTable({
-  guests,
   proposals: paramProposals,
   eventSlug,
   event,
 }: {
-  guests: Guest[];
   proposals: SessionProposal[];
   eventSlug: string;
   event: Event;
 }) {
   const initialProposals = paramProposals.map((proposal) => {
-    const hostNames = proposal.hosts.map(
-      (h) => guests.find((g) => g.ID === h)?.Name || ""
-    );
+    const hostNames = proposal.hosts.map((h) => h.name);
     return { ...proposal, hostNames };
   });
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,8 +71,8 @@ export function ProposalTable({
   const router = useRouter();
   const filteredProposals = initialProposals.filter((pr) => {
     if (currentUserId && resultFilter) {
-      const isMine = pr.hosts.includes(currentUserId);
-      const hasVoted = votes.some((vote) => vote.proposal === pr.id);
+      const isMine = pr.hosts.some((h) => h.id === currentUserId);
+      const hasVoted = votes.some((vote) => vote.proposalId === pr.id);
       let actual: Filter;
       if (isMine) {
         actual = "mine";
@@ -152,26 +147,24 @@ export function ProposalTable({
       } else if (b[key].length === 0) {
         cmp = 1;
       } else {
-        const hostNames = (hosts: string[]) =>
-          guests
-            .filter((g) => hosts.includes(g.ID))
-            .map((g) => g.Name)
+        const hostNamesStr = (hosts: SessionProposal["hosts"]) =>
+          hosts
+            .map((h) => h.name)
             .sort()
             .join("");
-        cmp = hostNames(a.hosts).localeCompare(hostNames(b.hosts));
+        cmp = hostNamesStr(a.hosts).localeCompare(hostNamesStr(b.hosts));
       }
     } else if (key === "durationMinutes") {
       cmp = (a[key] || 0) - (b[key] || 0);
     } else if (key === "createdTime") {
-      cmp = new Date(a[key]).getTime() - new Date(b[key]).getTime();
+      cmp = a[key].getTime() - b[key].getTime();
     } else if (key === "votesCount") {
       cmp = (a[key] || 0) - (b[key] || 0);
     } else if (key === "userVote") {
-      // Define vote order: interested (0), maybe (1), skip (2), no vote (3)
       const getVoteOrder = (proposalId: string) => {
-        if (!currentUserId) return 3; // no vote
+        if (!currentUserId) return 3;
         const userVote = votes.find(
-          (v) => v.proposal === proposalId && v.guest === currentUserId
+          (v) => v.proposalId === proposalId && v.guestId === currentUserId
         );
         if (!userVote) return 3; // no vote
         switch (userVote.choice) {
@@ -241,11 +234,11 @@ export function ProposalTable({
     router.push(`/${eventSlug}/proposals/${proposal.id}/view`);
   };
 
-  const canEdit = (hosts: string[]) => {
+  const canEdit = (hosts: SessionProposal["hosts"]) => {
     if (hosts.length === 0) {
       return true;
     } else {
-      return currentUserId && hosts.includes(currentUserId);
+      return currentUserId && hosts.some((h) => h.id === currentUserId);
     }
   };
 
@@ -511,12 +504,7 @@ export function ProposalTable({
                 </td>
                 <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <div className="truncate">
-                    {proposal.hosts
-                      .map(
-                        (host) =>
-                          guests.find((g) => g.ID === host)?.Name || "Deleted"
-                      )
-                      .join(", ") || "-"}
+                    {proposal.hosts.map((h) => h.name).join(", ") || "-"}
                   </div>
                 </td>
                 <td className="px-4 lg:px-6 py-4" title={proposal.description}>
@@ -543,7 +531,7 @@ export function ProposalTable({
                 {!schedEnabled && (
                   <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
                     {currentUserId &&
-                      !proposal.hosts.includes(currentUserId) && (
+                      !proposal.hosts.some((h) => h.id === currentUserId) && (
                         <VotingButtons
                           proposalId={proposal.id}
                           votingEnabled={votingEnabled}
@@ -559,8 +547,8 @@ export function ProposalTable({
                         title={(() => {
                           const vote = votes.find(
                             (v) =>
-                              v.proposal === proposal.id &&
-                              v.guest === currentUserId
+                              v.proposalId === proposal.id &&
+                              v.guestId === currentUserId
                           );
                           if (!vote) return "No vote";
                           switch (vote.choice) {
@@ -667,13 +655,7 @@ export function ProposalTable({
                   {proposal.title}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Host(s):{" "}
-                  {proposal.hosts
-                    .map(
-                      (host) =>
-                        guests.find((g) => g.ID === host)?.Name || "Deleted"
-                    )
-                    .join(", ") || "-"}
+                  Host(s): {proposal.hosts.map((h) => h.name).join(", ") || "-"}
                 </p>
               </div>
 
@@ -700,7 +682,7 @@ export function ProposalTable({
 
               <div className="pt-2 border-t border-gray-100 space-y-3">
                 {currentUserId &&
-                  !proposal.hosts.includes(currentUserId) &&
+                  !proposal.hosts.some((h) => h.id === currentUserId) &&
                   !schedEnabled && (
                     <VotingButtons
                       proposalId={proposal.id}
@@ -717,8 +699,8 @@ export function ProposalTable({
                           title={(() => {
                             const vote = votes.find(
                               (v) =>
-                                v.proposal === proposal.id &&
-                                v.guest === currentUserId
+                                v.proposalId === proposal.id &&
+                                v.guestId === currentUserId
                             );
                             if (!vote) return "No vote";
                             switch (vote.choice) {

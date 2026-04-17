@@ -1,6 +1,4 @@
-import { getSessions } from "@/db/sessions";
-import { deleteRSVPsFromSessionByUsers } from "@/db/rsvps";
-import { getBase } from "@/db/db";
+import { getRepositories } from "@/db/container";
 import { prepareToInsert, validateSession } from "../session-form-utils";
 import type { SessionParams } from "../session-form-utils";
 
@@ -12,32 +10,26 @@ export async function POST(req: Request) {
     console.error("Session ID is required for update.");
     return new Response("Session ID is required", { status: 400 });
   }
-  const session = prepareToInsert(params);
-  const allSessions = (await getSessions()).filter(
-    (s) => !session.Event || session.Event[0] === s.Event
+  const repos = getRepositories();
+  const input = prepareToInsert(params);
+  const allSessions = (await repos.sessions.listScheduled()).filter(
+    (s) => !input.eventId || s.eventId === input.eventId
   );
-  const prevSession = allSessions.find((ses) => ses.ID === params.id);
+  const prevSession = allSessions.find((ses) => ses.id === params.id);
   if (prevSession === undefined) {
     const msg = `Cannot find session with ID ${params.id}`;
     return new Response(msg, { status: 404 });
   }
-  if (!prevSession["Attendee scheduled"] || prevSession.Blocker) {
+  if (!prevSession.attendeeScheduled || prevSession.blocker) {
     return new Response("Cannot edit via web app", { status: 400 });
   }
-  const existingSessions = allSessions.filter((ses) => ses.ID !== params.id);
-  const newHostIDs = params.hosts.map((h) => h.ID);
-  const sessionValid = validateSession(session, existingSessions);
+  const existingSessions = allSessions.filter((ses) => ses.id !== params.id);
+  const newHostIds = input.hostIds;
+  const sessionValid = validateSession(input, existingSessions);
   if (sessionValid) {
     try {
-      const records = await getBase()("Sessions").update([
-        {
-          id: params.id,
-          fields: session,
-        },
-      ]);
-      records?.forEach(function (record) {
-        console.log(record.getId());
-      });
+      const updated = await repos.sessions.update(params.id, input);
+      console.log(updated.id);
     } catch (err) {
       console.error(err);
       return Response.error();
@@ -45,7 +37,7 @@ export async function POST(req: Request) {
 
     // Corner case: someone RSVPs to a session and is later added as a host
     // In this case, remove their RSVP
-    deleteRSVPsFromSessionByUsers(params.id, newHostIDs);
+    void repos.rsvps.deleteBySessionAndGuests(params.id, newHostIds);
     return Response.json({ success: true });
   } else {
     return Response.error();

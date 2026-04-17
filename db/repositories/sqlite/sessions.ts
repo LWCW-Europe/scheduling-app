@@ -54,7 +54,10 @@ export class SqliteSessionsRepository implements SessionsRepository {
         email: schema.guests.email,
       })
       .from(schema.sessionHosts)
-      .innerJoin(schema.guests, eq(schema.sessionHosts.guestId, schema.guests.id))
+      .innerJoin(
+        schema.guests,
+        eq(schema.sessionHosts.guestId, schema.guests.id)
+      )
       .all()
       .filter((r) => ids.includes(r.sessionId));
 
@@ -99,7 +102,12 @@ export class SqliteSessionsRepository implements SessionsRepository {
       rsvpCountBySession.set(r.sessionId, r.cnt);
     }
 
-    return buildSessions(rows, hostsBySession, locationsBySession, rsvpCountBySession);
+    return buildSessions(
+      rows,
+      hostsBySession,
+      locationsBySession,
+      rsvpCountBySession
+    );
   }
 
   async list(): Promise<Session[]> {
@@ -195,7 +203,8 @@ export class SqliteSessionsRepository implements SessionsRepository {
     this.db.transaction(() => {
       const values: Partial<typeof schema.sessions.$inferInsert> = {};
       if (patch.title !== undefined) values.title = patch.title;
-      if (patch.description !== undefined) values.description = patch.description;
+      if (patch.description !== undefined)
+        values.description = patch.description;
       if ("startTime" in patch)
         values.startTime = patch.startTime?.toISOString() ?? null;
       if ("endTime" in patch)
@@ -205,8 +214,7 @@ export class SqliteSessionsRepository implements SessionsRepository {
         values.attendeeScheduled = patch.attendeeScheduled;
       if (patch.blocker !== undefined) values.blocker = patch.blocker;
       if (patch.closed !== undefined) values.closed = patch.closed;
-      if ("proposalId" in patch)
-        values.proposalId = patch.proposalId ?? null;
+      if ("proposalId" in patch) values.proposalId = patch.proposalId ?? null;
       if ("eventId" in patch) values.eventId = patch.eventId ?? null;
 
       if (Object.keys(values).length > 0) {
@@ -248,10 +256,7 @@ export class SqliteSessionsRepository implements SessionsRepository {
 
   async delete(id: string): Promise<void> {
     this.db.transaction(() => {
-      this.db
-        .delete(schema.rsvps)
-        .where(eq(schema.rsvps.sessionId, id))
-        .run();
+      this.db.delete(schema.rsvps).where(eq(schema.rsvps.sessionId, id)).run();
       this.db
         .delete(schema.sessionHosts)
         .where(eq(schema.sessionHosts.sessionId, id))
@@ -260,10 +265,7 @@ export class SqliteSessionsRepository implements SessionsRepository {
         .delete(schema.sessionLocations)
         .where(eq(schema.sessionLocations.sessionId, id))
         .run();
-      this.db
-        .delete(schema.sessions)
-        .where(eq(schema.sessions.id, id))
-        .run();
+      this.db.delete(schema.sessions).where(eq(schema.sessions.id, id)).run();
     });
   }
 }

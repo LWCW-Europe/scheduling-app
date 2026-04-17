@@ -1,10 +1,8 @@
 import clsx from "clsx";
 import { ClockIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { UserIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
-import { Session } from "@/db/sessions";
-import { Day } from "@/db/days";
-import { Location } from "@/db/locations";
-import { Guest } from "@/db/guests";
+import type { Session, Location, Guest } from "@/db/repositories/interfaces";
+import type { DayWithSessions } from "@/app/context";
 import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
 import Link from "next/link";
@@ -20,30 +18,28 @@ export function SessionBlock(props: {
   eventName: string;
   session: Session;
   location: Location;
-  day: Day;
+  day: DayWithSessions;
   guests: Guest[];
 }) {
   const { eventName, session, location, day, guests } = props;
   const eventSlug = eventNameToSlug(eventName);
   const { rsvpdForSession } = useContext(EventContext);
   const { user } = useContext(UserContext);
-  const rsvpd = rsvpdForSession(session.ID + (user ? "" : ""));
+  const rsvpd = rsvpdForSession(session.id + (user ? "" : ""));
 
-  const startTime = new Date(session["Start time"]).getTime();
-  const endTime = new Date(session["End time"]).getTime();
+  const startTime = session.startTime?.getTime() ?? 0;
+  const endTime = session.endTime?.getTime() ?? 0;
   const sessionLength = endTime - startTime;
   const numHalfHours = sessionLength / 1000 / 60 / 30;
 
-  const isBlank = !session.Title;
+  const isBlank = !session.title;
   const isBookable =
     !!isBlank &&
-    !!location.Bookable &&
+    !!location.bookable &&
     startTime > new Date().getTime() &&
-    (!day.StartBookings ||
-      startTime >= new Date(day.StartBookings as Date | string).getTime()) &&
-    (!day.EndBookings ||
-      startTime < new Date(day.EndBookings as Date | string).getTime()) &&
-    !session.Blocker;
+    (!day.startBookings || startTime >= day.startBookings.getTime()) &&
+    (!day.endBookings || startTime < day.endBookings.getTime()) &&
+    !session.blocker;
   return isBookable ? (
     <BookableSessionCard
       eventSlug={eventSlug}
@@ -53,9 +49,9 @@ export function SessionBlock(props: {
     />
   ) : (
     <>
-      {session.Blocker ? (
+      {session.blocker ? (
         <BlockerSessionCard
-          title={session.Title || "Blocked"}
+          title={session.title || "Blocked"}
           numHalfHours={numHalfHours}
         />
       ) : isBlank ? (
@@ -81,17 +77,17 @@ export function BookableSessionCard(props: {
   eventSlug: string;
 }) {
   const { numHalfHours, session, location, eventSlug } = props;
-  const dayParam = DateTime.fromISO(session["Start time"])
+  const dayParam = DateTime.fromJSDate(session.startTime ?? new Date())
     .setZone("America/Los_Angeles")
     .toFormat("MM-dd");
-  const timeParam = DateTime.fromISO(session["Start time"])
+  const timeParam = DateTime.fromJSDate(session.startTime ?? new Date())
     .setZone("America/Los_Angeles")
     .toFormat("HH:mm");
   return (
     <div className={`row-span-${numHalfHours} my-0.5 min-h-10`}>
       <Link
         className="rounded font-roboto h-full w-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
-        href={`/${eventSlug}/add-session?location=${location.Name}&time=${timeParam}&day=${dayParam}`}
+        href={`/${eventSlug}/add-session?location=${location.name}&time=${timeParam}&day=${dayParam}`}
       >
         <PlusIcon className="h-4 w-4 text-gray-400" />
       </Link>
@@ -140,19 +136,20 @@ export function RealSessionCard(props: {
   const [clashingSession, setClashingSession] = useState<Session | null>(null);
   const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
 
-  const hostStatus = currentUser && session.Hosts?.includes(currentUser);
+  const hostStatus =
+    currentUser && session.hosts.some((h) => h.id === currentUser);
   const lowerOpacity = !rsvpd && !hostStatus;
-  const formattedHostNames = session["Host name"]?.join(", ") ?? "No hosts";
+  const formattedHostNames =
+    session.hosts.map((h) => h.name).join(", ") || "No hosts";
 
   const handleClick = () => {
-    // Preserve current search parameters including view
     const searchParams = new URLSearchParams(window.location.search);
-    const url = `/${eventSlug}/view-session?sessionID=${session.ID}&${searchParams.toString()}`;
+    const url = `/${eventSlug}/view-session?sessionID=${session.id}&${searchParams.toString()}`;
     router.push(url);
   };
 
   const handleRSVP = (event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent opening the session modal
+    event.stopPropagation();
 
     if (!currentUser) {
       setUserModalOpen(true);
@@ -162,14 +159,12 @@ export function RealSessionCard(props: {
     if (isRsvping) return;
 
     const currentSession =
-      localSessions.find((s) => s.ID === session.ID) ?? session;
+      localSessions.find((s) => s.id === session.id) ?? session;
 
-    if (currentSession.Hosts?.includes(currentUser)) {
-      // Can't RSVP to your own session
+    if (currentSession.hosts.some((h) => h.id === currentUser)) {
       return;
     }
 
-    // Check for scheduling conflicts when RSVPing
     if (!rsvpd) {
       const clashing = userBusySessions().find((busySession: Session) =>
         sessionsOverlap(currentSession, busySession)
@@ -190,13 +185,12 @@ export function RealSessionCard(props: {
 
     setIsRsvping(true);
 
-    // Get the current RSVP status at the time of the action
     const currentRsvpStatus = rsvpd;
 
     try {
       const result = await updateRsvp(
         currentUser,
-        session.ID,
+        session.id,
         currentRsvpStatus
       );
       if (!result) {
@@ -213,38 +207,37 @@ export function RealSessionCard(props: {
     void doRsvp();
   };
 
-  // Get the current number of RSVPs from the context
-  const numRSVPs = localSessions.find((ses) => ses.ID == session.ID)![
-    "Num RSVPs"
-  ];
+  const numRSVPs =
+    localSessions.find((ses) => ses.id === session.id)?.numRsvps ??
+    session.numRsvps;
 
   const SessionInfoDisplay = () => (
     <>
       <h1 className="text-lg font-bold leading-tight flex items-center gap-1">
-        {session.Closed && (
+        {session.closed && (
           <LockIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
         )}
-        {session.Title}
+        {session.title}
       </h1>
       <p className="text-xs text-gray-500 mb-2 mt-1">
         Hosted by {formattedHostNames}
       </p>
       <p className="text-sm whitespace-pre-line">
-        {session.Description?.length > 210
-          ? session.Description.substring(0, 200) + "..."
-          : session.Description}
+        {session.description?.length > 210
+          ? session.description.substring(0, 200) + "..."
+          : session.description}
       </p>
       <div className="flex justify-between mt-2 gap-4 text-xs text-gray-500">
         <div className="flex gap-1">
           <UserIcon className="h-4 w-4" />
           <span>
-            {numRSVPs} RSVPs (max capacity {session.Capacity})
+            {numRSVPs} RSVPs (max capacity {session.capacity})
           </span>
         </div>
         <div className="flex gap-1">
           <ClockIcon className="h-4 w-4" />
           <span>
-            {DateTime.fromISO(session["Start time"])
+            {DateTime.fromJSDate(session.startTime ?? new Date())
               .setZone("America/Los_Angeles")
               .toFormat("h:mm a")}{" "}
             -{" "}
@@ -266,11 +259,11 @@ export function RealSessionCard(props: {
         className={clsx(
           "py-1 px-1 rounded font-roboto h-full min-h-10 cursor-pointer flex flex-col relative w-full group",
           lowerOpacity
-            ? `bg-${location.Color}-${200} border-2 border-${
-                location.Color
+            ? `bg-${location.color}-${200} border-2 border-${
+                location.color
               }-${400}`
-            : `bg-${location.Color}-${500} border-2 border-${
-                location.Color
+            : `bg-${location.color}-${500} border-2 border-${
+                location.color
               }-${600}`,
           !lowerOpacity && "text-white"
         )}
@@ -282,10 +275,10 @@ export function RealSessionCard(props: {
             numHalfHours >= 3 ? "line-clamp-2" : "line-clamp-1"
           )}
         >
-          {session.Closed && (
+          {session.closed && (
             <LockIcon className="h-3 w-3 flex-shrink-0 mt-0" />
           )}
-          <span className="flex-1">{session.Title}</span>
+          <span className="flex-1">{session.title}</span>
         </p>
         {numHalfHours > 1 && (
           <p
@@ -313,7 +306,7 @@ export function RealSessionCard(props: {
           <div
             className={clsx(
               "py-[1px] px-1 rounded-tl text-[10px] flex gap-0.5 items-center cursor-pointer hover:opacity-80",
-              `bg-${location.Color}-400`
+              `bg-${location.color}-400`
             )}
             onClick={handleRSVP}
           >
@@ -323,12 +316,11 @@ export function RealSessionCard(props: {
         </div>
       </button>
 
-      {/* Modals for RSVP functionality */}
       <CurrentUserModal
         open={userModalOpen}
         close={() => setUserModalOpen(false)}
         guests={guests}
-        hosts={session["Host name"] || []}
+        hosts={session.hosts.map((h) => h.name)}
         rsvp={() => void doRsvp()}
         rsvpd={rsvpd}
         portal={true}
@@ -339,7 +331,7 @@ export function RealSessionCard(props: {
         close={() => setConfirmRSVPModalOpen(false)}
         message={
           clashingSession
-            ? `This session conflicts with "${clashingSession.Title}". Do you want to RSVP anyway?`
+            ? `This session conflicts with "${clashingSession.title}". Do you want to RSVP anyway?`
             : "This session conflicts with another session you're attending. Do you want to RSVP anyway?"
         }
         confirm={handleConfirmRSVP}

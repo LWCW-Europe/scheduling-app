@@ -4,16 +4,14 @@ import { SessionText } from "./session-text";
 import { DateTime } from "luxon";
 import { useContext } from "react";
 import { UserContext } from "../context";
-import { Day } from "@/db/days";
-import { RSVP } from "@/db/rsvps";
-import { Location } from "@/db/locations";
-import { Session } from "@/db/sessions";
+import type { DayWithSessions } from "@/app/context";
+import type { Rsvp, Location, Session } from "@/db/repositories/interfaces";
 
 export function DayText(props: {
   locations: Location[];
-  day: Day;
+  day: DayWithSessions;
   search: string;
-  rsvps: RSVP[];
+  rsvps: Rsvp[];
   eventSlug: string;
 }) {
   const { day, locations, search, rsvps, eventSlug } = props;
@@ -21,46 +19,42 @@ export function DayText(props: {
   const { user: currentUser } = useContext(UserContext);
   const locParams = searchParams?.getAll("loc");
   const locationsFromParams = locations.filter((loc) =>
-    locParams?.includes(loc.Name)
+    locParams?.includes(loc.name)
   );
   const includedLocations =
     locationsFromParams.length === 0 ? locations : locationsFromParams;
-  const includedSessions = day.Sessions.filter((session) => {
+  const includedSessions = day.sessions.filter((session) => {
     return (
       includedLocations.some((location) =>
-        session["Location name"].includes(location.Name)
+        session.locations.some((l) => l.id === location.id)
       ) &&
       sessionMatchesSearch(session, search) &&
-      !session.Blocker
+      !session.blocker
     );
   });
   const sessionsSortedByLocation = includedSessions.sort((a, b) => {
     return (
-      (locations.find((loc) => loc.Name === a["Location name"][0])?.Index ??
-        0) -
-      (locations.find((loc) => loc.Name === b["Location name"][0])?.Index ?? 0)
+      (locations.find((loc) => loc.id === a.locations[0]?.id)?.sortIndex ?? 0) -
+      (locations.find((loc) => loc.id === b.locations[0]?.id)?.sortIndex ?? 0)
     );
   });
   const sessionsSortedByTime = sessionsSortedByLocation.sort((a, b) => {
-    return (
-      new Date(a["Start time"]).getTime() - new Date(b["Start time"]).getTime()
-    );
+    return (a.startTime?.getTime() ?? 0) - (b.startTime?.getTime() ?? 0);
   });
 
-  // If RSVPs are present, only show sessions that the user has RSVP'd to
   let sessions = sessionsSortedByTime;
   if (rsvps.length > 0) {
-    const rsvpSet = new Set(rsvps.map((rsvp) => rsvp.Session[0]));
+    const rsvpSet = new Set(rsvps.map((rsvp) => rsvp.sessionId));
     sessions = sessions.filter(
       (session) =>
-        rsvpSet.has(session.ID) ||
-        (currentUser && session.Hosts?.includes(currentUser))
+        rsvpSet.has(session.id) ||
+        (currentUser && session.hosts.some((h) => h.id === currentUser))
     );
   }
   return (
     <div className="flex flex-col max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold w-full text-left">
-        {DateTime.fromISO(day.Start)
+        {DateTime.fromJSDate(day.start)
           .setZone("America/Los_Angeles")
           .toFormat("EEEE, MMMM d")}{" "}
       </h2>
@@ -69,10 +63,10 @@ export function DayText(props: {
           <>
             {sessions.map((session) => (
               <SessionText
-                key={`${session["Title"]} + ${session["Start time"]} + ${session["End time"]}`}
+                key={`${session.title}+${session.startTime?.toISOString()}+${session.endTime?.toISOString()}`}
                 session={session}
                 locations={locations.filter((loc) =>
-                  session["Location name"].includes(loc.Name)
+                  session.locations.some((l) => l.id === loc.id)
                 )}
                 eventSlug={eventSlug}
               />
@@ -90,13 +84,10 @@ export function DayText(props: {
 
 function sessionMatchesSearch(session: Session, search: string) {
   return (
-    checkStringForSearch(search, session.Title ?? "") ||
-    checkStringForSearch(search, session.Description ?? "") ||
-    checkStringForSearch(
-      search,
-      (session["Host name"] ?? []).join(" ") ?? ""
-    ) ||
-    checkStringForSearch(search, session["Location name"].join(" ") ?? "")
+    checkStringForSearch(search, session.title ?? "") ||
+    checkStringForSearch(search, session.description ?? "") ||
+    checkStringForSearch(search, session.hosts.map((h) => h.name).join(" ")) ||
+    checkStringForSearch(search, session.locations.map((l) => l.name).join(" "))
   );
 }
 

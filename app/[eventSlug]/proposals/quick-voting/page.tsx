@@ -2,15 +2,14 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { QuickVoting } from "./quick-voting";
-import { getSessionProposalsByEvent } from "@/db/sessionProposals";
-import { getGuests } from "@/db/guests";
-import { getVotesByUser } from "@/db/votes";
+import { getRepositories } from "@/db/container";
+import { eventSlugToName } from "@/utils/utils";
 
 export default async function ProposalQuickVoting(props: {
   params: { eventSlug: string };
 }) {
   const { eventSlug } = props.params;
-  const eventName = eventSlug.replace(/-/g, " ");
+  const eventName = eventSlugToName(eventSlug);
   const currentUser = cookies().get("user")?.value;
   if (!currentUser) {
     return (
@@ -26,13 +25,19 @@ export default async function ProposalQuickVoting(props: {
     );
   }
 
+  const repos = getRepositories();
+  const event = await repos.events.findByName(eventName);
+  if (!event) {
+    return <div>Event not found</div>;
+  }
+
   const [allProposals, guests, votes] = await Promise.all([
-    getSessionProposalsByEvent(eventName),
-    getGuests(),
-    getVotesByUser(currentUser, eventName),
+    repos.sessionProposals.listByEvent(event.id),
+    repos.guests.list(),
+    repos.votes.listByGuestAndEvent(currentUser, event.id),
   ]);
   const proposals = allProposals.filter(
-    (proposal) => !proposal.hosts.includes(currentUser)
+    (proposal) => !proposal.hosts.some((h) => h.id === currentUser)
   );
 
   return (

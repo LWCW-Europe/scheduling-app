@@ -25,55 +25,49 @@ export function EventDisplay() {
 
   if (!event) return <div>No event data available</div>;
 
-  const eventSlug = eventNameToSlug(event.Name);
+  const eventSlug = eventNameToSlug(event.name);
 
   const daysForEvent = days.filter(
-    (day) =>
-      !CONSTS.MULTIPLE_EVENTS ||
-      (day.EventName && day.EventName[0] === event.Name)
+    (day) => !CONSTS.MULTIPLE_EVENTS || day.eventId === event.id
   );
-  const locationsForEvent = locations.filter(
-    (loc) =>
-      !CONSTS.MULTIPLE_EVENTS ||
-      (event["Location names"] && event["Location names"].includes(loc.Name))
-  );
-  const multipleDays = event["Start"] !== event["End"];
+  const locationsForEvent = locations;
+  const multipleDays = event.start.getTime() !== event.end.getTime();
 
   return (
     <div className="flex flex-col items-start w-full">
       <h1 className="sm:text-4xl text-3xl font-bold mt-5">
-        {event.Name} Schedule
+        {event.name} Schedule
       </h1>
       <div className="flex text-gray-500 text-sm mt-1 gap-5 font-medium">
         <span className="flex gap-1 items-center">
           <CalendarIcon className="h-4 w-4 stroke-2" />
           <span>
-            {DateTime.fromFormat(event.Start, "yyyy-MM-dd", {
-              zone: "America/Los_Angeles",
-            }).toFormat("LLL d")}
+            {DateTime.fromJSDate(event.start)
+              .setZone("America/Los_Angeles")
+              .toFormat("LLL d")}
             {multipleDays && (
               <>
                 {" - "}
-                {DateTime.fromFormat(event.End, "yyyy-MM-dd", {
-                  zone: "America/Los_Angeles",
-                }).toFormat("LLL d")}
+                {DateTime.fromJSDate(event.end)
+                  .setZone("America/Los_Angeles")
+                  .toFormat("LLL d")}
               </>
             )}
           </span>
         </span>
         <a
           className="flex gap-1 items-center hover:underline"
-          href={`https://${event.Website}`}
+          href={`https://${event.website}`}
         >
           <LinkIcon className="h-4 w-4 stroke-2" />
-          <span>{event.Website}</span>
+          <span>{event.website}</span>
         </a>
       </div>
-      <p className="text-gray-900 mt-3 mb-5">{event.Description}</p>
+      <p className="text-gray-900 mt-3 mb-5">{event.description}</p>
       {hasPhases(event) && (
         <div className="mb-5">
           <Link
-            href={`/${eventNameToSlug(event.Name)}/proposals`}
+            href={`/${eventNameToSlug(event.name)}/proposals`}
             className={`bg-rose-400 hover:bg-rose-500 transition-colors text-white px-4 py-2 rounded-md flex items-center gap-2`}
           >
             <ClipboardDocumentListIcon className="h-4 w-4" />
@@ -94,13 +88,13 @@ export function EventDisplay() {
       )}
       <div className="flex flex-col gap-12 w-full">
         {daysForEvent.map((day) => (
-          <div key={day.Start}>
+          <div key={day.id}>
             {view === "grid" ? (
               <DayGrid
                 day={day}
                 locations={locationsForEvent}
                 guests={guests}
-                eventName={event.Name}
+                eventName={event.name}
               />
             ) : (
               <DayText

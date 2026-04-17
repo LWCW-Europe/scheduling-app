@@ -1,5 +1,5 @@
 import { EventPhase, getCurrentPhase } from "../utils/events";
-import { getEventByName } from "@/db/events";
+import { getRepositories } from "@/db/container";
 import { eventSlugToName } from "@/utils/utils";
 import EventPage from "./event-page";
 import { redirect } from "next/navigation";
@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 export default async function Page(props: { params: { eventSlug: string } }) {
   const { eventSlug } = props.params;
   const eventName = eventSlugToName(eventSlug);
-  const event = await getEventByName(eventName);
+  const event = await getRepositories().events.findByName(eventName);
 
   if (!event) {
     return "Event not found: " + eventName;

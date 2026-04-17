@@ -4,20 +4,20 @@ import { createPortal } from "react-dom";
 import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import type { SessionProposal } from "@/db/sessionProposals";
-import type { Event } from "@/db/events";
-import type { Guest } from "@/db/guests";
-import type { Session } from "@/db/sessions";
+import type {
+  SessionProposal,
+  Event,
+  Session,
+} from "@/db/repositories/interfaces";
 import { ViewProposal } from "@/app/[eventSlug]/proposals/[proposalId]/view/view-proposal";
 
 export function ProposalModal(props: {
   proposal: SessionProposal;
-  guests: Guest[];
   sessions: Session[];
   eventSlug: string;
   event: Event;
 }) {
-  const { proposal, guests, sessions, eventSlug, event } = props;
+  const { proposal, sessions, eventSlug, event } = props;
 
   const router = useRouter();
 
@@ -78,7 +78,6 @@ export function ProposalModal(props: {
         </button>
         <ViewProposal
           proposal={proposal}
-          guests={guests}
           sessions={sessions}
           eventSlug={eventSlug}
           event={event}

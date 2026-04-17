@@ -14,7 +14,17 @@ function seed(db: DB) {
     ])
     .run();
   db.insert(schema.locations)
-    .values({ id: "loc1", name: "Hall", imageUrl: "", description: "", capacity: 50, color: "#000", hidden: false, bookable: true, sortIndex: 1 })
+    .values({
+      id: "loc1",
+      name: "Hall",
+      imageUrl: "",
+      description: "",
+      capacity: 50,
+      color: "#000",
+      hidden: false,
+      bookable: true,
+      sortIndex: 1,
+    })
     .run();
 }
 
@@ -92,7 +102,10 @@ test("update replaces hosts and locations", async ({ db }) => {
     locationIds: ["loc1"],
   });
 
-  const updated = await repo.update(session.id, { title: "Talk v2", hostIds: ["g2"] });
+  const updated = await repo.update(session.id, {
+    title: "Talk v2",
+    hostIds: ["g2"],
+  });
   expect(updated.title).toBe("Talk v2");
   expect(updated.hosts).toHaveLength(1);
   expect(updated.hosts[0].id).toBe("g2");

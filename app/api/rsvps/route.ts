@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRSVPsByUser } from "@/db/rsvps";
+import { getRepositories } from "@/db/container";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const rsvps = await getRSVPsByUser(user);
+    const rsvps = await getRepositories().rsvps.listByGuest(user);
     return NextResponse.json(rsvps);
   } catch (error) {
     console.error("Error fetching RSVPs:", error);

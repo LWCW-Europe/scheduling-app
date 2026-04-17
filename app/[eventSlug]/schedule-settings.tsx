@@ -8,7 +8,7 @@ import {
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
 import { UserSelect } from "../user-select";
-import { Guest } from "@/db/guests";
+import type { Guest } from "@/db/repositories/interfaces";
 
 export function ScheduleSettings(props: { guests: Guest[] }) {
   const { guests } = props;

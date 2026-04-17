@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
 
-import { getGuestsByEvent } from "@/db/guests";
-import { getEventByName } from "@/db/events";
+import { getRepositories } from "@/db/container";
 import { eventSlugToName } from "@/utils/utils";
-import { getSessionsByEvent } from "@/db/sessions";
-import { getRSVPsBySession } from "@/db/rsvps";
 import { ViewSession } from "./view-session";
 
 export default async function ViewSessionPage({
@@ -18,18 +15,19 @@ export default async function ViewSessionPage({
   const { sessionID } = searchParams;
 
   const eventName = eventSlugToName(eventSlug);
-  const event = await getEventByName(eventName);
+  const repos = getRepositories();
+  const event = await repos.events.findByName(eventName);
 
   if (!event) {
     return <div>Event not found</div>;
   }
 
   const [sessions, guests, rsvps] = await Promise.all([
-    getSessionsByEvent(eventName),
-    getGuestsByEvent(event.Name),
-    getRSVPsBySession(sessionID),
+    repos.sessions.listByEvent(event.id),
+    repos.guests.list(),
+    repos.rsvps.listBySession(sessionID),
   ]);
-  const session = sessions.find((p) => p.ID === sessionID);
+  const session = sessions.find((p) => p.id === sessionID);
 
   if (!session) {
     notFound();

@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { nanoid } from "nanoid";
 import * as schema from "../../schema";
@@ -19,7 +19,11 @@ export class SqliteGuestsRepository implements GuestsRepository {
 
   async listByEvent(eventId: string): Promise<Guest[]> {
     const rows = this.db
-      .select({ id: schema.guests.id, name: schema.guests.name, email: schema.guests.email })
+      .select({
+        id: schema.guests.id,
+        name: schema.guests.name,
+        email: schema.guests.email,
+      })
       .from(schema.guests)
       .innerJoin(
         schema.eventGuests,
@@ -50,7 +54,10 @@ export class SqliteGuestsRepository implements GuestsRepository {
 
   async create(data: Omit<Guest, "id">): Promise<Guest> {
     const id = nanoid();
-    this.db.insert(schema.guests).values({ id, ...data }).run();
+    this.db
+      .insert(schema.guests)
+      .values({ id, ...data })
+      .run();
     return { id, ...data };
   }
 }

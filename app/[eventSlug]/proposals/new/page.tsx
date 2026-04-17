@@ -1,5 +1,4 @@
-import { getGuestsByEvent } from "@/db/guests";
-import { getEventByName } from "@/db/events";
+import { getRepositories } from "@/db/container";
 import { eventSlugToName } from "@/utils/utils";
 import { SessionProposalForm } from "../../session-proposal-form";
 
@@ -10,20 +9,20 @@ export default async function NewProposalPage({
 }) {
   const { eventSlug } = params;
 
-  // Convert slug to event name (simple conversion for now)
   const eventName = eventSlugToName(eventSlug);
-  const event = await getEventByName(eventName);
+  const repos = getRepositories();
+  const event = await repos.events.findByName(eventName);
 
   if (!event) {
     return <div>Event not found</div>;
   }
 
-  const guests = await getGuestsByEvent(event.Name);
+  const guests = await repos.guests.list();
 
   return (
     <div className="max-w-2xl mx-auto pb-24">
       <SessionProposalForm
-        eventID={event.ID}
+        eventID={event.id}
         eventSlug={eventSlug}
         guests={guests}
       />

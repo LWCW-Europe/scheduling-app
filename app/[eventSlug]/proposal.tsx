@@ -2,18 +2,16 @@
 
 import Link from "next/link";
 
-import type { Guest } from "@/db/guests";
-import type { SessionProposal } from "@/db/sessionProposals";
+import type { SessionProposal } from "@/db/repositories/interfaces";
 import { formatDuration, subtractBreakFromDuration } from "@/utils/utils";
 
 export function Proposal(props: {
   eventSlug: string;
   proposal: SessionProposal;
-  guests: Guest[];
   showBackBtn: boolean;
   titleId?: string;
 }) {
-  const { eventSlug, proposal, guests, showBackBtn, titleId } = props;
+  const { eventSlug, proposal, showBackBtn, titleId } = props;
   return (
     <>
       {showBackBtn && (
@@ -28,10 +26,7 @@ export function Proposal(props: {
         {proposal.title}
       </h1>
       <p className="text-lg font-medium text-gray-700 mb-4">
-        {proposal.hosts
-          .map((h) => guests.find((g) => g.ID === h))
-          .map((g) => g?.Name)
-          .join(", ")}
+        {proposal.hosts.map((h) => h.name).join(", ")}
       </p>
       <p className="mb-3 whitespace-pre-line">{proposal.description}</p>
       {proposal.durationMinutes && (

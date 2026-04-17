@@ -4,8 +4,7 @@ import Link from "next/link";
 
 import { Proposal } from "@/app/[eventSlug]/proposal";
 import { Vote, VoteChoice } from "@/app/votes";
-import type { SessionProposal } from "@/db/sessionProposals";
-import type { Guest } from "@/db/guests";
+import type { SessionProposal, Guest } from "@/db/repositories/interfaces";
 import { VotingButtons } from "@/app/[eventSlug]/proposals/voting-buttons";
 import { VotesContext } from "@/app/context";
 
@@ -23,9 +22,9 @@ export function QuickVoting(props: {
   const { addVote, removeVote, updateVote, getVote } = useContext(VotesContext);
 
   const totalProposals = proposals.length;
-  const currentUserName = guests.find((g) => g.ID === currentUser)?.Name;
+  const currentUserName = guests.find((g) => g.id === currentUser)?.name;
   const eligibleProposals = proposals
-    .filter((pr) => !votes.some((vote) => vote.proposal === pr.id))
+    .filter((pr) => !votes.some((vote) => vote.proposalId === pr.id))
     .sort((a, b) => a.votesCount - b.votesCount);
   const proposal = eligibleProposals.at(0);
 
@@ -33,16 +32,16 @@ export function QuickVoting(props: {
   async function handleVote(proposalId: string, choice: VoteChoice) {
     const previousVote = getVote(proposalId);
     const optimisticVote: Vote = {
-      proposal: proposalId,
-      guest: currentUser,
+      id: "",
+      proposalId,
+      guestId: currentUser,
       choice,
     };
 
     try {
-      // Optimistic local state for next-proposal selection
       setVotes((prevVotes) => {
         const existingIndex = prevVotes.findIndex(
-          (v) => v.proposal === proposalId && v.guest === currentUser
+          (v) => v.proposalId === proposalId && v.guestId === currentUser
         );
         if (existingIndex >= 0) {
           const updated = [...prevVotes];
@@ -67,10 +66,9 @@ export function QuickVoting(props: {
       if (!response.ok) {
         // Revert both local and global on failure
         setVotes((prevVotes) => {
-          // revert to previous choice if existed, else remove
           if (previousVote) {
             const idx = prevVotes.findIndex(
-              (v) => v.proposal === proposalId && v.guest === currentUser
+              (v) => v.proposalId === proposalId && v.guestId === currentUser
             );
             if (idx >= 0) {
               const reverted = [...prevVotes];
@@ -79,7 +77,7 @@ export function QuickVoting(props: {
             }
           }
           return prevVotes.filter(
-            (v) => !(v.proposal === proposalId && v.guest === currentUser)
+            (v) => !(v.proposalId === proposalId && v.guestId === currentUser)
           );
         });
 
@@ -91,12 +89,11 @@ export function QuickVoting(props: {
       }
       return response.ok;
     } catch (error: unknown) {
-      // Revert both local and global on error
       console.error("Error updating vote:", error);
       setVotes((prevVotes) => {
         if (previousVote) {
           const idx = prevVotes.findIndex(
-            (v) => v.proposal === proposalId && v.guest === currentUser
+            (v) => v.proposalId === proposalId && v.guestId === currentUser
           );
           if (idx >= 0) {
             const reverted = [...prevVotes];
@@ -105,7 +102,7 @@ export function QuickVoting(props: {
           }
         }
         return prevVotes.filter(
-          (v) => !(v.proposal === proposalId && v.guest === currentUser)
+          (v) => !(v.proposalId === proposalId && v.guestId === currentUser)
         );
       });
 
@@ -124,7 +121,6 @@ export function QuickVoting(props: {
         <Proposal
           eventSlug={eventSlug}
           proposal={proposal}
-          guests={guests}
           showBackBtn={false}
         />
       );

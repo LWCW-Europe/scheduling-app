@@ -1,5 +1,4 @@
-import { getSessions } from "@/db/sessions";
-import { getBase } from "@/db/db";
+import { getRepositories } from "@/db/container";
 import { prepareToInsert, validateSession } from "../session-form-utils";
 import type { SessionParams } from "../session-form-utils";
 
@@ -7,20 +6,16 @@ export const dynamic = "force-dynamic"; // defaults to auto
 
 export async function POST(req: Request) {
   const params = (await req.json()) as SessionParams;
-  const session = prepareToInsert(params);
-  console.log(session);
-  const existingSessions = (await getSessions()).filter(
-    (s) => !session.Event || session.Event[0] === s.Event
+  const repos = getRepositories();
+  const input = prepareToInsert(params);
+  const existingSessions = (await repos.sessions.listScheduled()).filter(
+    (s) => !input.eventId || s.eventId === input.eventId
   );
-  const sessionValid = validateSession(session, existingSessions);
+  const sessionValid = validateSession(input, existingSessions);
   if (sessionValid) {
     try {
-      const records = await getBase()("Sessions").create([
-        {
-          fields: session,
-        },
-      ]);
-      records.forEach((record) => console.log(record.getId()));
+      const session = await repos.sessions.create(input);
+      console.log(session.id);
     } catch (err) {
       console.error(err);
       return Response.error();

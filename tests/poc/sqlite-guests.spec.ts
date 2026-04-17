@@ -4,7 +4,10 @@ import * as schema from "../../db/schema";
 
 test("create and find by email", async ({ db }) => {
   const repo = new SqliteGuestsRepository(db);
-  const created = await repo.create({ name: "Alice", email: "alice@example.com" });
+  const created = await repo.create({
+    name: "Alice",
+    email: "alice@example.com",
+  });
   expect(created.id).toBeTruthy();
 
   const found = await repo.findByEmail("alice@example.com");
@@ -21,7 +24,10 @@ test("list returns all guests", async ({ db }) => {
 
 test("listByEvent returns only guests linked to that event", async ({ db }) => {
   const repo = new SqliteGuestsRepository(db);
-  const alice = await repo.create({ name: "Alice", email: "alice@example.com" });
+  const alice = await repo.create({
+    name: "Alice",
+    email: "alice@example.com",
+  });
   const bob = await repo.create({ name: "Bob", email: "bob@example.com" });
 
   db.insert(schema.events)

@@ -1,4 +1,4 @@
-import { deleteVote } from "@/db/votes";
+import { getRepositories } from "@/db/container";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   };
 
   try {
-    await deleteVote(guestId, proposalId);
+    await getRepositories().votes.deleteByGuestAndProposal(guestId, proposalId);
     return Response.json({ success: true });
   } catch (err) {
     console.error(err);

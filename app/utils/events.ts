@@ -1,4 +1,4 @@
-import type { Event } from "@/db/events";
+import type { Event } from "@/db/repositories/interfaces";
 
 /**
  * Represents the different phases an event can be in

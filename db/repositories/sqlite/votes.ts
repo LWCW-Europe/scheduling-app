@@ -18,10 +18,7 @@ function rowToVote(row: typeof schema.votes.$inferSelect): Vote {
 export class SqliteVotesRepository implements VotesRepository {
   constructor(private readonly db: DB) {}
 
-  async listByGuestAndEvent(
-    guestId: string,
-    eventId: string
-  ): Promise<Vote[]> {
+  async listByGuestAndEvent(guestId: string, eventId: string): Promise<Vote[]> {
     const rows = this.db
       .select({
         id: schema.votes.id,
@@ -52,7 +49,12 @@ export class SqliteVotesRepository implements VotesRepository {
     const id = nanoid();
     this.db
       .insert(schema.votes)
-      .values({ id, proposalId: data.proposalId, guestId: data.guestId, choice: data.choice })
+      .values({
+        id,
+        proposalId: data.proposalId,
+        guestId: data.guestId,
+        choice: data.choice,
+      })
       .run();
     return { id, ...data };
   }

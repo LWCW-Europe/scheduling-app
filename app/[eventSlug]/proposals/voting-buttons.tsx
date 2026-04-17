@@ -34,7 +34,7 @@ export function VotingButtons({
     }
 
     const existingVote = votes.find(
-      (v) => v.proposal === proposalId && v.guest === currentUserId
+      (v) => v.proposalId === proposalId && v.guestId === currentUserId
     );
     if (existingVote?.choice === choice) {
       return deleteVote(proposalId);
@@ -42,9 +42,10 @@ export function VotingButtons({
 
     try {
       const newVote: Vote = {
-        proposal: proposalId,
-        guest: currentUserId,
-        choice: choice,
+        id: "",
+        proposalId,
+        guestId: currentUserId,
+        choice,
       };
 
       // Optimistic update
@@ -83,7 +84,7 @@ export function VotingButtons({
   async function deleteVote(proposalId: string) {
     // Store the previous vote state for reversion
     const existingVote = votes.find(
-      (v) => v.proposal === proposalId && v.guest === currentUserId
+      (v) => v.proposalId === proposalId && v.guestId === currentUserId
     );
 
     try {
@@ -134,7 +135,7 @@ export function VotingButtons({
           className={`rounded-md border border-black shadow-sm font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
             ${large ? "w-16 h-16 sm:w-20 sm:h-20 flex flex-col items-center justify-center" : "px-1 py-1"}
             ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-            ${votes.some((vote) => vote.proposal === proposalId && vote.choice === VoteChoice.interested && vote.guest === currentUserId) ? "bg-blue-200" : "bg-white"}`}
+            ${votes.some((vote) => vote.proposalId === proposalId && vote.choice === VoteChoice.interested && vote.guestId === currentUserId) ? "bg-blue-200" : "bg-white"}`}
           disabled={!votingEnabled}
           onClick={(e) => handleVote(VoteChoice.interested, e)}
         >
@@ -151,7 +152,7 @@ export function VotingButtons({
           className={`rounded-md border border-black shadow-sm font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
             ${large ? "w-16 h-16 sm:w-20 sm:h-20 flex flex-col items-center justify-center" : "px-1 py-1"}
             ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-            ${votes.some((vote) => vote.proposal === proposalId && vote.choice === VoteChoice.maybe && vote.guest === currentUserId) ? "bg-blue-200" : "bg-white"}`}
+            ${votes.some((vote) => vote.proposalId === proposalId && vote.choice === VoteChoice.maybe && vote.guestId === currentUserId) ? "bg-blue-200" : "bg-white"}`}
           disabled={!votingEnabled}
           onClick={(e) => handleVote(VoteChoice.maybe, e)}
         >
@@ -168,7 +169,7 @@ export function VotingButtons({
           className={`rounded-md border border-black shadow-sm font-medium focus:ring-2 focus:ring-offset-2 text-black focus:outline-none
             ${large ? "w-16 h-16 sm:w-20 sm:h-20 flex flex-col items-center justify-center" : "px-1 py-1"}
             ${votingEnabled ? "" : "opacity-50 cursor-not-allowed grayscale"}
-            ${votes.some((vote) => vote.proposal === proposalId && vote.choice === VoteChoice.skip && vote.guest === currentUserId) ? "bg-blue-200" : "bg-white"}`}
+            ${votes.some((vote) => vote.proposalId === proposalId && vote.choice === VoteChoice.skip && vote.guestId === currentUserId) ? "bg-blue-200" : "bg-white"}`}
           disabled={!votingEnabled}
           onClick={(e) => handleVote(VoteChoice.skip, e)}
         >

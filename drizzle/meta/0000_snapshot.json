@@ -56,12 +56,8 @@
           "name": "days_event_id_events_id_fk",
           "tableFrom": "days",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -94,12 +90,8 @@
           "name": "event_guests_event_id_events_id_fk",
           "tableFrom": "event_guests",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -107,22 +99,15 @@
           "name": "event_guests_guest_id_guests_id_fk",
           "tableFrom": "event_guests",
           "tableTo": "guests",
-          "columnsFrom": [
-            "guest_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["guest_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "event_guests_event_id_guest_id_pk": {
-          "columns": [
-            "event_id",
-            "guest_id"
-          ],
+          "columns": ["event_id", "guest_id"],
           "name": "event_guests_event_id_guest_id_pk"
         }
       },
@@ -153,12 +138,8 @@
           "name": "event_locations_event_id_events_id_fk",
           "tableFrom": "event_locations",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -166,22 +147,15 @@
           "name": "event_locations_location_id_locations_id_fk",
           "tableFrom": "event_locations",
           "tableTo": "locations",
-          "columnsFrom": [
-            "location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["location_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "event_locations_event_id_location_id_pk": {
-          "columns": [
-            "event_id",
-            "location_id"
-          ],
+          "columns": ["event_id", "location_id"],
           "name": "event_locations_event_id_location_id_pk"
         }
       },
@@ -426,12 +400,8 @@
           "name": "proposal_hosts_proposal_id_session_proposals_id_fk",
           "tableFrom": "proposal_hosts",
           "tableTo": "session_proposals",
-          "columnsFrom": [
-            "proposal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["proposal_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -439,22 +409,15 @@
           "name": "proposal_hosts_guest_id_guests_id_fk",
           "tableFrom": "proposal_hosts",
           "tableTo": "guests",
-          "columnsFrom": [
-            "guest_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["guest_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "proposal_hosts_proposal_id_guest_id_pk": {
-          "columns": [
-            "proposal_id",
-            "guest_id"
-          ],
+          "columns": ["proposal_id", "guest_id"],
           "name": "proposal_hosts_proposal_id_guest_id_pk"
         }
       },
@@ -492,12 +455,8 @@
           "name": "rsvps_session_id_sessions_id_fk",
           "tableFrom": "rsvps",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -505,12 +464,8 @@
           "name": "rsvps_guest_id_guests_id_fk",
           "tableFrom": "rsvps",
           "tableTo": "guests",
-          "columnsFrom": [
-            "guest_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["guest_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -543,12 +498,8 @@
           "name": "session_hosts_session_id_sessions_id_fk",
           "tableFrom": "session_hosts",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -556,22 +507,15 @@
           "name": "session_hosts_guest_id_guests_id_fk",
           "tableFrom": "session_hosts",
           "tableTo": "guests",
-          "columnsFrom": [
-            "guest_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["guest_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "session_hosts_session_id_guest_id_pk": {
-          "columns": [
-            "session_id",
-            "guest_id"
-          ],
+          "columns": ["session_id", "guest_id"],
           "name": "session_hosts_session_id_guest_id_pk"
         }
       },
@@ -602,12 +546,8 @@
           "name": "session_locations_session_id_sessions_id_fk",
           "tableFrom": "session_locations",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -615,22 +555,15 @@
           "name": "session_locations_location_id_locations_id_fk",
           "tableFrom": "session_locations",
           "tableTo": "locations",
-          "columnsFrom": [
-            "location_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["location_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "session_locations_session_id_location_id_pk": {
-          "columns": [
-            "session_id",
-            "location_id"
-          ],
+          "columns": ["session_id", "location_id"],
           "name": "session_locations_session_id_location_id_pk"
         }
       },
@@ -689,12 +622,8 @@
           "name": "session_proposals_event_id_events_id_fk",
           "tableFrom": "session_proposals",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -795,12 +724,8 @@
           "name": "sessions_proposal_id_session_proposals_id_fk",
           "tableFrom": "sessions",
           "tableTo": "session_proposals",
-          "columnsFrom": [
-            "proposal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["proposal_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -808,12 +733,8 @@
           "name": "sessions_event_id_events_id_fk",
           "tableFrom": "sessions",
           "tableTo": "events",
-          "columnsFrom": [
-            "event_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["event_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -860,12 +781,8 @@
           "name": "votes_proposal_id_session_proposals_id_fk",
           "tableFrom": "votes",
           "tableTo": "session_proposals",
-          "columnsFrom": [
-            "proposal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["proposal_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -873,12 +790,8 @@
           "name": "votes_guest_id_guests_id_fk",
           "tableFrom": "votes",
           "tableTo": "guests",
-          "columnsFrom": [
-            "guest_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["guest_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

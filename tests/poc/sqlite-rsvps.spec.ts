@@ -11,7 +11,15 @@ function seed(db: DB) {
     ])
     .run();
   db.insert(schema.sessions)
-    .values({ id: "s1", title: "Talk", description: "", capacity: 10, attendeeScheduled: true, blocker: false, closed: false })
+    .values({
+      id: "s1",
+      title: "Talk",
+      description: "",
+      capacity: 10,
+      attendeeScheduled: true,
+      blocker: false,
+      closed: false,
+    })
     .run();
 }
 

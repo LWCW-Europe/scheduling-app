@@ -12,9 +12,6 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js"],
-      "parserOptions": {
-        "project": "./tsconfig.json"
-      },
       "rules": {
         "@typescript-eslint/no-unsafe-argument": "error",
         "@typescript-eslint/no-unsafe-assignment": "error",
@@ -22,6 +19,12 @@
         "@typescript-eslint/no-unsafe-member-access": "error",
         "@typescript-eslint/no-unsafe-return": "error",
         "@typescript-eslint/no-explicit-any": "error"
+      }
+    },
+    {
+      "files": ["db/repositories/sqlite/*.ts"],
+      "rules": {
+        "@typescript-eslint/require-await": "off"
       }
     }
   ]

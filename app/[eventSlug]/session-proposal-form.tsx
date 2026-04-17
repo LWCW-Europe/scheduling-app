@@ -10,10 +10,9 @@ import {
   updateProposal,
   deleteProposal,
 } from "./proposals/actions";
-import { SessionProposal } from "@/db/sessionProposals";
+import type { SessionProposal, Guest } from "@/db/repositories/interfaces";
 import { SelectHosts } from "@/app/[eventSlug]/session-form";
 import { ConfirmDeletionModal } from "../modals";
-import { Guest } from "@/db/guests";
 import { formatDuration, subtractBreakFromDuration } from "@/utils/utils";
 
 const DURATION_OPTIONS = [undefined, 30, 60, 90, 120];
@@ -36,7 +35,7 @@ export function SessionProposalForm(props: {
 
   useEffect(() => {
     if (proposal) {
-      setHosts(proposal.hosts);
+      setHosts(proposal.hosts.map((h) => h.id));
     } else if (currentUserId) {
       setHosts([currentUserId]);
     }
@@ -157,8 +156,8 @@ export function SessionProposalForm(props: {
           </p>
           <SelectHosts
             guests={guests}
-            hosts={guests.filter((g) => hosts.some((h) => h === g.ID))}
-            setHosts={(nextHosts) => setHosts(nextHosts.map((h) => h.ID))}
+            hosts={guests.filter((g) => hosts.some((h) => h === g.id))}
+            setHosts={(nextHosts) => setHosts(nextHosts.map((h) => h.id))}
             selectMany={true}
           />
         </div>

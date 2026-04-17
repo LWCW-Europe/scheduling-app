@@ -8,15 +8,12 @@ import type {
   SessionProposalCreateInput,
   SessionProposalUpdateInput,
   SessionProposalsRepository,
-  VoteChoice,
 } from "../interfaces";
 
 type DB = BetterSQLite3Database<typeof schema>;
 type ProposalRow = typeof schema.sessionProposals.$inferSelect;
 
-export class SqliteSessionProposalsRepository
-  implements SessionProposalsRepository
-{
+export class SqliteSessionProposalsRepository implements SessionProposalsRepository {
   constructor(private readonly db: DB) {}
 
   private enrichProposals(rows: ProposalRow[]): SessionProposal[] {
@@ -32,7 +29,10 @@ export class SqliteSessionProposalsRepository
         email: schema.guests.email,
       })
       .from(schema.proposalHosts)
-      .innerJoin(schema.guests, eq(schema.proposalHosts.guestId, schema.guests.id))
+      .innerJoin(
+        schema.guests,
+        eq(schema.proposalHosts.guestId, schema.guests.id)
+      )
       .all()
       .filter((r) => ids.includes(r.proposalId));
 
@@ -46,7 +46,10 @@ export class SqliteSessionProposalsRepository
       .filter((r) => ids.includes(r.proposalId));
 
     const sessionRows = this.db
-      .select({ proposalId: schema.sessions.proposalId, id: schema.sessions.id })
+      .select({
+        proposalId: schema.sessions.proposalId,
+        id: schema.sessions.id,
+      })
       .from(schema.sessions)
       .where(isNotNull(schema.sessions.proposalId))
       .all()
@@ -198,10 +201,7 @@ export class SqliteSessionProposalsRepository
 
   async delete(id: string): Promise<void> {
     this.db.transaction(() => {
-      this.db
-        .delete(schema.votes)
-        .where(eq(schema.votes.proposalId, id))
-        .run();
+      this.db.delete(schema.votes).where(eq(schema.votes.proposalId, id)).run();
       this.db
         .delete(schema.proposalHosts)
         .where(eq(schema.proposalHosts.proposalId, id))

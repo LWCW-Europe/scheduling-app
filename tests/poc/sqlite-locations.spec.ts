@@ -34,11 +34,18 @@ test("listVisible excludes hidden locations", async ({ db }) => {
   expect(visible.map((l) => l.name)).not.toContain("Hidden");
 });
 
-test("listBookable returns only visible+bookable locations sorted by index", async ({ db }) => {
+test("listBookable returns only visible+bookable locations sorted by index", async ({
+  db,
+}) => {
   const repo = new SqliteLocationsRepository(db);
   await repo.create({ ...base, name: "B", bookable: true, sortIndex: 2 });
   await repo.create({ ...base, name: "A", bookable: true, sortIndex: 1 });
-  await repo.create({ ...base, name: "NotBookable", bookable: false, sortIndex: 0 });
+  await repo.create({
+    ...base,
+    name: "NotBookable",
+    bookable: false,
+    sortIndex: 0,
+  });
 
   const bookable = await repo.listBookable();
   expect(bookable.map((l) => l.name)).not.toContain("NotBookable");

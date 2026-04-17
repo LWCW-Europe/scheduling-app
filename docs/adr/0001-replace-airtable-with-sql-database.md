@@ -23,7 +23,7 @@ Concrete problems we hit regularly:
   barrier for new contributors and for anyone running the app on their own.
 - **No programmatic schema migrations.** Schema changes have to be made by
   hand in the Airtable UI. Our `migrations/versions/*.ts` files can only
-  *document* what a human needs to click through; they cannot apply a
+  _document_ what a human needs to click through; they cannot apply a
   change. `migrations/runner.ts` is largely an elaborate check that the
   human did the right thing, with a long error-message path for when they
   did not.
@@ -74,7 +74,7 @@ Rationale for each piece:
   directory. We do not pay for that now — no second schema, no second
   CI job, no half-tested code path — but we avoid SQLite-only query
   idioms in call sites so the future port is contained, not a rewrite.
-  We explicitly do not claim it will be *mechanical*: column types,
+  We explicitly do not claim it will be _mechanical_: column types,
   defaults, JSON handling, `returning()` semantics, and boolean
   representation all differ between the two dialects and will need
   per-column review.
@@ -114,7 +114,7 @@ Rationale for each piece:
   spreadsheet-style end users rather than apps that just need a
   relational DB, and is comparatively heavy to run locally and in
   production.
-- **Verdict:** Rejected as a *primary* datastore, and not recommended as
+- **Verdict:** Rejected as a _primary_ datastore, and not recommended as
   a bundled admin UI either. See "Consequences" for the alternatives we
   do recommend for ad-hoc data editing.
 
@@ -149,7 +149,7 @@ Rationale for each piece:
   workflow is heavier machinery than a single-file SQLite app needs.
   Rejected on fit, not on disqualification — Prisma is a credible
   alternative we could live with.
-- **Kysely.** Excellent type-safe SQL query builder. It *does* ship a
+- **Kysely.** Excellent type-safe SQL query builder. It _does_ ship a
   programmatic migrator (`Kysely.Migrator`), so "no migration tool" is
   not quite fair — but it is deliberately not an ORM, so there is no
   schema DSL acting as source of truth. Table-row types must be

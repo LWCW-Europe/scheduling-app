@@ -1,6 +1,6 @@
 # Scheduling App
 
-A web app for managing event scheduling — attendees can propose sessions, vote on them, and view the final schedule. Built with Next.js and Airtable as the backend.
+A web app for managing event scheduling — attendees can propose sessions, vote on them, and view the final schedule. Built with Next.js and SQLite.
 
 This is a public open-source fork of [rachelweinberg12/scheduling-app](https://github.com/rachelweinberg12/scheduling-app). Rachel Weinberg, the original author, does not wish to maintain a public open-source project herself but agreed to this fork serving that role. See [LICENSING_HISTORY.md](LICENSING_HISTORY.md) for details.
 
@@ -18,7 +18,6 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
 ### Prerequisites
 
 - Node.js / Bun
-- An [Airtable](https://airtable.com) base set up with the required schema (see [docs/SCHEMA.md](docs/SCHEMA.md))
 
 ### Setup
 
@@ -28,20 +27,25 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
    bun install
    ```
 
-2. Create `.env.development.local` with your credentials:
+2. Create `.env.development.local` with your database path:
 
    ```bash
-   AIRTABLE_API_KEY=your_airtable_api_key
-   AIRTABLE_BASE_ID=your_airtable_base_id
+   DATABASE_URL=file:./data.db
    ```
 
-3. Seed the development database:
+3. Run database migrations:
+
+   ```bash
+   bun run dev:migrate:up
+   ```
+
+4. Seed the development database:
 
    ```bash
    bun run dev:db:reset
    ```
 
-4. Start the dev server:
+5. Start the dev server:
 
    ```bash
    bun dev
@@ -53,35 +57,34 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
 
 ### Required
 
-| Variable           | Description                        |
-| ------------------ | ---------------------------------- |
-| `AIRTABLE_API_KEY` | Your Airtable personal access token |
-| `AIRTABLE_BASE_ID` | The ID of your Airtable base        |
+| Variable       | Description                                       |
+| -------------- | ------------------------------------------------- |
+| `DATABASE_URL` | SQLite database file path (e.g. `file:./data.db`) |
 
 ### Optional
 
-| Variable                      | Description                                                                 |
-| ----------------------------- | --------------------------------------------------------------------------- |
-| `SITE_PASSWORD`               | Enables site-wide password protection. Omit to disable.                     |
+| Variable                        | Description                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `SITE_PASSWORD`                 | Enables site-wide password protection. Omit to disable.                        |
 | `NEXT_PUBLIC_FOOTER_RIGHT_HTML` | HTML for the right side of the footer (e.g. links to GitHub or a bug tracker). |
 
 `NEXT_PUBLIC_` variables are exposed to the browser; all others are server-side only.
 
-### Deploying to Vercel
+### Deploying to Fly.io / Vercel
 
-Set the variables above in **Vercel Dashboard → Settings → Environment Variables**, then deploy.
+Set the variables above in your deployment platform's environment settings, then deploy.
 
 ## Event Phases
 
 Events can progress through three optional phases:
 
-| Phase        | What it enables                                                        |
-| ------------ | ---------------------------------------------------------------------- |
-| **Proposal** | Attendees submit and browse session proposals                          |
-| **Voting**   | Attendees vote on proposals (votes hidden from hosts until scheduling) |
-| **Scheduling** | Hosts see vote counts and can place sessions on the schedule grid    |
+| Phase          | What it enables                                                        |
+| -------------- | ---------------------------------------------------------------------- |
+| **Proposal**   | Attendees submit and browse session proposals                          |
+| **Voting**     | Attendees vote on proposals (votes hidden from hosts until scheduling) |
+| **Scheduling** | Hosts see vote counts and can place sessions on the schedule grid      |
 
-Phase dates are set directly on the Event record in Airtable. If no dates are set, the app skips phases and goes straight to scheduling. See [docs/SCHEMA.md](docs/SCHEMA.md) for the required Airtable fields.
+Phase dates are set directly on the Event record in the database. If no dates are set, the app skips phases and goes straight to scheduling.
 
 ## Development
 
@@ -92,7 +95,12 @@ bun prettier   # format (writes changes in place)
 
 ### Database Migrations
 
-When making Airtable schema changes, create a migration file as described in [migrations/README.md](migrations/README.md).
+When changing the database schema, generate and run migrations:
+
+```bash
+bun run dev:migrate:create   # generate migration from schema changes
+bun run dev:migrate:up       # apply pending migrations
+```
 
 ### Testing
 

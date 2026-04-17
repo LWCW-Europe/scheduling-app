@@ -7,13 +7,17 @@ import {
   ReactNode,
   useContext,
 } from "react";
-import { Event } from "@/db/events";
-import { Day } from "@/db/days";
-import { Session } from "@/db/sessions";
-import { Location } from "@/db/locations";
-import { Guest } from "@/db/guests";
-import { RSVP } from "@/db/rsvps";
+import type {
+  Event,
+  Day,
+  Session,
+  Location,
+  Guest,
+  Rsvp,
+} from "@/db/repositories/interfaces";
 import { Vote, voteChoiceToEmoji } from "@/app/votes";
+
+export type DayWithSessions = Day & { sessions: Session[] };
 
 export interface UserContextType {
   user: string | null;
@@ -27,11 +31,11 @@ export const UserContext = createContext<UserContextType>({
 
 export interface EventContextType {
   event: Event | null;
-  days: Day[];
+  days: DayWithSessions[];
   sessions: Session[];
   locations: Location[];
   guests: Guest[];
-  rsvps: RSVP[];
+  rsvps: Rsvp[];
   rsvpdForSession: (sessionId: string) => boolean;
   localSessions: Session[];
   userBusySessions: () => Session[];
@@ -120,8 +124,8 @@ export function EventProvider({
   >;
 }) {
   const { user } = useContext(UserContext);
-  const valueSessions = value.days.map((d) => d.Sessions).flat();
-  const [rsvps, setRsvps] = useState<RSVP[]>(value.rsvps);
+  const valueSessions = value.days.flatMap((d) => d.sessions);
+  const [rsvps, setRsvps] = useState<Rsvp[]>(value.rsvps);
   // contains all optimistic updates
   const [localSessions, setLocalSessions] = useState<Session[]>(valueSessions);
 
@@ -136,7 +140,7 @@ export function EventProvider({
         try {
           const response = await fetch(`/api/rsvps?user=${user}`);
           if (response.ok) {
-            const userRsvps = (await response.json()) as RSVP[];
+            const userRsvps = (await response.json()) as Rsvp[];
             setRsvps(userRsvps);
           }
         } catch (error) {
@@ -153,9 +157,11 @@ export function EventProvider({
 
   function userBusySessions() {
     if (user) {
-      const sessionsWithRSVP = rsvps.map((r) => r.Session).flat();
+      const sessionsWithRSVP = rsvps.map((r) => r.sessionId);
       return valueSessions.filter(
-        (ses) => sessionsWithRSVP.includes(ses.ID) || ses.Hosts?.includes(user)
+        (ses) =>
+          sessionsWithRSVP.includes(ses.id) ||
+          ses.hosts.some((h) => h.id === user)
       );
     } else {
       return [];
@@ -163,9 +169,7 @@ export function EventProvider({
   }
 
   const rsvpdForSession = (sessionId: string) => {
-    return rsvps.some(
-      (rsvp) => rsvp.Session && rsvp.Session.includes(sessionId)
-    );
+    return rsvps.some((rsvp) => rsvp.sessionId === sessionId);
   };
 
   // update RSVPs optimistically
@@ -177,10 +181,10 @@ export function EventProvider({
     try {
       const countChange = remove ? -1 : 1;
       const newSessions = localSessions.map((session) => {
-        if (session.ID === sessionId) {
+        if (session.id === sessionId) {
           return {
             ...session,
-            ["Num RSVPs"]: session["Num RSVPs"] + countChange,
+            numRsvps: session.numRsvps + countChange,
           };
         } else {
           return session;
@@ -192,20 +196,13 @@ export function EventProvider({
         setRsvps((prevRsvps) =>
           prevRsvps.filter(
             (rsvp) =>
-              !(
-                rsvp.Guest?.includes(guestId) &&
-                rsvp.Session?.includes(sessionId)
-              )
+              !(rsvp.guestId === guestId && rsvp.sessionId === sessionId)
           )
         );
       } else {
         // Add RSVP
-        const newRsvp: Partial<RSVP> = {
-          Guest: [guestId],
-          Session: [sessionId],
-        };
-        // Cast to RSVP since we're providing the required fields
-        setRsvps((prevRsvps) => [...prevRsvps, newRsvp as RSVP]);
+        const newRsvp: Rsvp = { id: "", guestId, sessionId };
+        setRsvps((prevRsvps) => [...prevRsvps, newRsvp]);
       }
 
       // Make the actual API call
@@ -296,7 +293,7 @@ export function VotesProvider({
   const addVote = (vote: Vote) => {
     setVotes((prev) => {
       const existingIndex = prev.findIndex(
-        (v) => v.proposal === vote.proposal && v.guest === vote.guest
+        (v) => v.proposalId === vote.proposalId && v.guestId === vote.guestId
       );
       if (existingIndex >= 0) {
         // Update existing vote
@@ -312,7 +309,7 @@ export function VotesProvider({
 
   const removeVote = (proposalId: string) => {
     setVotes((prev) =>
-      prev.filter((v) => !(v.proposal === proposalId && v.guest === user))
+      prev.filter((v) => !(v.proposalId === proposalId && v.guestId === user))
     );
   };
 
@@ -321,7 +318,7 @@ export function VotesProvider({
 
     setVotes((prev) => {
       const existingIndex = prev.findIndex(
-        (v) => v.proposal === proposalId && v.guest === user
+        (v) => v.proposalId === proposalId && v.guestId === user
       );
       if (existingIndex >= 0) {
         const newVotes = [...prev];
@@ -329,17 +326,17 @@ export function VotesProvider({
         return newVotes;
       } else {
         // Add new vote if none exists
-        return [...prev, { proposal: proposalId, guest: user, choice }];
+        return [...prev, { id: "", proposalId, guestId: user, choice }];
       }
     });
   };
 
   const hasVoted = (proposalId: string) => {
-    return votes.some((v) => v.proposal === proposalId && v.guest === user);
+    return votes.some((v) => v.proposalId === proposalId && v.guestId === user);
   };
 
   const getVote = (proposalId: string) => {
-    return votes.find((v) => v.proposal === proposalId && v.guest === user);
+    return votes.find((v) => v.proposalId === proposalId && v.guestId === user);
   };
 
   const proposalVoteEmoji = (proposalId: string) => {

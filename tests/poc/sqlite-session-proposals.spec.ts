@@ -55,12 +55,26 @@ test("listByEvent returns proposals for that event only", async ({ db }) => {
 test("vote counts are computed correctly", async ({ db }) => {
   seed(db);
   const repo = new SqliteSessionProposalsRepository(db);
-  const proposal = await repo.create({ eventId: "evt1", title: "Talk", hostIds: [] });
+  const proposal = await repo.create({
+    eventId: "evt1",
+    title: "Talk",
+    hostIds: [],
+  });
 
   db.insert(schema.votes)
     .values([
-      { id: "v1", proposalId: proposal.id, guestId: "g1", choice: VoteChoice.interested },
-      { id: "v2", proposalId: proposal.id, guestId: "g2", choice: VoteChoice.maybe },
+      {
+        id: "v1",
+        proposalId: proposal.id,
+        guestId: "g1",
+        choice: VoteChoice.interested,
+      },
+      {
+        id: "v2",
+        proposalId: proposal.id,
+        guestId: "g2",
+        choice: VoteChoice.maybe,
+      },
     ])
     .run();
 
@@ -73,9 +87,17 @@ test("vote counts are computed correctly", async ({ db }) => {
 test("update title and durationMinutes", async ({ db }) => {
   seed(db);
   const repo = new SqliteSessionProposalsRepository(db);
-  const proposal = await repo.create({ eventId: "evt1", title: "Old", hostIds: [], durationMinutes: 30 });
+  const proposal = await repo.create({
+    eventId: "evt1",
+    title: "Old",
+    hostIds: [],
+    durationMinutes: 30,
+  });
 
-  const updated = await repo.update(proposal.id, { title: "New", durationMinutes: null });
+  const updated = await repo.update(proposal.id, {
+    title: "New",
+    durationMinutes: null,
+  });
   expect(updated.title).toBe("New");
   expect(updated.durationMinutes).toBeUndefined();
 });
@@ -83,10 +105,19 @@ test("update title and durationMinutes", async ({ db }) => {
 test("update hostIds removes votes from new hosts", async ({ db }) => {
   seed(db);
   const repo = new SqliteSessionProposalsRepository(db);
-  const proposal = await repo.create({ eventId: "evt1", title: "Talk", hostIds: [] });
+  const proposal = await repo.create({
+    eventId: "evt1",
+    title: "Talk",
+    hostIds: [],
+  });
 
   db.insert(schema.votes)
-    .values({ id: "v1", proposalId: proposal.id, guestId: "g1", choice: VoteChoice.interested })
+    .values({
+      id: "v1",
+      proposalId: proposal.id,
+      guestId: "g1",
+      choice: VoteChoice.interested,
+    })
     .run();
 
   await repo.update(proposal.id, { hostIds: ["g1"] });
@@ -99,9 +130,18 @@ test("update hostIds removes votes from new hosts", async ({ db }) => {
 test("delete removes proposal, hosts, and votes", async ({ db }) => {
   seed(db);
   const repo = new SqliteSessionProposalsRepository(db);
-  const proposal = await repo.create({ eventId: "evt1", title: "Bye", hostIds: ["g1"] });
+  const proposal = await repo.create({
+    eventId: "evt1",
+    title: "Bye",
+    hostIds: ["g1"],
+  });
   db.insert(schema.votes)
-    .values({ id: "v1", proposalId: proposal.id, guestId: "g2", choice: VoteChoice.maybe })
+    .values({
+      id: "v1",
+      proposalId: proposal.id,
+      guestId: "g2",
+      choice: VoteChoice.maybe,
+    })
     .run();
 
   await repo.delete(proposal.id);

@@ -4,16 +4,13 @@ import { createPortal } from "react-dom";
 import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
-import type { Event } from "@/db/events";
-import type { Guest } from "@/db/guests";
-import type { Session } from "@/db/sessions";
-import type { RSVP } from "@/db/rsvps";
+import type { Event, Guest, Session, Rsvp } from "@/db/repositories/interfaces";
 import { ViewSession } from "../../view-session/view-session";
 
 export function SessionModal(props: {
   session: Session;
   guests: Guest[];
-  rsvps: RSVP[];
+  rsvps: Rsvp[];
   eventSlug: string;
   event: Event;
 }) {

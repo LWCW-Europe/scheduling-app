@@ -19,12 +19,14 @@ import {
   subtractBreakFromDuration,
 } from "@/utils/utils";
 import { MyListbox, type Option } from "./select";
-import { Day } from "@/db/days";
-import { Guest } from "@/db/guests";
-import { Location } from "@/db/locations";
-import { Session } from "@/db/sessions";
-import { RSVP } from "@/db/rsvps";
-import type { SessionProposal } from "@/db/sessionProposals";
+import type {
+  Day,
+  Guest,
+  Location,
+  Session,
+  Rsvp,
+  SessionProposal,
+} from "@/db/repositories/interfaces";
 import { ConfirmDeletionModal } from "../modals";
 import { UserContext } from "../context";
 import { sessionsOverlap, newEmptySession } from "../session_utils";
@@ -51,11 +53,11 @@ export function SessionForm(props: {
   const proposalID = searchParams?.get("proposalID");
   const initialProposal = proposals.find((p) => p.id === proposalID) ?? null;
   const session =
-    sessions.find((ses) => ses.ID === sessionID) || newEmptySession();
+    sessions.find((ses) => ses.id === sessionID) || newEmptySession();
   const initDateTime =
     dayParam && timeParam
       ? convertParamDateTime(dayParam, timeParam)
-      : new Date(session["Start time"]);
+      : (session.startTime ?? null);
   const initDay = initDateTime
     ? days.find((d) => dateOnDay(initDateTime, d))
     : undefined;
@@ -69,15 +71,15 @@ export function SessionForm(props: {
     initialProposal
   );
   const [error, setError] = useState<string | null>(null);
-  const [title, setTitle] = useState(session.Title);
-  const [description, setDescription] = useState(session.Description);
-  const [closed, setClosed] = useState(session.Closed || false);
+  const [title, setTitle] = useState(session.title);
+  const [description, setDescription] = useState(session.description);
+  const [closed, setClosed] = useState(session.closed);
   const [day, setDay] = useState(initDay ?? days[0]);
-  const [location, setLocation] = useState(
-    locations.find((l) => l.Name === initLocation)?.Name ??
-      session["Location name"][0]
+  const [locationId, setLocationId] = useState<string | undefined>(
+    locations.find((l) => l.name === initLocation)?.id ??
+      session.locations[0]?.id
   );
-  const startTimes = getAvailableStartTimes(day, sessions, session, location);
+  const startTimes = getAvailableStartTimes(day, sessions, session, locationId);
   const initTimeValid = startTimes.some((st) => st.formattedTime === initTime);
   const [startTime, setStartTime] = useState(
     initTimeValid ? initTime : undefined
@@ -89,16 +91,16 @@ export function SessionForm(props: {
   const { user: currentUser } = useContext(UserContext);
   let initialHosts: Guest[] = [];
   if (!sessionID) {
-    initialHosts = guests.filter((g) => g.ID == currentUser);
+    initialHosts = guests.filter((g) => g.id === currentUser);
   }
   const [hosts, setHosts] = useState<Guest[]>(initialHosts);
   useEffect(() => {
     if (sessionID) {
-      setHosts(guests.filter((g) => session.Hosts?.includes(g.ID)));
-      const endTime = new Date(session["End time"]).valueOf();
-      const startTime = new Date(session["Start time"]).valueOf();
-      const duration = Math.round((endTime - startTime) / 1000 / 60);
-      setDuration(duration);
+      setHosts(guests.filter((g) => session.hosts.some((h) => h.id === g.id)));
+      const endTime = session.endTime?.valueOf() ?? 0;
+      const startTimeVal = session.startTime?.valueOf() ?? 0;
+      const dur = Math.round((endTime - startTimeVal) / 1000 / 60);
+      setDuration(dur);
     }
   }, [guests, session, sessionID]);
   useEffect(() => {
@@ -113,17 +115,17 @@ export function SessionForm(props: {
   }, [startTime, maxDuration, duration, startTimes]);
 
   let dummySession = newEmptySession();
-  if (startTime) {
+  if (startTime && day) {
     const { start, end } = parseSessionTime(day, startTime, duration);
     dummySession = {
       ...newEmptySession(),
-      "Start time": start,
-      "End time": end,
-      ID: sessionID || "",
+      startTime: new Date(start),
+      endTime: new Date(end),
+      id: sessionID || "",
     };
   }
 
-  const [hostRSVPs, setHostRSVPs] = useState<Record<string, RSVP[]>>({});
+  const [hostRSVPs, setHostRSVPs] = useState<Record<string, Rsvp[]>>({});
   const [isFetchingRSVPs, setIsFetchingRSVPs] = useState(false);
 
   const [usedProposal, setUsedProposal] = useState(false);
@@ -131,13 +133,12 @@ export function SessionForm(props: {
     if (proposal) {
       setTitle(proposal.title);
       setDescription(proposal.description ?? "");
-      setHosts(guests.filter((g) => proposal.hosts.includes(g.ID)));
+      setHosts(guests.filter((g) => proposal.hosts.some((h) => h.id === g.id)));
       if (proposal.durationMinutes) {
         setDuration(proposal.durationMinutes);
       }
       setUsedProposal(true);
     } else if (usedProposal) {
-      // Triggered only when deselecting proposal
       setTitle("");
       setDescription("");
       setHosts(initialHosts);
@@ -150,9 +151,9 @@ export function SessionForm(props: {
       setIsFetchingRSVPs(true);
       const entries = await Promise.all(
         hosts.map(async (host) => {
-          const res = await fetch(`/api/rsvps?user=${host.ID}`);
-          const rsvps = (await res.json()) as RSVP[];
-          return [host.ID, rsvps] as const;
+          const res = await fetch(`/api/rsvps?user=${host.id}`);
+          const rsvps = (await res.json()) as Rsvp[];
+          return [host.id, rsvps] as const;
         })
       );
 
@@ -166,18 +167,16 @@ export function SessionForm(props: {
   const clashes = hosts.map((host) => {
     const sessionClashes = sessions.filter(
       (ses) =>
-        ses.Hosts?.includes(host.ID) && sessionsOverlap(ses, dummySession)
+        ses.hosts.some((h) => h.id === host.id) &&
+        sessionsOverlap(ses, dummySession)
     );
-    // 'hostRSVPs' can contain RSVPs for other events while 'sessions' will
-    // only include sessions for the current event. Such RSVPs will lead to
-    // sessions.find() returning undefined, which we then have to filter out.
-    const rsvpClashes = (hostRSVPs[host.ID] || [])
-      .map((rsvp) => sessions.find((ses) => ses.ID === rsvp.Session[0]))
+    const rsvpClashes = (hostRSVPs[host.id] || [])
+      .map((rsvp) => sessions.find((ses) => ses.id === rsvp.sessionId))
       .filter((ses): ses is Session => ses !== undefined)
       .filter((ses) => sessionsOverlap(ses, dummySession));
 
     return {
-      id: host.ID,
+      id: host.id,
       sessionClashes,
       rsvpClashes,
     };
@@ -185,16 +184,16 @@ export function SessionForm(props: {
   const clashErrors = clashes
     .map((hostClashes) => {
       const { id, sessionClashes, rsvpClashes } = hostClashes;
-      const hostName = hosts.find((host) => host.ID === id)!.Name;
+      const hostName = hosts.find((host) => host.id === id)!.name;
       const formatTime = (d: DateTime) =>
         d.setZone("America/Los_Angeles").toFormat("HH:mm");
       const displayInterval = (ses: Session) =>
-        `from ${formatTime(DateTime.fromISO(ses["Start time"]))} to ${formatTime(getEndTimeMinusBreak(ses))}`;
+        `from ${formatTime(DateTime.fromJSDate(ses.startTime ?? new Date()))} to ${formatTime(getEndTimeMinusBreak(ses))}`;
       const sessionErrors = sessionClashes.map(
-        (ses) => `${hostName} is hosting ${ses.Title} ${displayInterval(ses)}`
+        (ses) => `${hostName} is hosting ${ses.title} ${displayInterval(ses)}`
       );
       const rsvpErrors = rsvpClashes.map(
-        (ses) => `${hostName} is attending ${ses.Title} ${displayInterval(ses)}`
+        (ses) => `${hostName} is attending ${ses.title} ${displayInterval(ses)}`
       );
       return sessionErrors.concat(rsvpErrors);
     })
@@ -205,6 +204,12 @@ export function SessionForm(props: {
   const Submit = async () => {
     setIsSubmitting(true);
     setError(null);
+    const location = locations.find((loc) => loc.id === locationId);
+    if (!location || !day || !startTime) {
+      setError("Missing required fields");
+      setIsSubmitting(false);
+      return;
+    }
     const endpoint = sessionID ? "/api/update-session" : "/api/add-session";
     const res = await fetch(endpoint, {
       method: "POST",
@@ -216,12 +221,12 @@ export function SessionForm(props: {
         title,
         description,
         closed,
-        day: day,
-        location: locations.find((loc) => loc.Name === location),
+        day,
+        location,
         startTimeString: startTime,
         duration,
-        hosts: hosts,
-        proposal: proposal?.id ?? session.proposal?.[0],
+        hosts,
+        proposal: proposal?.id ?? session.proposalId,
       }),
     });
     if (res.ok) {
@@ -236,7 +241,6 @@ export function SessionForm(props: {
         const errorData = (await res.json()) as ErrorResponse;
         errorMessage = errorData.message || errorMessage;
       } catch {
-        // Response is not valid JSON, use status text or generic message
         errorMessage = res.statusText || `Server error (${res.status})`;
       }
       setError(errorMessage);
@@ -386,15 +390,14 @@ export function SessionForm(props: {
           <RequiredStar />
         </label>
         <MyListbox
-          currValue={location}
-          setCurrValue={setLocation}
-          options={locations.map((loc) => {
-            return {
-              value: loc.Name,
-              available: true,
-              helperText: `max ${loc.Capacity}`,
-            };
-          })}
+          currValue={locationId}
+          setCurrValue={setLocationId}
+          options={locations.map((loc) => ({
+            value: loc.id,
+            display: loc.name,
+            available: true,
+            helperText: `max ${loc.capacity}`,
+          }))}
           placeholder={"Select a location"}
           truncateText={true}
         />
@@ -432,11 +435,11 @@ export function SessionForm(props: {
           maxDuration={maxDuration}
         />
       </div>
-      {sessionID && session.proposal && (
+      {sessionID && session.proposalId && (
         <p className="text-sm text-gray-600">
           This session was scheduled from a proposal. See it{" "}
           <a
-            href={`/${eventNameToSlug(eventName)}/proposals/${session.proposal[0]}/view`}
+            href={`/${eventNameToSlug(eventName)}/proposals/${session.proposalId}/view`}
             className="text-rose-500 underline hover:text-rose-600 transition-colors"
           >
             here
@@ -466,9 +469,8 @@ export function SessionForm(props: {
           !title ||
           !startTime ||
           !hosts.length ||
-          !location ||
+          !locationId ||
           !day ||
-          !duration ||
           !duration ||
           isFetchingRSVPs ||
           isSubmitting
@@ -500,26 +502,25 @@ function getAvailableStartTimes(
   day: Day,
   sessions: Session[],
   currentSession: Session,
-  location?: string
+  locationId?: string
 ) {
-  const locationSelected = !!location;
+  const locationSelected = !!locationId;
   const filteredSessions = (
     locationSelected
       ? sessions.filter(
-          (s) => s["Location name"][0] === location && s.ID != currentSession.ID
+          (s) =>
+            s.locations.some((l) => l.id === locationId) &&
+            s.id !== currentSession.id
         )
       : sessions
-  ).filter(
-    (s) => new Date(s["Start time"]).getTime() < new Date(day.End).getTime()
-  );
+  ).filter((s) => (s.startTime?.getTime() ?? 0) < day.end.getTime());
   const sortedSessions = filteredSessions.sort(
-    (a, b) =>
-      new Date(a["Start time"]).getTime() - new Date(b["Start time"]).getTime()
+    (a, b) => (a.startTime?.getTime() ?? 0) - (b.startTime?.getTime() ?? 0)
   );
   const startTimes: StartTime[] = [];
   for (
-    let t = day.StartBookings.getTime();
-    t < day.EndBookings.getTime();
+    let t = day.startBookings.getTime();
+    t < day.endBookings.getTime();
     t += 30 * 60 * 1000
   ) {
     const formattedTime = DateTime.fromMillis(t)
@@ -528,8 +529,8 @@ function getAvailableStartTimes(
     if (locationSelected) {
       const sessionNow = sortedSessions.find(
         (session) =>
-          new Date(session["Start time"]).getTime() <= t &&
-          new Date(session["End time"]).getTime() > t
+          (session.startTime?.getTime() ?? 0) <= t &&
+          (session.endTime?.getTime() ?? 0) > t
       );
       if (sessionNow) {
         startTimes.push({
@@ -540,11 +541,11 @@ function getAvailableStartTimes(
         });
       } else {
         const nextSession = sortedSessions.find(
-          (session) => new Date(session["Start time"]).getTime() > t
+          (session) => (session.startTime?.getTime() ?? 0) > t
         );
         const latestEndTime = nextSession
-          ? new Date(nextSession["Start time"]).getTime()
-          : day.EndBookings.getTime();
+          ? nextSession.startTime!.getTime()
+          : day.endBookings.getTime();
         startTimes.push({
           formattedTime,
           time: t,
@@ -574,11 +575,9 @@ export function SelectHosts(props: {
   const { guests, hosts, setHosts, id, selectMany } = props;
   const [query, setQuery] = useState("");
   const filteredGuests = guests
-    .filter((guest) =>
-      guest["Name"].toLowerCase().includes(query.toLowerCase())
-    )
-    .filter((guest) => guest["Name"].trim().length > 0)
-    .sort((a, b) => a["Name"].localeCompare(b["Name"]))
+    .filter((guest) => guest.name.toLowerCase().includes(query.toLowerCase()))
+    .filter((guest) => guest.name.trim().length > 0)
+    .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 20);
 
   const comboboxContent = (
@@ -592,10 +591,10 @@ export function SelectHosts(props: {
             <>
               {hosts.map((host) => (
                 <span
-                  key={host.ID}
+                  key={host.id}
                   className="py-1 px-2 bg-gray-100 rounded text-nowrap text-sm flex items-center gap-1"
                 >
-                  {host.Name}
+                  {host.name}
                   <span
                     onClick={(e) => {
                       setHosts(hosts.filter((h) => h !== host));
@@ -634,7 +633,7 @@ export function SelectHosts(props: {
           ) : (
             filteredGuests.map((guest) => (
               <Combobox.Option
-                key={guest["ID"]}
+                key={guest.id}
                 className={({ active }) =>
                   clsx(
                     "relative cursor-pointer select-none py-2 pl-10 pr-4 z-10",
@@ -654,7 +653,7 @@ export function SelectHosts(props: {
                         disabled ? "text-gray-400" : "text-gray-900"
                       )}
                     >
-                      {guest.Name}
+                      {guest.name}
                     </span>
                     {selected ? (
                       <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-rose-400">
@@ -743,18 +742,18 @@ function SelectDay(props: {
     <fieldset>
       <div className="space-y-4">
         {days.map((d) => {
-          const formattedDay = format(d.Start, "EEEE, MMMM d");
+          const formattedDay = format(d.start, "EEEE, MMMM d");
           return (
-            <div key={formattedDay} className="flex items-center">
+            <div key={d.id} className="flex items-center">
               <input
-                id={formattedDay}
+                id={d.id}
                 type="radio"
-                checked={d.Start === day.Start}
+                checked={d.id === day.id}
                 onChange={() => setDay(d)}
                 className="h-4 w-4 border-gray-300 text-rose-400 focus:ring-rose-400"
               />
               <label
-                htmlFor={formattedDay}
+                htmlFor={d.id}
                 className="ml-3 block text-sm font-medium leading-6 text-gray-900"
               >
                 {formattedDay}

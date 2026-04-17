@@ -8,27 +8,26 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
-import { Day } from "@/db/days";
-import { Guest } from "@/db/guests";
-import { Location } from "@/db/locations";
+import type { Guest, Location } from "@/db/repositories/interfaces";
+import type { DayWithSessions } from "@/app/context";
 
 export function DayGrid(props: {
   eventName: string;
   locations: Location[];
-  day: Day;
+  day: DayWithSessions;
   guests: Guest[];
 }) {
   const { eventName, day, locations, guests } = props;
   const searchParams = useSearchParams();
   const locParams = searchParams?.getAll("loc");
   const locationsFromParams = locations.filter((loc) =>
-    locParams?.includes(loc.Name)
+    locParams?.includes(loc.name)
   );
   const includedLocations =
     locationsFromParams.length === 0 ? locations : locationsFromParams;
   const numLocations = includedLocations.length;
-  const start = new Date(day.Start);
-  const end = new Date(day.End);
+  const start = day.start;
+  const end = day.end;
   const scrollableDivRef = useRef<HTMLDivElement>(null);
   const [scrolledToRightEnd, setScrolledToRightEnd] = useState(false);
   const [scrolledToLeftEnd, setScrolledToLeftEnd] = useState(true);
@@ -73,7 +72,7 @@ export function DayGrid(props: {
       <div className="flex flex-col">
         <div className="flex items-center gap-2">
           <h2 className="text-2xl font-bold">
-            {DateTime.fromISO(day.Start)
+            {DateTime.fromJSDate(day.start)
               .setZone("America/Los_Angeles")
               .toFormat("EEEE, MMMM d")}
           </h2>
@@ -100,29 +99,29 @@ export function DayGrid(props: {
             >
               {includedLocations.map((loc) => (
                 <Tooltip
-                  key={loc.Name}
-                  content={<p className="text-sm p-2">{loc.Description}</p>}
+                  key={loc.name}
+                  content={<p className="text-sm p-2">{loc.description}</p>}
                   placement="bottom-start"
                 >
                   <div
-                    key={loc.Name}
+                    key={loc.name}
                     className="p-1 border-b border-gray-100 flex flex-col justify-between h-full"
                   >
                     <div>
                       <h3 className="font-semibold text-xs sm:text-sm">
-                        {loc.Name}
+                        {loc.name}
                       </h3>
                       <p className="text-[10px] text-gray-500">
-                        {loc["Area description"] ?? <br />}
+                        {loc.areaDescription ?? <br />}
                       </p>
                       <p className="text-[10px] text-gray-500">
-                        {loc.Capacity ? `max ${loc.Capacity}` : <br />}
+                        {loc.capacity ? `max ${loc.capacity}` : <br />}
                       </p>
                     </div>
                     <Image
-                      key={loc.Name}
-                      src={loc["Image url"]}
-                      alt={loc.Name}
+                      key={loc.name}
+                      src={loc.imageUrl}
+                      alt={loc.name}
                       className="w-full mt-1 aspect-[4/3]"
                       style={{ maxHeight: 200 }}
                       width={500}
@@ -145,9 +144,9 @@ export function DayGrid(props: {
                 }
                 return (
                   <LocationCol
-                    key={location.Name}
-                    sessions={day.Sessions.filter((session) =>
-                      session["Location name"].includes(location.Name)
+                    key={location.name}
+                    sessions={day.sessions.filter((session) =>
+                      session.locations.some((l) => l.id === location.id)
                     )}
                     guests={guests}
                     day={day}

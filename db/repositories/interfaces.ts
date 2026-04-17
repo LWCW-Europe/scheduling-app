@@ -154,7 +154,10 @@ export interface RsvpsRepository {
   listBySession(sessionId: string): Promise<Rsvp[]>;
   create(data: { sessionId: string; guestId: string }): Promise<Rsvp>;
   deleteBySessionAndGuest(sessionId: string, guestId: string): Promise<void>;
-  deleteBySessionAndGuests(sessionId: string, guestIds: string[]): Promise<void>;
+  deleteBySessionAndGuests(
+    sessionId: string,
+    guestIds: string[]
+  ): Promise<void>;
 }
 
 // ── Session Proposals ─────────────────────────────────────────────────────────
@@ -194,7 +197,10 @@ export interface SessionProposalsRepository {
   listByEvent(eventId: string): Promise<SessionProposal[]>;
   findById(id: string): Promise<SessionProposal | undefined>;
   create(data: SessionProposalCreateInput): Promise<SessionProposal>;
-  update(id: string, patch: SessionProposalUpdateInput): Promise<SessionProposal>;
+  update(
+    id: string,
+    patch: SessionProposalUpdateInput
+  ): Promise<SessionProposal>;
   delete(id: string): Promise<void>;
 }
 
@@ -216,5 +222,8 @@ export interface VotesRepository {
   }): Promise<Vote>;
   deleteByGuestAndProposal(guestId: string, proposalId: string): Promise<void>;
   deleteByProposal(proposalId: string): Promise<void>;
-  deleteByProposalAndGuests(proposalId: string, guestIds: string[]): Promise<void>;
+  deleteByProposalAndGuests(
+    proposalId: string,
+    guestIds: string[]
+  ): Promise<void>;
 }

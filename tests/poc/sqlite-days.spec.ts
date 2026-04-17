@@ -56,7 +56,12 @@ test("list returns days sorted by start ascending", async ({ repo }) => {
 test("listByEvent filters by eventId", async ({ db, repo }) => {
   const eventId = "evt-poc-1";
   db.insert(schema.events)
-    .values({ id: eventId, name: "POC Event", start: "2025-06-10", end: "2025-06-12" })
+    .values({
+      id: eventId,
+      name: "POC Event",
+      start: "2025-06-10",
+      end: "2025-06-12",
+    })
     .run();
 
   const dayForEvent = await repo.create({

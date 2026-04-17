@@ -1,7 +1,5 @@
-import { Session } from "@/db/sessions";
-import { Day } from "@/db/days";
-import { Location } from "@/db/locations";
-import { Guest } from "@/db/guests";
+import type { Session, Location, Guest } from "@/db/repositories/interfaces";
+import type { DayWithSessions } from "@/app/context";
 import { SessionBlock } from "./session-block";
 import { getNumHalfHours } from "@/utils/utils";
 import clsx from "clsx";
@@ -10,16 +8,12 @@ export function LocationCol(props: {
   eventName: string;
   sessions: Session[];
   location: Location;
-  day: Day;
+  day: DayWithSessions;
   guests: Guest[];
 }) {
   const { eventName, sessions, location, day, guests } = props;
-  const sessionsWithBlanks = insertBlankSessions(
-    sessions,
-    new Date(day.Start),
-    new Date(day.End)
-  );
-  const numHalfHours = getNumHalfHours(new Date(day.Start), new Date(day.End));
+  const sessionsWithBlanks = insertBlankSessions(sessions, day.start, day.end);
+  const numHalfHours = getNumHalfHours(day.start, day.end);
   return (
     <div className={"px-0.5"}>
       <div
@@ -33,7 +27,7 @@ export function LocationCol(props: {
             <SessionBlock
               eventName={eventName}
               day={day}
-              key={session["Start time"]}
+              key={session.startTime?.toISOString() ?? session.id}
               session={session}
               location={location}
               guests={guests}
@@ -49,7 +43,7 @@ function insertBlankSessions(
   sessions: Session[],
   dayStart: Date,
   dayEnd: Date
-) {
+): Session[] {
   const sessionsWithBlanks: Session[] = [];
   for (
     let currentTime = dayStart.getTime();
@@ -57,34 +51,30 @@ function insertBlankSessions(
     currentTime += 1800000
   ) {
     const sessionNow = sessions.find((session) => {
-      const startTime = new Date(session["Start time"]).getTime();
-      const endTime = new Date(session["End time"]).getTime();
+      const startTime = session.startTime?.getTime() ?? 0;
+      const endTime = session.endTime?.getTime() ?? 0;
       return startTime <= currentTime && endTime > currentTime;
     });
     if (sessionNow) {
-      if (new Date(sessionNow["Start time"]).getTime() === currentTime) {
+      if ((sessionNow.startTime?.getTime() ?? 0) === currentTime) {
         sessionsWithBlanks.push(sessionNow);
       } else {
         continue;
       }
     } else {
       sessionsWithBlanks.push({
-        "Start time": new Date(currentTime).toISOString(),
-        "End time": new Date(currentTime + 1800000).toISOString(),
-        Title: "",
-        Description: "",
-        Hosts: [],
-        "Host name": [],
-        "Host email": "",
-        Location: [],
-        "Location name": [""],
-        Capacity: 0,
-        "Num RSVPs": 0,
-        ID: "",
-        "Attendee scheduled": false,
-        Blocker: false,
-        Closed: false,
-        proposal: [],
+        startTime: new Date(currentTime),
+        endTime: new Date(currentTime + 1800000),
+        title: "",
+        description: "",
+        hosts: [],
+        locations: [],
+        capacity: 0,
+        numRsvps: 0,
+        id: "",
+        attendeeScheduled: false,
+        blocker: false,
+        closed: false,
       });
     }
   }

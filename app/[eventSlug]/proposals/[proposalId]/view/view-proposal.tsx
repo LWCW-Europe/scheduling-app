@@ -13,17 +13,17 @@ import {
 import HoverTooltip from "@/app/hover-tooltip";
 import { UserContext, VotesContext } from "@/app/context";
 import { Proposal } from "@/app/[eventSlug]/proposal";
-import type { Event } from "@/db/events";
-import type { Guest } from "@/db/guests";
-import type { SessionProposal } from "@/db/sessionProposals";
-import type { Session } from "@/db/sessions";
+import type {
+  Event,
+  SessionProposal,
+  Session,
+} from "@/db/repositories/interfaces";
 import { VotingButtons } from "@/app/[eventSlug]/proposals/voting-buttons";
 import { VoteChoice } from "@/app/votes";
 import { DateTime } from "luxon";
 
 export function ViewProposal(props: {
   proposal: SessionProposal;
-  guests: Guest[];
   sessions: Session[];
   eventSlug: string;
   event: Event;
@@ -34,7 +34,6 @@ export function ViewProposal(props: {
 }) {
   const {
     proposal,
-    guests,
     eventSlug,
     event,
     sessions: allSessions,
@@ -51,12 +50,14 @@ export function ViewProposal(props: {
     if (proposal.hosts.length === 0) {
       return true;
     } else {
-      return currentUserId && proposal.hosts.includes(currentUserId);
+      return (
+        currentUserId && proposal.hosts.some((h) => h.id === currentUserId)
+      );
     }
   };
 
   const isHost = () => {
-    return currentUserId && proposal.hosts.includes(currentUserId);
+    return currentUserId && proposal.hosts.some((h) => h.id === currentUserId);
   };
 
   const handleEditClick = (e: React.MouseEvent) => {
@@ -93,9 +94,9 @@ export function ViewProposal(props: {
   }
   const schedDisabledText = `Scheduling ${dateStartDescription(event.schedulingPhaseStart)}`;
 
-  const sessions = (proposal.sessions || []).map(
-    (ses) => allSessions.find((s) => s.ID === ses)!
-  );
+  const sessions = (proposal.sessionIds || [])
+    .map((sesId) => allSessions.find((s) => s.id === sesId))
+    .filter((s): s is Session => s !== undefined);
 
   return (
     <div
@@ -104,7 +105,6 @@ export function ViewProposal(props: {
       <Proposal
         eventSlug={eventSlug}
         proposal={proposal}
-        guests={guests}
         showBackBtn={showBackBtn}
         titleId={titleId}
       />
@@ -156,7 +156,8 @@ export function ViewProposal(props: {
                 title={(() => {
                   const vote = votes.find(
                     (v) =>
-                      v.proposal === proposal.id && v.guest === currentUserId
+                      v.proposalId === proposal.id &&
+                      v.guestId === currentUserId
                   );
                   if (!vote) return "No vote";
                   switch (vote.choice) {
@@ -203,17 +204,17 @@ export function ViewProposal(props: {
             <p>
               This proposal was scheduled on{" "}
               <Link
-                href={`/${eventSlug}/view-session?sessionID=${sessions[0].ID}`}
+                href={`/${eventSlug}/view-session?sessionID=${sessions[0].id}`}
                 className="text-rose-500 underline hover:text-rose-600 transition-colors"
               >
-                {DateTime.fromISO(sessions[0]["Start time"])
+                {DateTime.fromJSDate(sessions[0].startTime ?? new Date())
                   .setZone("America/Los_Angeles")
                   .toFormat("EEEE")}{" "}
                 at{" "}
-                {DateTime.fromISO(sessions[0]["Start time"])
+                {DateTime.fromJSDate(sessions[0].startTime ?? new Date())
                   .setZone("America/Los_Angeles")
                   .toFormat("h:mm a")}{" "}
-                in {sessions[0]["Location name"]}
+                in {sessions[0].locations[0]?.name}
               </Link>
               .
             </p>
@@ -222,15 +223,15 @@ export function ViewProposal(props: {
               <p>This proposal was scheduled several times:</p>
               <ul className="mt-2 space-y-1 ml-4">
                 {sessions.map((session) => (
-                  <li key={session.ID}>
+                  <li key={session.id}>
                     <Link
-                      href={`/${eventSlug}/view-session?sessionID=${session.ID}`}
+                      href={`/${eventSlug}/view-session?sessionID=${session.id}`}
                       className="text-rose-500 underline hover:text-rose-600 transition-colors"
                     >
-                      {DateTime.fromISO(session["Start time"])
+                      {DateTime.fromJSDate(session.startTime ?? new Date())
                         .setZone("America/Los_Angeles")
                         .toFormat("EEEE h:mm a")}{" "}
-                      in {session["Location name"]}
+                      in {session.locations[0]?.name}
                     </Link>
                   </li>
                 ))}

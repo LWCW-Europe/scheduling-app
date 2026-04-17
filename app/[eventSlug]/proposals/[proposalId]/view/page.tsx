@@ -1,9 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getSessionProposalsByEvent } from "@/db/sessionProposals";
-import { getGuestsByEvent } from "@/db/guests";
-import { getEventByName } from "@/db/events";
-import { getSessionsByEvent } from "@/db/sessions";
+import { getRepositories } from "@/db/container";
 import { eventSlugToName } from "@/utils/utils";
 import { ViewProposal } from "./view-proposal";
 
@@ -15,15 +12,15 @@ export default async function ViewProposalPage({
   const { eventSlug, proposalId } = params;
 
   const eventName = eventSlugToName(eventSlug);
+  const repos = getRepositories();
 
-  const [event, proposals, guests, sessions] = await Promise.all([
-    getEventByName(eventName),
-    getSessionProposalsByEvent(eventName),
-    getGuestsByEvent(eventName),
-    getSessionsByEvent(eventName),
+  const [event, proposals, sessions] = await Promise.all([
+    repos.events.findByName(eventName),
+    repos.sessionProposals.findById(proposalId).then((p) => (p ? [p] : [])),
+    repos.sessions.list(),
   ]);
 
-  const proposal = proposals.find((p) => p.id === proposalId);
+  const proposal = proposals[0];
 
   if (!event || !proposal) {
     return notFound();
@@ -33,7 +30,6 @@ export default async function ViewProposalPage({
     <div className="container mx-auto px-4 py-8">
       <ViewProposal
         proposal={proposal}
-        guests={guests}
         sessions={sessions}
         eventSlug={eventSlug}
         event={event}

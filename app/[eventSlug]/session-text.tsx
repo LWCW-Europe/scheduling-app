@@ -1,7 +1,6 @@
 import clsx from "clsx";
 import { DateTime } from "luxon";
-import { Session } from "@/db/sessions";
-import { Location } from "@/db/locations";
+import type { Session, Location } from "@/db/repositories/interfaces";
 import { getEndTimeMinusBreak } from "@/utils/utils";
 import { useRouter } from "next/navigation";
 import { useState, useContext } from "react";
@@ -21,13 +20,13 @@ export function SessionText(props: {
   const { user: currentUser } = useContext(UserContext);
   const { rsvpdForSession } = useContext(EventContext);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const formattedHostNames = session["Host name"]?.join(", ") ?? "No hosts";
+  const formattedHostNames =
+    session.hosts.map((h) => h.name).join(", ") || "No hosts";
 
-  // Determine user status for this session
-  const rsvpd = currentUser ? rsvpdForSession(session.ID + "") : false;
-  const isHost = currentUser && session.Hosts?.includes(currentUser);
+  const rsvpd = currentUser ? rsvpdForSession(session.id) : false;
+  const isHost = currentUser && session.hosts.some((h) => h.id === currentUser);
 
-  const description = session.Description || "";
+  const description = session.description || "";
   const isLongDescription = description.length > 200;
   const displayDescription =
     isLongDescription && !showFullDescription
@@ -37,7 +36,7 @@ export function SessionText(props: {
   const handleTitleClick = () => {
     // Preserve current search parameters including view
     const currentParams = new URLSearchParams(searchParams.toString());
-    const url = `/${eventSlug}/view-session?sessionID=${session.ID}&${currentParams.toString()}`;
+    const url = `/${eventSlug}/view-session?sessionID=${session.id}&${currentParams.toString()}`;
     router.push(url);
   };
 
@@ -48,10 +47,10 @@ export function SessionText(props: {
           className="font-bold leading-tight cursor-pointer hover:text-blue-600 transition-colors flex-1 flex items-center gap-1"
           onClick={handleTitleClick}
         >
-          {session.Closed && (
+          {session.closed && (
             <LockIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
           )}
-          {session.Title}
+          {session.title}
         </h1>
         <div className="flex gap-1">
           {isHost && (
@@ -76,8 +75,11 @@ export function SessionText(props: {
         <div className="flex gap-2 text-sm text-gray-500">
           <div className="flex gap-1">
             <span>
-              {DateTime.fromISO(session["Start time"]).toFormat("EEEE")},{" "}
-              {DateTime.fromISO(session["Start time"])
+              {DateTime.fromJSDate(session.startTime ?? new Date()).toFormat(
+                "EEEE"
+              )}
+              ,{" "}
+              {DateTime.fromJSDate(session.startTime ?? new Date())
                 .setZone("America/Los_Angeles")
                 .toFormat("h:mm a")}{" "}
               -{" "}
@@ -90,7 +92,7 @@ export function SessionText(props: {
         </div>
         <div className="flex items-center gap-1">
           {locations.map((loc) => (
-            <LocationTag key={loc.Name} location={loc} />
+            <LocationTag key={loc.name} location={loc} />
           ))}
         </div>
       </div>
@@ -115,10 +117,10 @@ export function LocationTag(props: { location: Location }) {
     <div
       className={clsx(
         "flex items-center gap-2 rounded-full py-0.5 px-2 text-xs font-semibold w-fit",
-        `text-${location.Color}-500 bg-${location.Color}-100 border-2 border-${location.Color}-400`
+        `text-${location.color}-500 bg-${location.color}-100 border-2 border-${location.color}-400`
       )}
     >
-      {location.Name}
+      {location.name}
     </div>
   );
 }

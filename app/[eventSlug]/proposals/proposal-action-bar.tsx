@@ -16,7 +16,7 @@ import {
   inProposalPhase,
 } from "@/app/utils/events";
 import { UserContext } from "@/app/context";
-import type { Event } from "@/db/events";
+import type { Event } from "@/db/repositories/interfaces";
 
 export function ProposalActionBar({
   eventSlug,

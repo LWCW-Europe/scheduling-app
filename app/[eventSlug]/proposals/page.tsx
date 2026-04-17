@@ -1,8 +1,6 @@
 import Link from "next/link";
 
-import { getSessionProposalsByEvent } from "@/db/sessionProposals";
-import { getGuestsByEvent } from "@/db/guests";
-import { getEventByName } from "@/db/events";
+import { getRepositories } from "@/db/container";
 import { eventSlugToName } from "@/utils/utils";
 import { ProposalActionBar } from "./proposal-action-bar";
 import { ProposalTable } from "./proposal-table";
@@ -19,15 +17,16 @@ export default async function ProposalsPage({
 
   // Convert slug to event name (simple conversion for now)
   const eventName = eventSlugToName(eventSlug);
-  const event = await getEventByName(eventName);
+  const repos = getRepositories();
+  const event = await repos.events.findByName(eventName);
 
   if (!event) {
     return <div>Event not found</div>;
   }
 
   const [guests, proposals] = await Promise.all([
-    getGuestsByEvent(eventName),
-    getSessionProposalsByEvent(eventName),
+    repos.guests.list(),
+    repos.sessionProposals.listByEvent(event.id),
   ]);
 
   return (
@@ -42,7 +41,7 @@ export default async function ProposalsPage({
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
           <div>
             <h1 className="text-3xl font-bold">
-              {event.Name}: Session Proposals
+              {event.name}: Session Proposals
             </h1>
             <p className="text-gray-600 mt-2">
               Browse session ideas or add your own proposal
@@ -69,7 +68,6 @@ export default async function ProposalsPage({
         </div>
       ) : (
         <ProposalTable
-          guests={guests}
           proposals={proposals}
           eventSlug={eventSlug}
           event={event}

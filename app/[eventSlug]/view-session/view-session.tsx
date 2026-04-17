@@ -7,10 +7,7 @@ import { useRouter } from "next/navigation";
 import { PencilIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
 
-import type { Event } from "@/db/events";
-import type { Guest } from "@/db/guests";
-import type { Session } from "@/db/sessions";
-import type { RSVP } from "@/db/rsvps";
+import type { Event, Guest, Session, Rsvp } from "@/db/repositories/interfaces";
 import { getEndTimeMinusBreak } from "@/utils/utils";
 import { UserContext, EventContext } from "../../context";
 import { CurrentUserModal, ConfirmationModal } from "../../modals";
@@ -21,7 +18,7 @@ import { LocationTag } from "../session-text";
 export function ViewSession(props: {
   session: Session;
   guests: Guest[];
-  rsvps: RSVP[];
+  rsvps: Rsvp[];
   eventSlug: string;
   event: Event;
   showBackBtn: boolean;
@@ -48,58 +45,48 @@ export function ViewSession(props: {
     locations,
   } = useContext(EventContext);
 
-  // Merge server RSVPs with user's optimistic updates
-  // If user has an RSVP in context, use that; otherwise use server data
-  const [optimisticRsvps, setOptimisticRsvps] = useState<RSVP[]>(rsvps);
+  const [optimisticRsvps, setOptimisticRsvps] = useState<Rsvp[]>(rsvps);
 
   useEffect(() => {
-    // When context RSVPs change, update our optimistic state
     if (currentUser) {
       const userRsvpForThisSession = userRsvps.find(
-        (rsvp) => rsvp.Session && rsvp.Session.includes(session.ID)
+        (rsvp) => rsvp.sessionId === session.id
       );
 
       if (userRsvpForThisSession) {
-        // User has RSVP'd - add/update their RSVP in the list
         setOptimisticRsvps((prev) => {
           const withoutUserRsvp = prev.filter(
-            (rsvp) => !rsvp.Guest || !rsvp.Guest.includes(currentUser)
+            (rsvp) => rsvp.guestId !== currentUser
           );
           return [...withoutUserRsvp, userRsvpForThisSession];
         });
       } else {
-        // User has un-RSVP'd - remove their RSVP from the list
         setOptimisticRsvps((prev) =>
-          prev.filter(
-            (rsvp) => !rsvp.Guest || !rsvp.Guest.includes(currentUser)
-          )
+          prev.filter((rsvp) => rsvp.guestId !== currentUser)
         );
       }
     }
-  }, [userRsvps, currentUser, session.ID]);
+  }, [userRsvps, currentUser, session.id]);
+
   const router = useRouter();
   const [isRsvping, setIsRsvping] = useState(false);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [clashingSession, setClashingSession] = useState<Session | null>(null);
   const [confirmRSVPModalOpen, setConfirmRSVPModalOpen] = useState(false);
 
-  // Determine user status for this session
-  const rsvpd = currentUser ? rsvpdForSession(session.ID + "") : false;
-  const isHost = currentUser && session.Hosts?.includes(currentUser);
-  const isEditable = !!isHost && session["Attendee scheduled"];
+  const rsvpd = currentUser ? rsvpdForSession(session.id) : false;
+  const isHost = currentUser && session.hosts.some((h) => h.id === currentUser);
+  const isEditable = !!isHost && session.attendeeScheduled;
 
-  // Get attendee names from optimistic RSVPs - updates in real-time
-  const attendeeIds = optimisticRsvps.flatMap((rsvp: RSVP) => rsvp.Guest);
-  const guestMap = new Map(guests.map((guest) => [guest.ID, guest.Name]));
+  const attendeeIds = optimisticRsvps.map((rsvp) => rsvp.guestId);
+  const guestMap = new Map(guests.map((guest) => [guest.id, guest.name]));
 
   const attendeeNames = attendeeIds
-    .map((id: string) => guestMap.get(id))
+    .map((id) => guestMap.get(id))
     .filter((name): name is string => name !== undefined)
     .sort();
 
-  const location = locations.find(
-    (loc) => loc.Name === session["Location name"]?.[0]
-  );
+  const location = locations.find((loc) => loc.id === session.locations[0]?.id);
 
   const handleRsvp = () => {
     if (!currentUser) {
@@ -107,7 +94,6 @@ export function ViewSession(props: {
       return;
     }
 
-    // Check for clashing sessions only when RSVPing (not when un-RSVPing)
     if (!rsvpd) {
       const overlappingSession = userBusySessions().find((ses) =>
         sessionsOverlap(session, ses)
@@ -129,10 +115,9 @@ export function ViewSession(props: {
 
     setIsRsvping(true);
 
-    // Get the current RSVP status at the time of the action
-    const currentRsvpStatus = rsvpdForSession(session.ID + "");
+    const currentRsvpStatus = rsvpdForSession(session.id);
 
-    void updateRsvp(currentUser, session.ID, currentRsvpStatus)
+    void updateRsvp(currentUser, session.id, currentRsvpStatus)
       .then((result) => {
         if (!result) {
           console.error("Failed to update RSVP");
@@ -147,13 +132,13 @@ export function ViewSession(props: {
     if (isInModal && onCloseModal) {
       e.preventDefault();
       onCloseModal();
-      // Small delay to allow modal to close before navigation
       setTimeout(() => {
-        router.push(`/${eventSlug}/edit-session?sessionID=${session.ID}`);
+        router.push(`/${eventSlug}/edit-session?sessionID=${session.id}`);
       }, 100);
     }
-    // If not in modal, let the Link component handle the navigation normally
   };
+
+  const hostNames = session.hosts.map((h) => h.name).join(", ");
 
   return (
     <div
@@ -164,24 +149,20 @@ export function ViewSession(props: {
         open={userModalOpen}
         rsvp={handleRsvp}
         guests={guests}
-        hosts={session.Hosts || []}
+        hosts={session.hosts.map((h) => h.name)}
         rsvpd={rsvpd}
         zIndex="z-[100]"
-        portal={true} // Explicitly portal this modal to escape the session modal
+        portal={true}
         sessionInfoDisplay={
           <div>
             <h1 className="text-lg font-bold leading-tight flex items-center gap-1">
-              {session.Closed && (
+              {session.closed && (
                 <LockIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
               )}
-              {session.Title}
+              {session.title}
             </h1>
             <p className="text-xs text-gray-500 mb-2 mt-1">
-              Hosted by{" "}
-              {session
-                .Hosts!.map((h) => guests.find((g) => g.ID === h))
-                .map((g) => g?.Name)
-                .join(", ")}
+              Hosted by {hostNames}
             </p>
           </div>
         }
@@ -191,10 +172,10 @@ export function ViewSession(props: {
         close={() => setConfirmRSVPModalOpen(false)}
         confirm={doRsvp}
         zIndex="z-[100]"
-        portal={true} // Explicitly portal this modal to escape the session modal
+        portal={true}
         message={
-          `Warning: that session clashes with ${clashingSession?.Title}, which you ` +
-          `are ${clashingSession?.Hosts?.includes(currentUser || "") ? "hosting" : "attending"}. ` +
+          `Warning: that session clashes with ${clashingSession?.title}, which you ` +
+          `are ${clashingSession?.hosts.some((h) => h.id === (currentUser || "")) ? "hosting" : "attending"}. ` +
           "Are you sure you want to proceed?"
         }
       />
@@ -203,19 +184,18 @@ export function ViewSession(props: {
           className="bg-rose-400 text-white font-semibold py-2 px-4 rounded shadow hover:bg-rose-500 active:bg-rose-500 w-fit px-12 mt-4 mb-2 block"
           href={`/${eventSlug}`}
         >
-          Back to {event.Name}
+          Back to {event.name}
         </Link>
       )}
-      {/* Title with status indicators */}
       <div className="flex items-start gap-2 mb-2 mt-5">
         <p
           className="text-xl font-semibold flex-1 flex items-center gap-2"
           id="title"
         >
-          {session.Closed && (
+          {session.closed && (
             <LockIcon className="h-5 w-5 text-gray-600 flex-shrink-0" />
           )}
-          {session.Title}
+          {session.title}
         </p>
         <div className="flex gap-1">
           {isHost && (
@@ -236,8 +216,7 @@ export function ViewSession(props: {
           )}
         </div>
       </div>
-      {/* Closed session information */}
-      {session.Closed && (
+      {session.closed && (
         <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-sm text-yellow-800">
           <div className="flex items-center gap-2 font-medium mb-1">
             <LockIcon className="h-4 w-4" />
@@ -250,7 +229,6 @@ export function ViewSession(props: {
           </p>
         </div>
       )}
-      {/* Action buttons */}
       <div className="mt-2 mb-6 flex gap-2 flex-wrap">
         {!isHost && (
           <button
@@ -264,7 +242,7 @@ export function ViewSession(props: {
 
         {isEditable && (
           <Link
-            href={`/${eventSlug}/edit-session?sessionID=${session.ID}`}
+            href={`/${eventSlug}/edit-session?sessionID=${session.id}`}
             className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium rounded-md border border-rose-400 text-rose-400 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-400 transition-colors"
             onClick={handleEditClick}
           >
@@ -272,17 +250,11 @@ export function ViewSession(props: {
             Edit
           </Link>
         )}
-      </div>{" "}
-      {/* Session details */}
+      </div>
       <div className="space-y-2 mb-6 text-sm text-gray-700">
         <div className="flex gap-2">
           <span className="font-medium">Hosts(s):</span>
-          <span>
-            {session
-              .Hosts!.map((h) => guests.find((g) => g.ID === h))
-              .map((g) => g?.Name)
-              .join(", ")}
-          </span>
+          <span>{hostNames}</span>
         </div>
         <div className="flex gap-2">
           <span className="font-medium">Location:</span>
@@ -291,7 +263,7 @@ export function ViewSession(props: {
         <div className="flex gap-2">
           <span className="font-medium">Time:</span>
           <span>
-            {DateTime.fromISO(session["Start time"])
+            {DateTime.fromJSDate(session.startTime ?? new Date())
               .setZone("America/Los_Angeles")
               .toFormat("EEEE h:mm a")}{" "}
             -{" "}
@@ -311,17 +283,15 @@ export function ViewSession(props: {
           </span>
         </div>
       </div>
-      {/* Description (potentially long) */}
       <div className="mb-6">
         <h3 className="font-semibold mb-2">Description</h3>
-        <p className="whitespace-pre-line">{session.Description}</p>
+        <p className="whitespace-pre-line">{session.description}</p>
       </div>
-      {/* Link to proposal (if exists) */}
-      {session.proposal && (
+      {session.proposalId && (
         <p className="text-sm text-gray-600">
           This session was scheduled from a proposal. See it{" "}
           <a
-            href={`/${eventSlug}/proposals/${session.proposal[0]}/view`}
+            href={`/${eventSlug}/proposals/${session.proposalId}/view`}
             className="text-rose-500 underline hover:text-rose-600 transition-colors"
           >
             here

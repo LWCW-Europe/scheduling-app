@@ -1,5 +1,5 @@
-import { Day } from "@/db/days";
-import type { Session } from "@/db/sessions";
+import { Day } from "@/db/repositories/interfaces";
+import type { Session } from "@/db/repositories/interfaces";
 import { DateTime } from "luxon";
 
 export const getPercentThroughDay = (now: Date, start: Date, end: Date) =>
@@ -16,8 +16,7 @@ export const convertParamDateTime = (date: string, time: string) => {
 
 export const dateOnDay = (date: Date, day: Day) => {
   return (
-    date.getTime() >= new Date(day.Start).getTime() &&
-    date.getTime() <= new Date(day.End).getTime()
+    date.getTime() >= day.start.getTime() && date.getTime() <= day.end.getTime()
   );
 };
 
@@ -61,8 +60,8 @@ export function formatDuration(
  * Note: This is only used for DISPLAY purposes on existing sessions.
  */
 export function getEndTimeMinusBreak(session: Session): DateTime {
-  const startTime = DateTime.fromISO(session["Start time"]);
-  const endTime = DateTime.fromISO(session["End time"]);
+  const startTime = DateTime.fromJSDate(session.startTime ?? new Date(0));
+  const endTime = DateTime.fromJSDate(session.endTime ?? new Date(0));
   const originalDurationMs = endTime.toMillis() - startTime.toMillis();
   const originalDurationMinutes = originalDurationMs / (1000 * 60);
 

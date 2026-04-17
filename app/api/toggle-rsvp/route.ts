@@ -1,4 +1,4 @@
-import { getBase } from "@/db/db";
+import { getRepositories } from "@/db/container";
 
 type RSVPParams = {
   sessionId: string;
@@ -10,37 +10,24 @@ export const dynamic = "force-dynamic"; // defaults to auto
 
 export async function POST(req: Request) {
   const { sessionId, guestId, remove } = (await req.json()) as RSVPParams;
+  const repos = getRepositories();
 
   if (!remove) {
     try {
-      const records = await getBase()("RSVPs").create([
-        {
-          fields: { Session: [sessionId], Guest: [guestId] },
-        },
-      ]);
-      records.forEach((record) => console.log(record.getId()));
+      const rsvp = await repos.rsvps.create({ sessionId, guestId });
+      console.log(rsvp.id);
     } catch (err) {
       console.error(err);
-      return;
+      return Response.error();
     }
   } else {
     console.log("REMOVING RSVP", { sessionId, guestId });
-    await getBase()("RSVPs")
-      .select({
-        filterByFormula: `AND({Session ID} = "${sessionId}", {Guest ID} = "${guestId}")`,
-      })
-      .eachPage(function page(records, fetchNextPage) {
-        console.log("RECORDS", { records });
-        records.forEach(function (record) {
-          getBase()("RSVPs").destroy([record.getId()], function (err: string) {
-            if (err) {
-              console.error(err);
-              return;
-            }
-          });
-        });
-        fetchNextPage();
-      });
+    try {
+      await repos.rsvps.deleteBySessionAndGuest(sessionId, guestId);
+    } catch (err) {
+      console.error(err);
+      return Response.error();
+    }
   }
 
   return Response.json({ success: true });
