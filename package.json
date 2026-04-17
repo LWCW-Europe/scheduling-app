@@ -13,7 +13,8 @@
     "dev:migrate:up": "node set-env.js development drizzle-kit migrate",
     "dev:migrate:status": "node set-env.js development drizzle-kit check",
     "dev:migrate:create": "node set-env.js development drizzle-kit generate",
-    "dev:db:reset": "node set-env.js development tsx tests/reset-database.ts"
+    "dev:db:reset": "node set-env.js development tsx tests/reset-database.ts",
+    "test:poc": "playwright test --config=playwright.poc.config.ts"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",
@@ -31,6 +32,7 @@
     "lodash": "^4.18.1",
     "luxon": "^3.7.2",
     "moment-timezone": "^0.6.1",
+    "nanoid": "^5.1.9",
     "next": "^14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
