@@ -1,9 +1,8 @@
 # ADR 0001: Replace Airtable with a SQL database
 
-- **Status:** Proposed
-- **Date:** 2026-04-15
+- **Status:** Accepted
+- **Date:** 2026-04-16
 - **Tracking issue:** [#367](https://github.com/LWCW-Europe/scheduling-app/issues/367)
-- **Implementation plan:** [docs/plans/367-replace-airtable.md](../plans/367-replace-airtable.md)
 
 ## Context
 
@@ -200,8 +199,7 @@ Rationale for each piece:
 ### Negative / costs
 
 - **One-time migration effort.** Every file in `db/` and every API route
-  that calls `getBase()` has to be rewritten. Covered by the phased plan
-  in `docs/plans/367-replace-airtable.md`.
+  that calls `getBase()` has to be rewritten.
 - **Loss of the free admin UI.** This is the real cost. Mitigations, in
   order of preference: (a) a minimal custom `/admin` route in the Next.js
   app for the handful of fields that actually need editing (event phase
@@ -233,7 +231,6 @@ Rationale for each piece:
 ## References
 
 - Issue [#367](https://github.com/LWCW-Europe/scheduling-app/issues/367)
-- Implementation plan: [docs/plans/367-replace-airtable.md](../plans/367-replace-airtable.md)
 - Drizzle ORM: <https://orm.drizzle.team>
 - Drizzle Kit migration system (SQLite `ALTER TABLE` limitations → table-rebuild statements): <https://deepwiki.com/drizzle-team/drizzle-orm/3.2-migration-system>
 - `better-sqlite3`: <https://github.com/WiseLibs/better-sqlite3>
