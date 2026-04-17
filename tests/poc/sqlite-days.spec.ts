@@ -1,30 +1,10 @@
-import { test as base, expect } from "@playwright/test";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import * as fs from "fs";
-import * as schema from "../../db/schema";
+import { test as base, expect } from "./fixture";
 import { SqliteDaysRepository } from "../../db/repositories/sqlite/days";
+import * as schema from "../../db/schema";
 
-type DB = ReturnType<typeof drizzle<typeof schema>>;
-
-type Fixtures = {
-  db: DB;
-  repo: SqliteDaysRepository;
-};
+type Fixtures = { repo: SqliteDaysRepository };
 
 const test = base.extend<Fixtures>({
-  // eslint-disable-next-line no-empty-pattern
-  db: async ({}, use, testInfo) => {
-    const dbPath = `./data.test.poc.${testInfo.parallelIndex}.db`;
-    if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
-    const sqlite = new Database(dbPath);
-    const db = drizzle(sqlite, { schema });
-    migrate(db, { migrationsFolder: "./drizzle" });
-    await use(db);
-    sqlite.close();
-    if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
-  },
   repo: async ({ db }, use) => {
     await use(new SqliteDaysRepository(db));
   },
