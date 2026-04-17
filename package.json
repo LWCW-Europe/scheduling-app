@@ -13,8 +13,7 @@
     "dev:migrate:up": "node set-env.js development drizzle-kit migrate",
     "dev:migrate:status": "node set-env.js development drizzle-kit check",
     "dev:migrate:create": "node set-env.js development drizzle-kit generate",
-    "dev:db:reset": "node set-env.js development tsx tests/reset-database.ts",
-    "test:poc": "playwright test --config=playwright.poc.config.ts"
+    "dev:db:reset": "node set-env.js development tsx tests/reset-database.ts"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",
