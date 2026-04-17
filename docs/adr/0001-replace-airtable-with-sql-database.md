@@ -68,16 +68,27 @@ Rationale for each piece:
   load this app sees. It makes self-hosting a `docker run` with a
   mounted volume.
 - **Postgres-friendly structure, deferred implementation.** Drizzle
-  supports Postgres through the same ORM surface, so adding it later
-  should be a contained change: a second schema file, a branch in
-  `db/client.ts`, a second migrations directory. We do not pay for that
-  now — no second schema, no second CI job, no half-tested code path —
-  but we do avoid SQLite-only query idioms in call sites so the future
-  port is mechanical.
-- **Drizzle ORM.** TS-first schema as source of truth, SQL-file
-  migrations via `drizzle-kit`, no binary engine, small runtime
-  footprint, good fit for Next.js App Router. The cross-dialect story
-  is a latent option, not something we use today.
+  supports Postgres through a parallel ORM surface (`pg-core` vs
+  `sqlite-core`), so adding it later should be a contained change: a
+  second schema file, a branch in `db/client.ts`, a second migrations
+  directory. We do not pay for that now — no second schema, no second
+  CI job, no half-tested code path — but we avoid SQLite-only query
+  idioms in call sites so the future port is contained, not a rewrite.
+  We explicitly do not claim it will be *mechanical*: column types,
+  defaults, JSON handling, `returning()` semantics, and boolean
+  representation all differ between the two dialects and will need
+  per-column review.
+- **Drizzle ORM.** TS-first schema as the single source of truth (no
+  `prisma generate`-style codegen step), SQL-file migrations via
+  `drizzle-kit`, small bundle, good fit for Next.js App Router, and —
+  via the `better-sqlite3` driver — a natural match for the Node-based
+  Docker/VPS deployment we are moving to. The cross-dialect story is a
+  latent option, not something we use today. Known rough edges we
+  accept: SQLite's limited `ALTER TABLE` forces `drizzle-kit` into
+  table-rebuild statements for some schema changes (documented, not
+  hidden); the community and ecosystem are smaller than Prisma's;
+  type-checking is heavier than Prisma's in very large schemas. None
+  are blocking at this project's size.
 
 ## Alternatives considered
 
@@ -126,19 +137,38 @@ Rationale for each piece:
 
 ### Alternative ORMs / query layers
 
-- **Prisma.** Mature, great DX, large community. But: separate
-  `schema.prisma` DSL duplicates the TS types, ships a binary query engine
-  (awkward in small Docker images and in serverless), slower cold starts,
-  and migration workflow is heavier than we need. Rejected.
-- **Kysely.** Excellent type-safe query builder, but has no schema source
-  of truth — we would still need a separate migration tool and hand-kept
-  types. Rejected as primary, reconsider if Drizzle disappoints.
-- **TypeORM / MikroORM.** Decorator-heavy, weaker inference, historically
-  rough migration stories. Rejected.
-- **Raw SQL + `better-sqlite3`/`postgres`.** Minimal dependencies, maximum
-  control. Tempting for a project this size, but we would hand-write types
-  for every row shape and lose the cross-dialect story. Rejected; if
-  Drizzle is ever removed, this is the fallback.
+- **Prisma.** Mature, great DX, largest community and tooling ecosystem
+  of the options here. Historically we would have rejected it on the
+  Rust query-engine binary (large client, cold-start and bundling pain),
+  but Prisma 7 (late 2025) replaced that with a pure TS/WASM Query
+  Compiler, which closes most of that gap. Remaining cons vs Drizzle:
+  `schema.prisma` is a separate DSL that duplicates the TS types and
+  requires a `prisma generate` step to keep them in sync (a recurring
+  source of "why are my types wrong?"); the client is still several
+  times larger than Drizzle's; and the `prisma migrate dev` / `deploy`
+  workflow is heavier machinery than a single-file SQLite app needs.
+  Rejected on fit, not on disqualification — Prisma is a credible
+  alternative we could live with.
+- **Kysely.** Excellent type-safe SQL query builder. It *does* ship a
+  programmatic migrator (`Kysely.Migrator`), so "no migration tool" is
+  not quite fair — but it is deliberately not an ORM, so there is no
+  schema DSL acting as source of truth. Table-row types must be
+  hand-maintained or generated from the live database via a third-party
+  codegen tool (e.g. `kysely-codegen`), and we would lose the automatic
+  schema-diff → SQL flow that `drizzle-kit generate` gives us. Rejected
+  as primary; reconsider if Drizzle disappoints, since Kysely's
+  query-builder ergonomics are genuinely good.
+- **TypeORM.** Decorator-heavy, weaker TS inference, relies on
+  experimental decorators, and development pace has visibly slowed.
+  Rejected.
+- **MikroORM.** Actively maintained and arguably the most "correct" TS
+  ORM (Data Mapper + Unit of Work + Identity Map). But the entity /
+  decorator / `em.flush()` model is heavier than this app needs, and
+  the runtime footprint is larger than Drizzle's. Rejected on fit.
+- **Raw SQL + `better-sqlite3`/`postgres`.** Minimal dependencies,
+  maximum control. Tempting for a project this size, but we would
+  hand-write types for every row shape and lose the cross-dialect
+  story. Rejected; if Drizzle is ever removed, this is the fallback.
 
 ### ID strategy
 
@@ -205,4 +235,12 @@ Rationale for each piece:
 - Issue [#367](https://github.com/LWCW-Europe/scheduling-app/issues/367)
 - Implementation plan: [docs/plans/367-replace-airtable.md](../plans/367-replace-airtable.md)
 - Drizzle ORM: <https://orm.drizzle.team>
+- Drizzle Kit migration system (SQLite `ALTER TABLE` limitations → table-rebuild statements): <https://deepwiki.com/drizzle-team/drizzle-orm/3.2-migration-system>
 - `better-sqlite3`: <https://github.com/WiseLibs/better-sqlite3>
+- Prisma 7 TS/WASM rewrite — architecture shift announcement: <https://www.prisma.io/blog/from-rust-to-typescript-a-new-chapter-for-prisma-orm>
+- Prisma 7 performance benchmarks after removing the Rust engine: <https://www.prisma.io/blog/prisma-orm-without-rust-latest-performance-benchmarks>
+- Kysely migrations (built-in programmatic `Migrator`): <https://kysely.dev/docs/migrations>
+- Kysely vs Drizzle comparison (typed query builders): <https://marmelab.com/blog/2025/06/26/kysely-vs-drizzle.html>
+- MikroORM competitive landscape (2026 self-assessment): <https://github.com/mikro-orm/mikro-orm/issues/7170>
+- 2026 TypeScript ORM survey — Encore: <https://encore.cloud/resources/typescript-orms>
+- 2026 Drizzle / Prisma / Kysely tier list: <https://www.pkgpulse.com/blog/prisma-vs-drizzle-vs-kysely-typescript-orm-tier-list>

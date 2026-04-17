@@ -10,8 +10,12 @@ Tracking: [#367](https://github.com/LWCW-Europe/scheduling-app/issues/367)
 - **SQLite driver: `better-sqlite3`** — Node, sync, fastest, standard choice.
 - **Postgres:** not shipped in this change. Drizzle supports it through
   `pg-core` + the `postgres` (postgres.js) driver if we add it later.
-- Rejected: Prisma (heavy, binary engines, schema.prisma duplication),
-  Kysely (no schema source of truth), TypeORM (decorator-heavy, weaker TS).
+- Rejected: Prisma (credible after the Prisma 7 TS/WASM rewrite, but
+  `schema.prisma` still duplicates types and needs `prisma generate`;
+  heavier workflow than this app needs), Kysely (has a migrator but no
+  schema DSL — row types must be hand-kept or codegen'd from the live
+  DB), TypeORM (decorator-heavy, weaker TS, slowing down), MikroORM
+  (heavier entity/UoW model than needed here). See ADR for full reasoning.
 
 ## Architecture
 
