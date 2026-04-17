@@ -10,134 +10,197 @@ Tracking: [#367](https://github.com/LWCW-Europe/scheduling-app/issues/367)
 - **SQLite driver: `better-sqlite3`** — Node, sync, fastest, standard choice.
 - **Postgres:** not shipped in this change. Drizzle supports it through
   `pg-core` + the `postgres` (postgres.js) driver if we add it later.
-- Rejected: Prisma (credible after the Prisma 7 TS/WASM rewrite, but
-  `schema.prisma` still duplicates types and needs `prisma generate`;
-  heavier workflow than this app needs), Kysely (has a migrator but no
-  schema DSL — row types must be hand-kept or codegen'd from the live
-  DB), TypeORM (decorator-heavy, weaker TS, slowing down), MikroORM
-  (heavier entity/UoW model than needed here). See ADR for full reasoning.
+- Rejected: Prisma, Kysely, TypeORM, MikroORM. See ADR for reasoning.
 
 ## Architecture
 
-- New `db/client.ts` is the single place that instantiates Drizzle. It reads
-  `DATABASE_URL` (currently only `file:…` accepted) and returns a `getDb()`
-  handle. Adding Postgres later means extending this module and its URL
-  parsing — no other file should need to change.
-- New `db/schema.ts` holds the SQLite schema (`drizzle-orm/sqlite-core`) as the
-  single source of truth. It is the only file that imports from `sqlite-core`,
-  so a future Postgres schema can sit beside it as `db/schema.pg.ts` without
-  touching call sites.
-- Call sites in `db/*.ts` go through the Drizzle query builder only. No raw
-  SQL, no SQLite-specific functions (`json_extract`, `GLOB`, `LIKE` with
-  SQLite's default case-insensitive ASCII semantics, integer-booleans, etc.)
-  leak into the data layer. Where a SQLite idiom is unavoidable it is isolated
-  in a helper inside `db/` and documented as dialect-specific.
-- The entire `migrations/` tree is deleted (`versions/*.ts`, `runner.ts`,
-  `schema-validator.ts`). Drizzle migrations live in `drizzle/` as generated
-  SQL, starting from a single initial migration that creates the current-state
-  schema — we do not replay the Airtable-era migration history.
-  `dev:migrate:{up,status,create}` map to `drizzle-kit` commands.
-- Existing domain types in `db/*.ts` (`Guest`, `Event`, `Session`, …) are
-  preserved so call sites in `app/**` barely change. Only the internal query
-  bodies are rewritten.
+### Repository pattern, dependency-injected
+
+All data access goes through a **Repository per aggregate**. The app
+domain (everything outside `db/`) never sees an ORM object, a Drizzle
+row type, or an Airtable record — only domain types returned by
+repository methods.
+
+- `db/repositories/interfaces.ts` — pure interfaces and domain types.
+  The only file `app/**` imports from the data layer.
+- `db/repositories/sqlite/*.ts` — Drizzle implementations. The only
+  place `drizzle-orm/sqlite-core` row types appear outside
+  `db/schema.ts`.
+- `db/container.ts` — `getRepositories()` returns a bundle of
+  repositories, cached as a process-level singleton. Call sites
+  destructure what they need; `better-sqlite3` is sync and the
+  `Database` handle is safe to share across requests.
+
+### Domain model vs. database schema
+
+The domain model (what `app/**` sees) and the database schema (what
+`db/schema.ts` defines) are allowed to diverge. Repositories translate
+between them. This keeps the domain shaped around app logic and the
+schema shaped around storage, without one dragging the other around.
+
+Apply DDD but also be pragmatic.
+
+### Transactions
+
+**A transaction stays inside a single repository method and covers
+exactly one aggregate.** The container does not expose
+`withTransaction(tx => …)`. If a feature seems to need an atomic write
+across two repositories, treat that as a signal the aggregate
+boundaries are wrong, not as a reason to plumb transactions through
+the domain.
+
+### Drizzle-specific pieces
+
+- `db/schema.ts` — SQLite schema, single source of truth for storage.
+- `db/client.ts` — instantiates Drizzle from `DATABASE_URL` (currently
+  only `file:…`). Adding Postgres later extends this module and URL
+  parsing; no call site changes.
+- `drizzle/` — generated SQL migrations. A single initial migration
+  creates the current-state schema; we do not replay Airtable-era
+  history.
+- `dev:migrate:{up,status,create}` map to `drizzle-kit` commands.
+
+### Future directions (not part of this migration)
+
+- If the domain layer grows, extract domain types and interfaces to a
+  separate `domain/` package. Not worth the move today.
+- Postgres support via a second client branch plus `db/schema.pg.ts`,
+  behind the same repository interfaces.
 
 ## Schema mapping
 
-One initial Drizzle migration creates all tables matching the current Airtable
-shape:
+One initial Drizzle migration creates all tables matching the current
+Airtable shape:
 
 - `guests`, `events`, `locations`, `days`, `sessions`, `rsvps`,
   `session_proposals`, `votes`. The old Airtable `migrations` tracking
-  table is not recreated — Drizzle manages its own migration state in
+  table is not recreated — Drizzle manages its own state in
   `__drizzle_migrations`.
-- Link fields → FKs. Many-to-many relations (Events↔Guests, Events↔Locations,
-  Sessions↔Hosts, Sessions↔Locations) → join tables.
+- Link fields → FKs. Many-to-many relations (Events↔Guests,
+  Events↔Locations, Sessions↔Hosts, Sessions↔Locations) → join tables,
+  loaded as part of their parent aggregate.
 - Airtable lookups/rollups (`Host name`, `Location name`, `Num RSVPs`,
-  `votesCount`, `Event name`, `guestId`, `proposalId`) → computed in the query
-  layer via joins; DTOs expose the same field names.
-- IDs: `TEXT` primary keys generated with plain nanoid (no `rec` prefix).
-  Existing `ID: string` typing stays intact; any `rec…`-assuming code is
-  updated in the same pass.
-- `filterByFormula` strings are replaced with Drizzle `where` clauses — which
-  also fixes the SQL-injection-shaped string interpolation currently in
-  `db/votes.ts` and `db/guests.ts`.
-
-## Call sites to migrate
-
-Everything touching `getBase()`:
-
-- `db/{days,events,guests,locations,rsvps,sessions,sessionProposals,votes}.ts`
-  — rewrite internals against Drizzle.
-- `db/db.ts` — deleted; `getBase()` has no replacement.
-- `app/api/{add-vote,update-session,add-session}/route.ts` — usually
-  unchanged if domain types are preserved, confirm per route.
-- `app/api/toggle-rsvp/route.ts`, `app/api/delete-session/route.ts` —
-  contain their own inline Airtable queries (`filterByFormula` with
-  string-interpolated input); rewrite against Drizzle, do not just
-  re-check the signature.
-- `tests/reset-database.ts` — rewritten as pure Drizzle inserts against a
-  fresh SQLite file.
-- `migrations/` — deleted wholesale, not ported.
-
-Port one module at a time, run the Playwright suite against the new SQLite
-backend after each.
-
-## Test strategy
-
-- Playwright tests get a fresh SQLite file per run: `tests/init.ts` deletes
-  `data.test.db`, runs `drizzle-kit migrate`, then calls the rewritten
-  `reset-database.ts` (now pure Drizzle inserts, no Airtable batching limits).
-- No mocks — integration tests hit a real SQLite file, which is the whole point
-  of the change.
-- CI: no secrets, no network, no rate-limit flakes.
-
-## Docs and env
-
-- Remove `AIRTABLE_API_KEY`, `AIRTABLE_BASE_ID` from `set-env.js`, docs,
-  examples.
-- Add `DATABASE_URL` with SQLite default for dev (`file:./data.db`).
-- Update `README.md` and deploy docs to describe Docker/self-host with a
-  mounted volume for the SQLite file.
-- `docs/SCHEMA.md` is deleted; `db/schema.ts` is the source of truth.
+  `votesCount`, `Event name`, `guestId`, `proposalId`) → computed in
+  the repository layer via joins; domain types expose the fields app
+  code actually needs, not a one-for-one of storage.
+- IDs: `TEXT` primary keys generated with plain nanoid (no `rec`
+  prefix).
+- `filterByFormula` strings become Drizzle `where` clauses — which also
+  fixes the SQL-injection-shaped string interpolation currently in
+  `db/votes.ts`, `db/guests.ts`, and the inline queries in
+  `app/api/toggle-rsvp/route.ts` and `app/api/delete-session/route.ts`.
 
 ## Work breakdown
 
-One big-bang PR, internally ordered as:
+Four stages, one commit each. Airtable and SQLite never both serve the
+running app — no dual-backend runtime at any point.
 
-1. Add Drizzle + `better-sqlite3`, `db/schema.ts`, `db/client.ts`, initial
-   migration, seed rewrite. Wire `dev:db:reset` to SQLite.
-2. Port `db/guests.ts`, `db/locations.ts`, `db/days.ts` and their API callers.
-3. Port `db/events.ts` (drop the fallback/phase-field error handling — it
-   exists only because Airtable schema can drift).
-4. Port `db/sessions.ts`, `db/rsvps.ts` and related API routes.
-5. Port `db/sessionProposals.ts`, `db/votes.ts` and related API routes.
-6. Delete the `airtable` package, the entire `migrations/` tree, and
-   `getBase()`. Update docs.
+### Stage 1 — Drizzle infrastructure (additive, no app changes)
+
+- Add `drizzle-orm`, `better-sqlite3`, `drizzle-kit` dependencies.
+- Add `db/schema.ts` with the full SQLite schema.
+- Add `db/client.ts`, `drizzle.config.ts`.
+- Generate the initial migration (`drizzle/0000_*.sql`).
+- Add `DATABASE_URL` to `set-env.js` with SQLite defaults
+  (`file:./data.db` dev, `file:./data.test.db` test).
+- Airtable env vars and the Airtable-era `migrations/` tree untouched.
+- App is unchanged, still runs on Airtable.
+
+### Stage 2 — POC: standalone integration test against SQLite
+
+- Add `db/repositories/interfaces.ts` seeded with `DaysRepository` and
+  the `Day` domain type.
+- Implement `db/repositories/sqlite/days.ts`.
+- Add `tests/poc/sqlite-days.spec.ts`: fresh SQLite file, run
+  `drizzle-kit migrate`, exercise CRUD through the interface, assert
+  round-trip.
+- No container, no app wiring, no Airtable env vars needed. App still
+  runs on Airtable.
+- Validates: Drizzle setup, migration flow, schema, interface seam,
+  domain-types-only boundary, CI has a working SQLite path.
+
+### Stage 3 — Implement remaining repositories (additive)
+
+- Flesh out `db/repositories/interfaces.ts` with every aggregate's
+  interface and domain type: `Event`, `Guest`, `Location`, `Session`
+  (bundling hosts and locations), `Rsvp`, `SessionProposal`, `Vote`.
+- Implement `db/repositories/sqlite/*.ts` for each, each with
+  repository-level integration tests.
+- Add `db/container.ts` with `getRepositories()`.
+- `db/*.ts` Airtable files and `app/**` call sites untouched. The new
+  repositories are dead code until stage 4.
+
+### Stage 4 — Flip to SQLite, delete Airtable
+
+- Migrate every call site in `app/**` to `getRepositories()`, including
+  the inline Airtable queries in `app/api/toggle-rsvp/route.ts` and
+  `app/api/delete-session/route.ts`. Rename Airtable-era field accesses
+  (`"Location names"`, `"Host name"`, `Start`/`End` strings, …) to the
+  idiomatic names defined on the new domain types.
+- Rewrite `tests/reset-database.ts` as pure Drizzle inserts. Have
+  `tests/init.ts` run `drizzle-kit migrate` then seed, using per-worker
+  `data.test.${workerIndex}.db` files so Playwright's
+  `fullyParallel: true` keeps working.
+- Delete:
+  - `airtable` package.
+  - `db/db.ts` and every `db/*.ts` Airtable file.
+  - `migrations/{cli,versions}/`, `migrations/runner.ts`,
+    `migrations/schema-validator.ts`, `migrations/types.ts`,
+    `migrations/README.md`.
+  - `AIRTABLE_API_KEY`, `AIRTABLE_BASE_ID` from `set-env.js` and
+    `.env.*.local`.
+  - `docs/SCHEMA.md` (schema lives in `db/schema.ts`).
+- Update `README.md` and deploy docs: Docker/self-host with a mounted
+  volume for the SQLite file; backup guidance (`sqlite3 .backup`).
+
+## Test strategy
+
+- Playwright tests use per-worker SQLite files
+  (`data.test.${workerIndex}.db`). `tests/init.ts` deletes stale
+  files, runs `drizzle-kit migrate`, then seeds.
+- Stage 2's POC test owns its own SQLite file and does not share
+  fixtures with the Playwright suite.
+- No mocks — integration tests hit real SQLite files.
+- CI from stage 4 onward: no secrets, no network, no rate-limit flakes.
 
 ## Out of scope
 
 - Admin backend replacement — tracked in [#368](https://github.com/LWCW-Europe/scheduling-app/issues/368).
-- Data migration from existing Airtable production bases — clean break, see resolved decisions.
-- Postgres support — deliberately deferred; see resolved decisions.
+- Data migration from existing Airtable bases — clean break (no
+  production deployment to migrate).
+- Postgres support — deliberately deferred.
+- Extracting domain types to a separate `domain/` package — noted as a
+  future direction.
 
 ## Resolved decisions
 
-- **Clean break, no importer.** Existing deployments start fresh. No
-  one-shot Airtable → SQLite migration tool.
-- **SQLite only for now, Postgres-friendly encapsulation.** Ship SQLite
-  as the only backend. Keep the data layer structured so a later
-  Postgres port is contained: `db/client.ts` is the only place that
-  instantiates a driver, `db/schema.ts` is the only file that imports
-  from `sqlite-core`, and call sites use the Drizzle query builder
-  without leaking SQLite-specific idioms. Rejected alternatives: a
-  dialect factory (too much wrapping) and shipping two parallel
-  schemas with a drift test (pays for a Postgres backend we do not
-  actually run in CI).
-- **Plain nanoid IDs.** Drop the Airtable `rec…` prefix.
+- **Four stages, no dual-backend runtime.** Airtable and SQLite never
+  both serve the running app. Stage 1 is additive infra, stage 2 is a
+  standalone POC test, stage 3 implements repositories without wiring
+  them, stage 4 flips and deletes Airtable in one commit.
+- **Repository pattern with DI; ORM types never leak.** Interfaces and
+  domain types in `db/repositories/interfaces.ts` are the only surface
+  `app/**` imports. Drizzle types stay inside
+  `db/repositories/sqlite/*` and `db/schema.ts`.
+- **Single `getRepositories()` bundle, process singleton.** Not
+  per-aggregate accessors. Not per-request.
+- **Transactions hidden inside repository methods, single-aggregate
+  only.** No container-level `withTransaction`. Cross-aggregate
+  atomicity is a modelling smell; fix the boundary.
+- **Domain model may diverge from DB schema.** Repositories translate.
+- **Domain-type fields use idiomatic TypeScript names.** No Airtable-era
+  quoted keys with spaces, no date-as-string fields. Renames happen at
+  the interface boundary in stage 3; call sites pick them up in stage 4.
+- **`Session` bundles its host and location link rows.** One
+  `SessionsRepository` owns the `sessions`, `session_hosts`, and
+  `session_locations` tables; `Session` is returned with populated
+  host and location projections via joins. `Guest` and `Location`
+  remain their own aggregates and are mutated only through their own
+  repositories.
+- **Per-worker Playwright DB files.** `data.test.${workerIndex}.db`,
+  keeps `fullyParallel: true`.
+- **Clean break, no importer.**
+- **SQLite only for now, Postgres-friendly structure.**
+- **Plain nanoid IDs.** No `rec…` prefix.
 - **SQLite file at `/var/lib/scheduling-app/data.db` in prod** (mounted
-  volume); `./data.db` in dev; `./data.test.db` in tests, selected via
-  `DATABASE_URL` in the test environment so tests never clobber a dev
-  database. Revisit if the Docker/self-host layout changes.
-- **Big-bang PR.** The Playwright suite gives enough coverage to port the
-  whole data layer in one PR rather than running both backends behind a
-  flag.
+  volume); `./data.db` in dev; `./data.test.*.db` in tests.
