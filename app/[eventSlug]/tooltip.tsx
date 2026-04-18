@@ -52,6 +52,9 @@ export function Tooltip(props: {
         offset(8),
         flip(),
         shift({ padding: 4 }),
+        // Floating UI's arrow() middleware requires the ref object itself
+        // in its configuration; it reads ref.current internally.
+        // eslint-disable-next-line react-hooks/refs
         arrow({ element: arrowRef }),
       ],
     });
@@ -91,6 +94,9 @@ export function Tooltip(props: {
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
         role="tooltip"
+        // refs.setFloating is a callback ref from useFloating; assigning it
+        // here is the documented Floating UI pattern.
+        // eslint-disable-next-line react-hooks/refs
         ref={refs.setFloating}
         style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
         className="z-40 max-w-lg w-120 whitespace-normal rounded bg-white px-2 py-1 border shadow-md border-gray-100"

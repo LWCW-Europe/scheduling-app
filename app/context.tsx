@@ -90,8 +90,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<string | null>(null);
 
   useEffect(() => {
+    // Cookies.get reads document.cookie, a browser-only API. Must run
+    // post-mount so SSR and the first client render agree on user=null.
     const userCookie = Cookies.get("user");
     if (userCookie) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(userCookie);
     }
   }, []);
@@ -125,13 +128,12 @@ export function EventProvider({
 }) {
   const { user } = useContext(UserContext);
   const valueSessions = value.days.flatMap((d) => d.sessions);
+  // value.rsvps seeds the initial state once. The user-change effect below
+  // is the only authoritative source of subsequent updates (plus optimistic
+  // mutations in updateRsvp). Server-side revalidation is not used for RSVPs.
   const [rsvps, setRsvps] = useState<Rsvp[]>(value.rsvps);
   // contains all optimistic updates
   const [localSessions, setLocalSessions] = useState<Session[]>(valueSessions);
-
-  useEffect(() => {
-    setRsvps(value.rsvps);
-  }, [value.rsvps]);
 
   // Fetch RSVPs when user changes
   useEffect(() => {

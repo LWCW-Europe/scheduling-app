@@ -19,7 +19,7 @@ export async function EventLayoutContent({
     return <div>Event not found</div>;
   }
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const currentUser = cookieStore.get("user")?.value;
 
   const [days, sessions, locations, guests, rsvps] = await Promise.all([

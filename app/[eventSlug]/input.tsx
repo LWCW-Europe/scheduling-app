@@ -1,13 +1,13 @@
 /* eslint-disable react/display-name */
 import clsx from "clsx";
-import { Ref, forwardRef } from "react";
+import { type ComponentPropsWithoutRef, Ref, forwardRef } from "react";
 
 export const Input = forwardRef(
   (
     props: {
       error?: boolean;
       errorMessage?: string;
-    } & JSX.IntrinsicElements["input"],
+    } & ComponentPropsWithoutRef<"input">,
     ref: Ref<HTMLInputElement>
   ) => {
     const { error, errorMessage, className, ...rest } = props;

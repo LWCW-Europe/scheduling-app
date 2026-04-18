@@ -9,8 +9,6 @@ import {
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 
-// Server actions must be async functions, even if they don't use await
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function loginAction(
   prevState: { error?: string } | null,
   formData: FormData
@@ -27,16 +25,14 @@ export async function loginAction(
   }
 
   if (verifyPassword(password)) {
-    cookies().set(createAuthCookie());
+    (await cookies()).set(createAuthCookie());
     redirect(redirectTo);
   }
 
   return { error: "Invalid password" };
 }
 
-// Server actions must be async functions, even if they don't use await
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function logoutAction() {
-  cookies().set(createLogoutCookie());
+  (await cookies()).set(createLogoutCookie());
   redirect("/");
 }

@@ -67,12 +67,36 @@ export function SessionForm(props: {
         .toFormat("h:mm a")
     : undefined;
 
+  const { user: currentUser } = useContext(UserContext);
+
+  // Compute default hosts for new sessions (no initial proposal, no sessionID).
+  // Also used as the "reset" target when the user un-selects a proposal.
+  const defaultHosts: Guest[] = currentUser
+    ? guests.filter((g) => g.id === currentUser)
+    : [];
+  const initialHosts: Guest[] = initialProposal
+    ? guests.filter((g) => initialProposal.hosts.some((h) => h.id === g.id))
+    : sessionID
+      ? guests.filter((g) => session.hosts.some((h) => h.id === g.id))
+      : defaultHosts;
+  const sessionDuration = sessionID
+    ? Math.round(
+        ((session.endTime?.valueOf() ?? 0) -
+          (session.startTime?.valueOf() ?? 0)) /
+          1000 /
+          60
+      )
+    : null;
+
   const [proposal, setProposal] = useState<SessionProposal | null>(
     initialProposal
   );
+  const [usedProposal, setUsedProposal] = useState<boolean>(!!initialProposal);
   const [error, setError] = useState<string | null>(null);
-  const [title, setTitle] = useState(session.title);
-  const [description, setDescription] = useState(session.description);
+  const [title, setTitle] = useState(initialProposal?.title ?? session.title);
+  const [description, setDescription] = useState(
+    initialProposal?.description ?? session.description
+  );
   const [closed, setClosed] = useState(session.closed);
   const [day, setDay] = useState(initDay ?? days[0]);
   const [locationId, setLocationId] = useState<string | undefined>(
@@ -84,39 +108,52 @@ export function SessionForm(props: {
   const [startTime, setStartTime] = useState(
     initTimeValid ? initTime : undefined
   );
+  // Derived: the currently-selected startTime if it is still available under
+  // the current location/day, otherwise undefined. Avoids a setState-in-effect
+  // reset by not storing invalid values downstream.
+  const effectiveStartTime = startTimes.some(
+    (st) => st.formattedTime === startTime && st.available
+  )
+    ? startTime
+    : undefined;
   const maxDuration = startTimes.find(
-    (st) => st.formattedTime === startTime
+    (st) => st.formattedTime === effectiveStartTime
   )?.maxDuration;
-  const [duration, setDuration] = useState(Math.min(maxDuration ?? 60, 60));
-  const { user: currentUser } = useContext(UserContext);
-  let initialHosts: Guest[] = [];
-  if (!sessionID) {
-    initialHosts = guests.filter((g) => g.id === currentUser);
-  }
+  const [duration, setDuration] = useState<number>(
+    initialProposal?.durationMinutes ??
+      sessionDuration ??
+      Math.min(maxDuration ?? 60, 60)
+  );
+  // Derived: clamp duration to maxDuration. Preserves user-set value so it
+  // restores when the limit widens again.
+  const effectiveDuration =
+    maxDuration && duration > maxDuration ? maxDuration : duration;
   const [hosts, setHosts] = useState<Guest[]>(initialHosts);
-  useEffect(() => {
-    if (sessionID) {
-      setHosts(guests.filter((g) => session.hosts.some((h) => h.id === g.id)));
-      const endTime = session.endTime?.valueOf() ?? 0;
-      const startTimeVal = session.startTime?.valueOf() ?? 0;
-      const dur = Math.round((endTime - startTimeVal) / 1000 / 60);
-      setDuration(dur);
+
+  function applyProposal(next: SessionProposal | null) {
+    setProposal(next);
+    if (next) {
+      setTitle(next.title);
+      setDescription(next.description ?? "");
+      setHosts(guests.filter((g) => next.hosts.some((h) => h.id === g.id)));
+      if (next.durationMinutes) {
+        setDuration(next.durationMinutes);
+      }
+      setUsedProposal(true);
+    } else if (usedProposal) {
+      setTitle("");
+      setDescription("");
+      setHosts(defaultHosts);
     }
-  }, [guests, session, sessionID]);
-  useEffect(() => {
-    if (
-      !startTimes.some((st) => st.formattedTime === startTime && st.available)
-    ) {
-      setStartTime(undefined);
-    }
-    if (maxDuration && duration > maxDuration) {
-      setDuration(maxDuration);
-    }
-  }, [startTime, maxDuration, duration, startTimes]);
+  }
 
   let dummySession = newEmptySession();
-  if (startTime && day) {
-    const { start, end } = parseSessionTime(day, startTime, duration);
+  if (effectiveStartTime && day) {
+    const { start, end } = parseSessionTime(
+      day,
+      effectiveStartTime,
+      effectiveDuration
+    );
     dummySession = {
       ...newEmptySession(),
       startTime: new Date(start),
@@ -127,24 +164,6 @@ export function SessionForm(props: {
 
   const [hostRSVPs, setHostRSVPs] = useState<Record<string, Rsvp[]>>({});
   const [isFetchingRSVPs, setIsFetchingRSVPs] = useState(false);
-
-  const [usedProposal, setUsedProposal] = useState(false);
-  useEffect(() => {
-    if (proposal) {
-      setTitle(proposal.title);
-      setDescription(proposal.description ?? "");
-      setHosts(guests.filter((g) => proposal.hosts.some((h) => h.id === g.id)));
-      if (proposal.durationMinutes) {
-        setDuration(proposal.durationMinutes);
-      }
-      setUsedProposal(true);
-    } else if (usedProposal) {
-      setTitle("");
-      setDescription("");
-      setHosts(initialHosts);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proposal, guests]);
 
   useEffect(() => {
     const fetchRSVPs = async () => {
@@ -205,7 +224,7 @@ export function SessionForm(props: {
     setIsSubmitting(true);
     setError(null);
     const location = locations.find((loc) => loc.id === locationId);
-    if (!location || !day || !startTime) {
+    if (!location || !day || !effectiveStartTime) {
       setError("Missing required fields");
       setIsSubmitting(false);
       return;
@@ -223,8 +242,8 @@ export function SessionForm(props: {
         closed,
         day,
         location,
-        startTimeString: startTime,
-        duration,
+        startTimeString: effectiveStartTime,
+        duration: effectiveDuration,
         hosts,
         proposal: proposal?.id ?? session.proposalId,
       }),
@@ -326,7 +345,7 @@ export function SessionForm(props: {
           <MyListbox
             currValue={proposal?.id ?? ""}
             setCurrValue={(id) =>
-              setProposal(proposals.find((p) => p.id === id) ?? null)
+              applyProposal(proposals.find((p) => p.id === id) ?? null)
             }
             options={proposalSelectOpts}
             placeholder={"Pre-fill from proposal"}
@@ -415,7 +434,7 @@ export function SessionForm(props: {
           <RequiredStar />
         </label>
         <MyListbox
-          currValue={startTime}
+          currValue={effectiveStartTime}
           setCurrValue={setStartTime}
           options={startTimes.map((st) => {
             return { value: st.formattedTime, available: st.available };
@@ -430,7 +449,7 @@ export function SessionForm(props: {
           <RequiredStar />
         </label>
         <SelectDuration
-          duration={duration}
+          duration={effectiveDuration}
           setDuration={setDuration}
           maxDuration={maxDuration}
         />
@@ -467,11 +486,11 @@ export function SessionForm(props: {
         className="bg-rose-400 text-white font-semibold py-2 rounded shadow disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none hover:bg-rose-500 active:bg-rose-500 mx-auto px-12"
         disabled={
           !title ||
-          !startTime ||
+          !effectiveStartTime ||
           !hosts.length ||
           !locationId ||
           !day ||
-          !duration ||
+          !effectiveDuration ||
           isFetchingRSVPs ||
           isSubmitting
         }

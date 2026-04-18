@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Fuse from "fuse.js";
@@ -69,8 +69,11 @@ export function ProposalTable({
   const { user: currentUserId } = useContext(UserContext);
   const { votes, proposalVoteEmoji } = useContext(VotesContext);
   const router = useRouter();
+  // Derived: filter only applies when a user is selected. Hidden from data
+  // and UI when logged out, without discarding the selection.
+  const effectiveFilter: Filter = currentUserId ? resultFilter : undefined;
   const filteredProposals = initialProposals.filter((pr) => {
-    if (currentUserId && resultFilter) {
+    if (effectiveFilter) {
       const isMine = pr.hosts.some((h) => h.id === currentUserId);
       const hasVoted = votes.some((vote) => vote.proposalId === pr.id);
       let actual: Filter;
@@ -81,7 +84,7 @@ export function ProposalTable({
       } else {
         actual = "unvoted";
       }
-      return resultFilter === actual;
+      return effectiveFilter === actual;
     } else {
       return true;
     }
@@ -106,11 +109,6 @@ export function ProposalTable({
       oldFilter === newFilter ? undefined : newFilter
     );
   }
-  useEffect(() => {
-    if (!currentUserId) {
-      setResultFilter(undefined);
-    }
-  }, [currentUserId]);
   const fuse = new Fuse(filteredProposals, {
     keys: [
       {
@@ -271,7 +269,7 @@ export function ProposalTable({
               <div className="relative inline-block group">
                 <button
                   className={`disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md transition-colors inline-flex items-center gap-2 ${
-                    resultFilter === "mine"
+                    effectiveFilter === "mine"
                       ? "bg-blue-600 hover:bg-blue-700"
                       : currentUserId
                         ? "bg-gray-400 hover:bg-gray-500"
@@ -279,12 +277,12 @@ export function ProposalTable({
                   }`}
                   onClick={() => updateResultFilter("mine")}
                   disabled={!currentUserId}
-                  aria-pressed={resultFilter === "mine"}
-                  aria-label={`Filter to show only your proposals${resultFilter === "mine" ? " (active)" : ""}`}
+                  aria-pressed={effectiveFilter === "mine"}
+                  aria-label={`Filter to show only your proposals${effectiveFilter === "mine" ? " (active)" : ""}`}
                 >
                   <UserIcon className="h-4 w-4" />
                   My proposals
-                  {resultFilter === "mine" && (
+                  {effectiveFilter === "mine" && (
                     <span className="bg-blue-800 text-white text-xs px-1.5 py-0.5 rounded-full">
                       {filteredProposals.length}
                     </span>
@@ -299,7 +297,7 @@ export function ProposalTable({
               <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
                 <button
                   className={`disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md transition-colors inline-flex items-center gap-2 ${
-                    resultFilter === "unvoted"
+                    effectiveFilter === "unvoted"
                       ? "bg-blue-600 hover:bg-blue-700"
                       : currentUserId
                         ? "bg-gray-400 hover:bg-gray-500"
@@ -311,7 +309,7 @@ export function ProposalTable({
                 >
                   <EyeSlashIcon className="h-4 w-4" />
                   Only unvoted
-                  {resultFilter === "unvoted" && (
+                  {effectiveFilter === "unvoted" && (
                     <span className="bg-blue-800 text-white text-xs px-1.5 py-0.5 rounded-full">
                       {filteredProposals.length}
                     </span>
@@ -321,7 +319,7 @@ export function ProposalTable({
               <HoverTooltip text={votingDisabledText} visible={!votingEnabled}>
                 <button
                   className={`disabled:opacity-50 disabled:cursor-not-allowed text-sm text-white px-3 py-2 rounded-md transition-colors inline-flex items-center gap-2 ${
-                    resultFilter === "voted"
+                    effectiveFilter === "voted"
                       ? "bg-blue-600 hover:bg-blue-700"
                       : currentUserId
                         ? "bg-gray-400 hover:bg-gray-500"
@@ -333,14 +331,14 @@ export function ProposalTable({
                 >
                   <CheckCircleIcon className="h-4 w-4" />
                   Only voted
-                  {resultFilter === "voted" && (
+                  {effectiveFilter === "voted" && (
                     <span className="bg-blue-800 text-white text-xs px-1.5 py-0.5 rounded-full">
                       {filteredProposals.length}
                     </span>
                   )}
                 </button>
               </HoverTooltip>
-              {resultFilter && (
+              {effectiveFilter && (
                 <button
                   onClick={() => updateResultFilter(undefined)}
                   className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50 transition-colors inline-flex items-center gap-1"

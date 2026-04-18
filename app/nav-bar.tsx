@@ -20,8 +20,12 @@ export default function Example() {
   };
 
   useEffect(() => {
+    // checkAuth reads document.cookie, a browser-only API; must run
+    // post-mount to avoid hydration mismatch. Re-check on pathname change
+    // to catch login/logout redirects.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkAuth();
-  }, [pathname]); // Re-check when pathname changes (like after login redirect)
+  }, [pathname]);
 
   // Listen for custom auth events (triggered by login/logout actions)
   useEffect(() => {

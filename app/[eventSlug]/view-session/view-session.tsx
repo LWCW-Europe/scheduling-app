@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { DateTime } from "luxon";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PencilIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
@@ -45,28 +45,20 @@ export function ViewSession(props: {
     locations,
   } = useContext(EventContext);
 
-  const [optimisticRsvps, setOptimisticRsvps] = useState<Rsvp[]>(rsvps);
-
-  useEffect(() => {
-    if (currentUser) {
-      const userRsvpForThisSession = userRsvps.find(
-        (rsvp) => rsvp.sessionId === session.id
-      );
-
-      if (userRsvpForThisSession) {
-        setOptimisticRsvps((prev) => {
-          const withoutUserRsvp = prev.filter(
-            (rsvp) => rsvp.guestId !== currentUser
-          );
-          return [...withoutUserRsvp, userRsvpForThisSession];
-        });
-      } else {
-        setOptimisticRsvps((prev) =>
-          prev.filter((rsvp) => rsvp.guestId !== currentUser)
-        );
-      }
-    }
-  }, [userRsvps, currentUser, session.id]);
+  // Reconcile session RSVPs with the current user's RSVP from context, so
+  // optimistic toggles in EventProvider reflect immediately here.
+  const optimisticRsvps = useMemo<Rsvp[]>(() => {
+    if (!currentUser) return rsvps;
+    const userRsvpForThisSession = userRsvps.find(
+      (rsvp) => rsvp.sessionId === session.id
+    );
+    const withoutUserRsvp = rsvps.filter(
+      (rsvp) => rsvp.guestId !== currentUser
+    );
+    return userRsvpForThisSession
+      ? [...withoutUserRsvp, userRsvpForThisSession]
+      : withoutUserRsvp;
+  }, [rsvps, currentUser, userRsvps, session.id]);
 
   const router = useRouter();
   const [isRsvping, setIsRsvping] = useState(false);

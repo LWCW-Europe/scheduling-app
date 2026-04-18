@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import Link from "next/link";
 
 import { Input } from "./input";
@@ -28,18 +28,14 @@ export function SessionProposalForm(props: {
 
   const [title, setTitle] = useState(proposal?.title || "");
   const [description, setDescription] = useState(proposal?.description || "");
-  const [hosts, setHosts] = useState<string[]>([]);
+  const [hosts, setHosts] = useState<string[]>(() => {
+    if (proposal) return proposal.hosts.map((h) => h.id);
+    if (currentUserId) return [currentUserId];
+    return [];
+  });
   const [durationMinutes, setDurationMinutes] = useState(
     proposal?.durationMinutes
   );
-
-  useEffect(() => {
-    if (proposal) {
-      setHosts(proposal.hosts.map((h) => h.id));
-    } else if (currentUserId) {
-      setHosts([currentUserId]);
-    }
-  }, [proposal, currentUserId]);
 
   // UI state
   const [error, setError] = useState<string | null>(null);

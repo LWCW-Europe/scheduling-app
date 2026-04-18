@@ -27,5 +27,5 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/require-await": "off",
     },
-  },
+  }
 );

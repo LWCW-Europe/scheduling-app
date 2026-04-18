@@ -10,7 +10,7 @@ export default async function ProposalQuickVoting(props: {
 }) {
   const { eventSlug } = props.params;
   const eventName = eventSlugToName(eventSlug);
-  const currentUser = cookies().get("user")?.value;
+  const currentUser = (await cookies()).get("user")?.value;
   if (!currentUser) {
     return (
       <div>

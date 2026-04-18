@@ -118,6 +118,55 @@ function BlockerSessionCard(props: { title: string; numHalfHours: number }) {
   );
 }
 
+function SessionInfoDisplay({
+  session,
+  formattedHostNames,
+  numRSVPs,
+}: {
+  session: Session;
+  formattedHostNames: string;
+  numRSVPs: number;
+}) {
+  return (
+    <>
+      <h1 className="text-lg font-bold leading-tight flex items-center gap-1">
+        {session.closed && (
+          <LockIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
+        )}
+        {session.title}
+      </h1>
+      <p className="text-xs text-gray-500 mb-2 mt-1">
+        Hosted by {formattedHostNames}
+      </p>
+      <p className="text-sm whitespace-pre-line">
+        {session.description?.length > 210
+          ? session.description.substring(0, 200) + "..."
+          : session.description}
+      </p>
+      <div className="flex justify-between mt-2 gap-4 text-xs text-gray-500">
+        <div className="flex gap-1">
+          <UserIcon className="h-4 w-4" />
+          <span>
+            {numRSVPs} RSVPs (max capacity {session.capacity})
+          </span>
+        </div>
+        <div className="flex gap-1">
+          <ClockIcon className="h-4 w-4" />
+          <span>
+            {DateTime.fromJSDate(session.startTime ?? new Date())
+              .setZone("America/Los_Angeles")
+              .toFormat("h:mm a")}{" "}
+            -{" "}
+            {getEndTimeMinusBreak(session)
+              .setZone("America/Los_Angeles")
+              .toFormat("h:mm a")}
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function RealSessionCard(props: {
   eventSlug: string;
   session: Session;
@@ -211,47 +260,15 @@ export function RealSessionCard(props: {
     localSessions.find((ses) => ses.id === session.id)?.numRsvps ??
     session.numRsvps;
 
-  const SessionInfoDisplay = () => (
-    <>
-      <h1 className="text-lg font-bold leading-tight flex items-center gap-1">
-        {session.closed && (
-          <LockIcon className="h-4 w-4 text-gray-600 flex-shrink-0" />
-        )}
-        {session.title}
-      </h1>
-      <p className="text-xs text-gray-500 mb-2 mt-1">
-        Hosted by {formattedHostNames}
-      </p>
-      <p className="text-sm whitespace-pre-line">
-        {session.description?.length > 210
-          ? session.description.substring(0, 200) + "..."
-          : session.description}
-      </p>
-      <div className="flex justify-between mt-2 gap-4 text-xs text-gray-500">
-        <div className="flex gap-1">
-          <UserIcon className="h-4 w-4" />
-          <span>
-            {numRSVPs} RSVPs (max capacity {session.capacity})
-          </span>
-        </div>
-        <div className="flex gap-1">
-          <ClockIcon className="h-4 w-4" />
-          <span>
-            {DateTime.fromJSDate(session.startTime ?? new Date())
-              .setZone("America/Los_Angeles")
-              .toFormat("h:mm a")}{" "}
-            -{" "}
-            {getEndTimeMinusBreak(session)
-              .setZone("America/Los_Angeles")
-              .toFormat("h:mm a")}
-          </span>
-        </div>
-      </div>
-    </>
-  );
   return (
     <Tooltip
-      content={<SessionInfoDisplay />}
+      content={
+        <SessionInfoDisplay
+          session={session}
+          formattedHostNames={formattedHostNames}
+          numRSVPs={numRSVPs}
+        />
+      }
       className={`row-span-${numHalfHours} my-0.5 overflow-hidden group`}
       noTap={true}
     >

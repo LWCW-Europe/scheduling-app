@@ -10,7 +10,7 @@ export async function renderSessionForm(props: {
   params: { eventSlug: string };
 }) {
   const { eventSlug } = props.params;
-  const currentUser = cookies().get("user")?.value;
+  const currentUser = (await cookies()).get("user")?.value;
   const eventName = eventSlugToName(eventSlug);
   const repos = getRepositories();
 
