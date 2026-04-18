@@ -6,8 +6,8 @@
     "dev": "node set-env.js development next dev",
     "build": "next build",
     "start": "node set-env.js production next start",
-    "lint": "next lint",
-    "lint-watch": "watchexec -c -w app -w db -w utils \"next lint --fix\"",
+    "lint": "eslint app db utils",
+    "lint-watch": "watchexec -c -w app -w db -w utils \"eslint --fix app db utils\"",
     "dev:test": "node set-env.js development npx playwright test --headed",
     "prettier": "prettier --write .",
     "dev:migrate:up": "node set-env.js development drizzle-kit migrate",
@@ -31,9 +31,9 @@
     "luxon": "^3.7.2",
     "moment-timezone": "^0.6.1",
     "nanoid": "^5.1.9",
-    "next": "^14.2.35",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "next": "^16",
+    "react": "^19",
+    "react-dom": "^19"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
@@ -41,18 +41,19 @@
     "@types/js-cookie": "^3.0.6",
     "@types/lodash": "^4.17.24",
     "@types/luxon": "^3.7.1",
-    "@types/node": "^24.12.2",
-    "@types/react": "^18.3.28",
-    "@types/react-dom": "^18.3.7",
+    "@types/node": "^25",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
     "drizzle-kit": "^0.31.10",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "^15.5.15",
+    "eslint": "^9",
+    "eslint-config-next": "^16",
     "postcss": "^8.5.10",
     "prettier": "3.8.3",
     "tailwindcss": "^3.4.19",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^6",
+    "typescript-eslint": "^8.58.2"
   }
 }

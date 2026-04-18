@@ -39,7 +39,7 @@ const nextConfig = {
     ],
   },
   eslint: {
-    dirs: ["app", "db", "utils"],
+    ignoreDuringBuilds: true,
   },
   env: {
     NEXT_PUBLIC_COMMIT_HASH: process.env.VERCEL_GIT_COMMIT_SHA
