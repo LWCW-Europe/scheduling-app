@@ -93,11 +93,12 @@ export function Tooltip(props: {
         leave={noFade ? "" : "transition ease-in duration-150"}
         leaveFrom="opacity-100"
         leaveTo="opacity-0"
-        role="tooltip"
+        as="div"
         // refs.setFloating is a callback ref from useFloating; assigning it
         // here is the documented Floating UI pattern.
         // eslint-disable-next-line react-hooks/refs
         ref={refs.setFloating}
+        role="tooltip"
         style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
         className="z-40 max-w-lg w-120 whitespace-normal rounded bg-white px-2 py-1 border shadow-md border-gray-100"
         suppressHydrationWarning={suppressHydrationWarning}

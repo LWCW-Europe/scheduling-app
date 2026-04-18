@@ -705,7 +705,7 @@ export function SelectHosts(props: {
         <Combobox
           value={hosts[0]}
           onChange={(newHosts) => {
-            setHosts([newHosts]);
+            setHosts(newHosts ? [newHosts] : []);
             setQuery("");
           }}
         >
