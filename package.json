@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
+    "@tailwindcss/postcss": "^4.2.2",
     "@types/better-sqlite3": "^7.6.13",
     "@types/js-cookie": "^3.0.6",
     "@types/lodash": "^4.17.24",
