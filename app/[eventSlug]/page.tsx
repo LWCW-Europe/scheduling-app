@@ -4,8 +4,10 @@ import { eventSlugToName } from "@/utils/utils";
 import EventPage from "./event-page";
 import { redirect } from "next/navigation";
 
-export default async function Page(props: { params: { eventSlug: string } }) {
-  const { eventSlug } = props.params;
+export default async function Page(props: {
+  params: Promise<{ eventSlug: string }>;
+}) {
+  const { eventSlug } = await props.params;
   const eventName = eventSlugToName(eventSlug);
   const event = await getRepositories().events.findByName(eventName);
 
