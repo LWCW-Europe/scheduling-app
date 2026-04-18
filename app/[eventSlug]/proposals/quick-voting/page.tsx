@@ -6,9 +6,9 @@ import { getRepositories } from "@/db/container";
 import { eventSlugToName } from "@/utils/utils";
 
 export default async function ProposalQuickVoting(props: {
-  params: { eventSlug: string };
+  params: Promise<{ eventSlug: string }>;
 }) {
-  const { eventSlug } = props.params;
+  const { eventSlug } = await props.params;
   const eventName = eventSlugToName(eventSlug);
   const currentUser = (await cookies()).get("user")?.value;
   if (!currentUser) {

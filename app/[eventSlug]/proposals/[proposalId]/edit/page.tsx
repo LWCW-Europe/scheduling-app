@@ -6,9 +6,9 @@ import { notFound } from "next/navigation";
 export default async function EditProposalPage({
   params,
 }: {
-  params: { eventSlug: string; proposalId: string };
+  params: Promise<{ eventSlug: string; proposalId: string }>;
 }) {
-  const { eventSlug, proposalId } = params;
+  const { eventSlug, proposalId } = await params;
 
   const eventName = eventSlugToName(eventSlug);
   const repos = getRepositories();

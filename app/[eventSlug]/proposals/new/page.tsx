@@ -5,9 +5,9 @@ import { SessionProposalForm } from "../../session-proposal-form";
 export default async function NewProposalPage({
   params,
 }: {
-  params: { eventSlug: string };
+  params: Promise<{ eventSlug: string }>;
 }) {
-  const { eventSlug } = params;
+  const { eventSlug } = await params;
 
   const eventName = eventSlugToName(eventSlug);
   const repos = getRepositories();

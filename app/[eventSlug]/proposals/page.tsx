@@ -11,9 +11,9 @@ export const dynamic = "force-dynamic";
 export default async function ProposalsPage({
   params,
 }: {
-  params: { eventSlug: string };
+  params: Promise<{ eventSlug: string }>;
 }) {
-  const { eventSlug } = params;
+  const { eventSlug } = await params;
 
   // Convert slug to event name (simple conversion for now)
   const eventName = eventSlugToName(eventSlug);

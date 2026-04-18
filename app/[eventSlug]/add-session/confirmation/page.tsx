@@ -1,9 +1,12 @@
 "use client";
+import { use } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function Confirmation(props: { params: { eventSlug: string } }) {
-  const { eventSlug } = props.params;
+export default function Confirmation(props: {
+  params: Promise<{ eventSlug: string }>;
+}) {
+  const { eventSlug } = use(props.params);
   const searchParams = useSearchParams();
   const actionType = searchParams?.get("actionType");
   const actionDescription = actionType === "updated" ? "updated" : "added";

@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-export default function DeletionConfirmation(props: {
-  params: { eventSlug: string };
+export default async function DeletionConfirmation(props: {
+  params: Promise<{ eventSlug: string }>;
 }) {
-  const { eventSlug } = props.params;
+  const { eventSlug } = await props.params;
   return (
     <div className="p-8 max-w-lg mx-auto flex flex-col">
       <h1 className="text-2xl font-bold">Session deleted</h1>

@@ -8,11 +8,11 @@ export default async function ViewSessionPage({
   params,
   searchParams,
 }: {
-  params: { eventSlug: string };
-  searchParams: { sessionID: string };
+  params: Promise<{ eventSlug: string }>;
+  searchParams: Promise<{ sessionID: string }>;
 }) {
-  const { eventSlug } = params;
-  const { sessionID } = searchParams;
+  const { eventSlug } = await params;
+  const { sessionID } = await searchParams;
 
   const eventName = eventSlugToName(eventSlug);
   const repos = getRepositories();

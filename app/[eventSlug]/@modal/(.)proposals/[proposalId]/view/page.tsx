@@ -7,9 +7,9 @@ import { ProposalModal } from "./modal";
 export default async function ProposalModalPage({
   params,
 }: {
-  params: { eventSlug: string; proposalId: string };
+  params: Promise<{ eventSlug: string; proposalId: string }>;
 }) {
-  const { eventSlug, proposalId } = params;
+  const { eventSlug, proposalId } = await params;
 
   const eventName = eventSlugToName(eventSlug);
   const repos = getRepositories();

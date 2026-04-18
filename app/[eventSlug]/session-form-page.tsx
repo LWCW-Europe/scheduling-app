@@ -7,9 +7,9 @@ import { getRepositories } from "@/db/container";
 import { CONSTS } from "@/utils/constants";
 
 export async function renderSessionForm(props: {
-  params: { eventSlug: string };
+  params: Promise<{ eventSlug: string }>;
 }) {
-  const { eventSlug } = props.params;
+  const { eventSlug } = await props.params;
   const currentUser = (await cookies()).get("user")?.value;
   const eventName = eventSlugToName(eventSlug);
   const repos = getRepositories();

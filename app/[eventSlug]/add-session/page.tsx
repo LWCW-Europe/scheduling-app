@@ -1,7 +1,7 @@
 import { renderSessionForm } from "../session-form-page";
 
 export default async function AddSession(props: {
-  params: { eventSlug: string };
+  params: Promise<{ eventSlug: string }>;
 }) {
   return renderSessionForm(props);
 }
