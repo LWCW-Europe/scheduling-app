@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "node set-env.js production next start",
     "lint": "eslint app db utils",
+    "typecheck": "tsc --noEmit",
     "lint-watch": "watchexec -c -w app -w db -w utils \"eslint --fix app db utils\"",
     "dev:test": "node set-env.js development npx playwright test --headed",
     "prettier": "prettier --write .",
