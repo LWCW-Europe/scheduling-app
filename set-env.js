@@ -1,7 +1,10 @@
-const fs = require("fs");
-const path = require("path");
-const { spawn } = require("child_process");
-const dotenv = require("dotenv");
+import fs from "fs";
+import path from "path";
+import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const mode = process.argv[2]; // e.g. "test", "dev"
 const command = process.argv.slice(3); // rest of command

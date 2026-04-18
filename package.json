@@ -2,6 +2,7 @@
   "name": "manifest-schedule",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "node set-env.js development next dev",
     "build": "next build",
