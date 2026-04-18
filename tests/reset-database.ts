@@ -574,7 +574,7 @@ async function resetDatabase() {
   }
 }
 
-if (require.main === module) {
+if (process.argv[1] === new URL(import.meta.url).pathname) {
   resetDatabase();
 }
 
