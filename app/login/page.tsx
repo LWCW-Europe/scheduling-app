@@ -4,13 +4,13 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Input } from "../[eventSlug]/input";
 import clsx from "clsx";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { loginAction } from "../actions/auth";
 
 function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams?.get("redirect") || "/";
-  const [state, formAction] = useFormState(loginAction, null);
+  const [state, formAction] = useActionState(loginAction, null);
 
   return (
     <div className="max-w-md w-full space-y-8">
