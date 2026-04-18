@@ -13,7 +13,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
@@ -22,7 +22,8 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "target": "ES2017"
   },
   "include": [
     "next-env.d.ts",
@@ -30,7 +31,8 @@
     "**/*.tsx",
     "**/*.js",
     ".next/types/**/*.ts",
-    "db"
+    "db",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

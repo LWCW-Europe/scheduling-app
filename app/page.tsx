@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import SummaryPage from "./summary-page";
 import { getRepositories } from "@/db/container";
 import { CONSTS } from "@/utils/constants";
