@@ -441,13 +441,26 @@ async function seedTestData() {
 
   const voteRows: (typeof schema.votes.$inferInsert)[] = [];
 
+  // Event-specific proposals have deterministic titles and are used as clean
+  // test targets — skip them when seeding votes so tests start from a
+  // known "no prior vote" state.
+  const eventSpecificTitlePatterns = [
+    /Lightning Talks: Community Showcase$/,
+    /^Networking & Coffee Chat: /,
+    /Panel: Industry Leaders Share Their Insights$/,
+  ];
+
   eventRows.forEach((ev, eventIndex) => {
     const eventName = eventConfigs[eventIndex].name;
     if (eventName !== "Conference Beta" && eventName !== "Conference Gamma") {
       return;
     }
 
-    const eventProposals = proposalRows.filter((p) => p.eventId === ev.id);
+    const eventProposals = proposalRows.filter(
+      (p) =>
+        p.eventId === ev.id &&
+        !eventSpecificTitlePatterns.some((re) => re.test(p.title))
+    );
 
     guestRows.forEach((guest) => {
       eventProposals.forEach((proposal) => {

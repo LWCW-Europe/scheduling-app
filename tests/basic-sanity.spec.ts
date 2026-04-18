@@ -32,7 +32,9 @@ test.describe("Basic Sanity Checks", () => {
       .click();
 
     await expect(
-      page.getByText(/Conference Alpha: Session Proposals/)
+      page.getByRole("heading", {
+        name: /Conference Alpha: Session Proposals/,
+      })
     ).toBeVisible();
     await expect(
       page
@@ -49,7 +51,9 @@ test.describe("Basic Sanity Checks", () => {
       .click();
 
     await expect(
-      page.getByText(/Conference Beta: Session Proposals/)
+      page.getByRole("heading", {
+        name: /Conference Beta: Session Proposals/,
+      })
     ).toBeVisible();
     await expect(
       page
@@ -65,7 +69,9 @@ test.describe("Basic Sanity Checks", () => {
       .getByRole("link", { name: "View Schedule" })
       .click();
 
-    await expect(page.getByText(/Conference Gamma Schedule/)).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Conference Gamma Schedule/ })
+    ).toBeVisible();
     await expect(
       page.getByText("Opening Keynote - Conference Gamma")
     ).toBeVisible();

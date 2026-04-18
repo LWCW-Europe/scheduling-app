@@ -601,10 +601,7 @@ export function SelectHosts(props: {
 
   const comboboxContent = (
     <div className="relative mt-1">
-      <Combobox.Button
-        id={id}
-        className="relative w-full min-h-12 h-fit rounded-md border px-4 shadow-sm transition-colors focus:outline-none border-gray-300 focus:ring-2 focus:ring-rose-400 focus:outline-0 focus:border-none bg-white py-2 pl-3 pr-10 text-left placeholder:text-gray-400"
-      >
+      <div className="relative w-full min-h-12 h-fit rounded-md border transition-colors border-gray-300 bg-white py-2 pl-3 pr-10 focus-within:ring-2 focus-within:ring-rose-400 focus-within:border-transparent">
         <div className="flex flex-wrap gap-1 items-center">
           {hosts.length > 0 && (
             <>
@@ -628,14 +625,15 @@ export function SelectHosts(props: {
             </>
           )}
           <Combobox.Input
+            id={id}
             onChange={(event) => setQuery(event.target.value)}
             value={query}
-            className="border-none focus:ring-0 px-0 py-1 text-sm focus:w-fit w-0 placeholder:text-gray-400"
+            className="border-none focus:ring-0 px-0 py-1 text-sm flex-1 min-w-8 bg-transparent placeholder:text-gray-400 outline-none"
           />
         </div>
-        <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
-        </div>
+      </div>
+      <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+        <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
       </Combobox.Button>
       <Transition
         as={Fragment}
@@ -698,6 +696,7 @@ export function SelectHosts(props: {
             setQuery("");
           }}
           multiple
+          immediate
         >
           {comboboxContent}
         </Combobox>
@@ -708,6 +707,7 @@ export function SelectHosts(props: {
             setHosts(newHosts ? [newHosts] : []);
             setQuery("");
           }}
+          immediate
         >
           {comboboxContent}
         </Combobox>

@@ -73,10 +73,12 @@ test("should create a new session proposal, edit it, and add hosts", async ({
   await page.keyboard.type("Alice Test");
   await page.getByRole("option", { name: /Alice Test/i }).click();
 
-  // Add second host - use the same reference to the main combobox button
-  await comboboxButton.click();
+  // Add second host - dropdown stays open in multi-select mode, just type
   await page.keyboard.type("Bob Test");
   await page.getByRole("option", { name: /Bob Test/i }).click();
+
+  // Close the still-open hosts dropdown so it doesn't overlay Submit
+  await page.keyboard.press("Escape");
 
   // Submit the edited form
   await page.getByRole("button", { name: /Submit/i }).click();

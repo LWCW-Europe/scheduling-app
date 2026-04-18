@@ -276,7 +276,17 @@ export function VotesProvider({
         );
         if (response.ok) {
           const fetchedVotes = (await response.json()) as Vote[];
-          setVotes(fetchedVotes);
+          setVotes((prev) => {
+            // Preserve optimistic votes not yet reflected on the server
+            const optimistic = prev.filter(
+              (pv) =>
+                !fetchedVotes.some(
+                  (fv) =>
+                    fv.proposalId === pv.proposalId && fv.guestId === pv.guestId
+                )
+            );
+            return [...fetchedVotes, ...optimistic];
+          });
         } else {
           console.error("Failed to fetch votes");
           setVotes([]);
