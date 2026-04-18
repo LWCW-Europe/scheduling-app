@@ -134,4 +134,4 @@ const { events, sessions } = getRepositories();
 
 - Use `jj` (jujutsu) if available, otherwise `git`
 - Use conventional commits (`feat:`, `fix:`, `docs:`, etc.)
-- Subject line ≤ 72 chars; additional detail in the body
+- Subject line ≤ 72 chars: summarize WHAT; explain WHY in the body
