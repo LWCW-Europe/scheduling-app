@@ -38,9 +38,6 @@ const nextConfig = {
       },
     ],
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   env: {
     NEXT_PUBLIC_COMMIT_HASH: process.env.VERCEL_GIT_COMMIT_SHA
       ? process.env.VERCEL_GIT_COMMIT_SHA.substring(0, 7) // Shorten Vercel's full hash
