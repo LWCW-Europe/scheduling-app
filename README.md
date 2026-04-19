@@ -53,6 +53,16 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
 
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Admin CLI
+
+Until a full admin UI is built ([#368](https://github.com/omarkohl/scheduling-app/issues/368)), a terminal CLI is available for managing core records (events, guests, phase dates):
+
+```bash
+bun run dev:admin
+```
+
+This opens an interactive menu to create, edit, and delete events and guests, and to set event phase dates.
+
 ## Environment Variables
 
 ### Required
@@ -101,16 +111,6 @@ When changing the database schema, generate and run migrations:
 bun run dev:migrate:create   # generate migration from schema changes
 bun run dev:migrate:up       # apply pending migrations
 ```
-
-### Admin CLI
-
-Until a full admin UI is built ([#368](https://github.com/omarkohl/scheduling-app/issues/368)), a terminal CLI is available for managing core records (events, guests, phase dates):
-
-```bash
-bun run dev:admin
-```
-
-This opens an interactive menu to create, edit, and delete events and guests, and to set event phase dates.
 
 ### Testing
 
