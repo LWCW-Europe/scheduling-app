@@ -118,7 +118,7 @@ test("should open proposal detail page when clicking on a proposal", async ({
 
   // Verify the proposal title is displayed as a heading within the modal
   await expect(
-    modal.getByRole("heading", { name: proposalTitle! })
+    modal.getByRole("heading", { name: proposalTitle })
   ).toBeVisible();
 
   const closeButton = modal.getByRole("button", { name: /close/i });
@@ -146,6 +146,6 @@ test("should open proposal detail page when clicking on a proposal", async ({
 
   // Verify the proposal we viewed is still in the list
   await expect(
-    page.getByRole("row", { name: new RegExp(proposalTitle!) })
+    page.getByRole("row", { name: new RegExp(proposalTitle) })
   ).toBeVisible();
 });

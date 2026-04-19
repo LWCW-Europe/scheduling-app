@@ -3,7 +3,9 @@ import nextTypescript from "eslint-config-next/typescript";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["tailwind.config.ts", ".next/**"] },
+  {
+    ignores: ["tailwind.config.ts", ".next/**", "node_modules/**", "**/*.mjs"],
+  },
   ...coreWebVitals,
   ...nextTypescript,
   ...tseslint.configs.recommendedTypeChecked,

@@ -24,9 +24,9 @@ function openDb() {
   return drizzle(sqlite, { schema });
 }
 
-var _seedForRandom = 42;
+let _seedForRandom = 42;
 function seededRandom() {
-  var x = Math.sin(_seedForRandom++) * 10000;
+  const x = Math.sin(_seedForRandom++) * 10000;
   return x - Math.floor(x);
 }
 
@@ -203,7 +203,7 @@ const sessionTemplates = [
   },
 ];
 
-async function clearAll() {
+function clearAll() {
   console.log("🧹 Clearing all tables...");
   const db = openDb();
   db.delete(schema.votes).run();
@@ -222,7 +222,7 @@ async function clearAll() {
   console.log("  ✅ All tables cleared");
 }
 
-async function seedTestData() {
+function seedTestData() {
   console.log("🌱 Seeding test data...");
   const db = openDb();
 
@@ -571,18 +571,19 @@ async function seedTestData() {
   console.log("✅ Test data seeded successfully");
 }
 
-async function resetDatabase() {
+function resetDatabase() {
   try {
     console.log("🔄 Resetting test database to known state...");
     console.log(`📍 Database: ${dbUrl}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 
-    await clearAll();
-    await seedTestData();
+    clearAll();
+    seedTestData();
 
     console.log("🎉 Database reset completed successfully!");
-  } catch (error: any) {
-    console.error("❌ Database reset failed:", error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("❌ Database reset failed:", message);
     process.exit(1);
   }
 }

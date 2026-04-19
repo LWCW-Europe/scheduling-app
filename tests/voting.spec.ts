@@ -78,8 +78,6 @@ test("should navigate to quick voting and allow voting on proposals", async ({
 
   // Check if there's a proposal to vote on
   const interestedButton = page.getByRole("button", { name: /❤️ Interested/i });
-  const maybeButton = page.getByRole("button", { name: /⭐ Maybe/i });
-  const skipButton = page.getByRole("button", { name: /👋🏽 Skip/i });
 
   // If there are proposals to vote on, vote on one
   if (await interestedButton.isVisible()) {

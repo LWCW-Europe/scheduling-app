@@ -22,7 +22,7 @@ function getCommitHash() {
     }
 
     return isDirty ? `${hash}-dirty` : hash;
-  } catch (error) {
+  } catch {
     // If git is not available or not a git repo, return unknown
     return "unknown";
   }

@@ -1,10 +1,10 @@
 import { resetDatabase } from "./reset-database";
 
-async function globalSetup() {
+function globalSetup() {
   console.log("🚀 Setting up test environment...");
 
   // Reset and seed the database with test data
-  await resetDatabase();
+  resetDatabase();
 
   console.log("✅ Test environment ready!");
 }
