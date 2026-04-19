@@ -1,4 +1,4 @@
-name: Check pull requests
+name: CI
 
 on:
   pull_request:
@@ -42,16 +42,34 @@ jobs:
           AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
         run: bun run build
 
-  check-with-prettier:
+  prettier:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v6
 
-      - name: Check the code with Prettier
-        uses: creyD/prettier_action@v4.6
-        with:
-          dry: true
-          no_commit: true
-          prettier_options: "--check ."
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check formatting
+        run: bun run prettier:check
+
+  typecheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v6
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Type check
+        run: bun run typecheck
