@@ -1,5 +1,8 @@
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import path from "path";
+import { fileURLToPath } from "url";
 import * as schema from "./schema";
 import { SqliteDaysRepository } from "./repositories/sqlite/days";
 import { SqliteEventsRepository } from "./repositories/sqlite/events";
@@ -31,14 +34,20 @@ export type Repositories = {
   votes: VotesRepository;
 };
 
+const DEFAULT_DB_URL = "file:./data.db";
+
 let _repositories: Repositories | null = null;
 
 export function getRepositories(): Repositories {
   if (!_repositories) {
-    const url = process.env.DATABASE_URL;
-    if (!url) throw new Error("DATABASE_URL is not set");
+    const url = process.env.DATABASE_URL ?? DEFAULT_DB_URL;
     const sqlite = new Database(url.replace(/^file:/, ""));
     const db = drizzle(sqlite, { schema });
+    const migrationsFolder = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      "../drizzle"
+    );
+    migrate(db, { migrationsFolder });
     _repositories = {
       days: new SqliteDaysRepository(db),
       events: new SqliteEventsRepository(db),
