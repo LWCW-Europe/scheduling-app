@@ -102,6 +102,16 @@ bun run dev:migrate:create   # generate migration from schema changes
 bun run dev:migrate:up       # apply pending migrations
 ```
 
+### Admin CLI
+
+Until a full admin UI is built ([#368](https://github.com/omarkohl/scheduling-app/issues/368)), a terminal CLI is available for managing core records (events, guests, phase dates):
+
+```bash
+bun run dev:admin
+```
+
+This opens an interactive menu to create, edit, and delete events and guests, and to set event phase dates.
+
 ### Testing
 
 See [tests/README.md](tests/README.md).

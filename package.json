@@ -16,7 +16,8 @@
     "dev:migrate:up": "node set-env.js development drizzle-kit migrate",
     "dev:migrate:status": "node set-env.js development drizzle-kit check",
     "dev:migrate:create": "node set-env.js development drizzle-kit generate",
-    "dev:db:reset": "node set-env.js development tsx tests/reset-database.ts"
+    "dev:db:reset": "node set-env.js development tsx tests/reset-database.ts",
+    "dev:admin": "bun set-env.ts development tsx scripts/admin.ts"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",
@@ -39,6 +40,7 @@
     "react-dom": "^19"
   },
   "devDependencies": {
+    "@clack/prompts": "^1.2.0",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.2.2",
     "@types/better-sqlite3": "^7.6.13",
