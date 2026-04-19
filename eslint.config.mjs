@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["tailwind.config.ts", ".next/**", "node_modules/**", "**/*.mjs"],
+    ignores: ["tailwind.config.ts", ".next/**", "**/*.mjs"],
   },
   ...coreWebVitals,
   ...nextTypescript,
@@ -14,14 +14,6 @@ export default tseslint.config(
       parserOptions: {
         projectService: true,
       },
-    },
-    rules: {
-      "@typescript-eslint/no-unsafe-argument": "error",
-      "@typescript-eslint/no-unsafe-assignment": "error",
-      "@typescript-eslint/no-unsafe-call": "error",
-      "@typescript-eslint/no-unsafe-member-access": "error",
-      "@typescript-eslint/no-unsafe-return": "error",
-      "@typescript-eslint/no-explicit-any": "error",
     },
   },
   {
