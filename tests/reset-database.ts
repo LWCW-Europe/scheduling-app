@@ -1,8 +1,10 @@
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { nanoid } from "nanoid";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from "url";
 import * as schema from "@/db/schema";
 import { VoteChoice } from "@/db/repositories/interfaces";
 
@@ -10,18 +12,21 @@ const envFile =
   process.env.NODE_ENV === "test" ? ".env.test.local" : ".env.local";
 dotenv.config({ path: path.resolve(process.cwd(), envFile) });
 
-const dbUrl = process.env.DATABASE_URL;
-if (!dbUrl) {
-  throw new Error(`Missing DATABASE_URL in ${envFile}`);
-}
+const dbUrl = process.env.DATABASE_URL ?? "file:./data.db";
 
 if (process.env.NODE_ENV === "production" || dbUrl.includes("prod")) {
   throw new Error("🚨 SAFETY: Cannot reset production database!");
 }
 
 function openDb() {
-  const sqlite = new Database(dbUrl!.replace(/^file:/, ""));
-  return drizzle(sqlite, { schema });
+  const sqlite = new Database(dbUrl.replace(/^file:/, ""));
+  const db = drizzle(sqlite, { schema });
+  const migrationsFolder = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    "../drizzle"
+  );
+  migrate(db, { migrationsFolder });
+  return db;
 }
 
 let _seedForRandom = 42;
