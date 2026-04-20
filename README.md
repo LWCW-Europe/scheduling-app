@@ -53,6 +53,15 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
 
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Next steps
+
+```bash
+bun playwright install   # install browser binaries for E2E tests (one-time)
+bun run dev:test         # run E2E tests
+bun lint                 # lint
+bun run                  # list all available scripts
+```
+
 ### Admin CLI
 
 Until a full admin UI is built ([#368](https://github.com/omarkohl/scheduling-app/issues/368)), a terminal CLI is available for managing core records (events, guests, phase dates):
