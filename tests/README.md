@@ -9,47 +9,48 @@ bun install
 bun playwright install
 ```
 
-- The tests assume the global password is `testtest` by default.
-  Set it in your .env file with `SITE_PASSWORD`. You can override the password the tests use with `TEST_PASSWORD`.
-- Tests expect the app to be running on `http://localhost:3000` and will start
-  it themself otherwise.
-- The global setup automatically resets the database before each test run
+The test environment is pre-configured via `.env.test` (committed):
 
-## Generated Test Data
-
-The tests run against a clean database with:
-
-- **3 Events**: Alpha (proposal phase), Beta (voting phase), Gamma (scheduling phase)
-- More test data. See the `reset-database.ts` script for details.
+- `SITE_PASSWORD=testtest` — used by tests automatically; override with `TEST_PASSWORD`
+- `DATABASE_URL=file:./data.test.db` — isolated test database, separate from dev
 
 ## Running Tests
 
-**IMPORTANT!** These tests reset the database (Airtable) and are meant for
-development purposes only. Do NOT run them against production data.
+**IMPORTANT!** Tests reset the database before each run. Do NOT run against production data.
 
 ```bash
-# Run all tests (headed) in the 'development' environment with DB reset
 bun run dev:test
 ```
 
-### Executing Specific Tests
+This resets the test database, starts the app with the test env, and runs all tests headed.
 
-If you have a `.env.local` file (or set the ENV variables some other way) then
-you can run tests without the `set-env.js` helper.
-
-Examples:
+### Running specific tests
 
 ```bash
-# Run tests (headless) using development env
-node set-env.js development npx playwright test
+# Run a single spec
+bun set-env.ts test bun x playwright test tests/proposals.spec.ts
 
-# Run only proposals tests
-node set-env.js development npx playwright test tests/proposals.spec.ts
-
-# If you create a .env.test.local you can run with that instead
-node set-env.js test npx playwright test
-
-### Helpers
-
-Common authentication helpers live in `tests/helpers/auth.ts` providing `login` & `loginAndGoto` to reduce repetition across specs.
+# Run headless
+bun set-env.ts test bun x playwright test --headed=false
 ```
+
+### Running against a different environment
+
+You can substitute any env mode — for example `development` to run against your dev database:
+
+```bash
+bun set-env.ts development bun x playwright test
+```
+
+This loads `.env.development.local` (or `.env.development`) instead of `.env.test`, so `DATABASE_URL` and `SITE_PASSWORD` are taken from that file. **The database will still be reset**, so don't point this at data you care about.
+
+## Test Data
+
+Each run starts from a clean database with:
+
+- **3 events**: Alpha (proposal phase), Beta (voting phase), Gamma (scheduling phase)
+- Guests, proposals, votes, sessions — see `reset-database.ts` for details
+
+## Helpers
+
+`tests/helpers/auth.ts` provides `login` and `loginAndGoto` to reduce repetition across specs.
