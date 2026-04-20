@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * Interactive admin CLI for managing events and guests directly in the DB.
- * Run via: bun run dev:admin
+ * Run via: bun dev:admin
  */
 import * as p from "@clack/prompts";
 import Database from "better-sqlite3";

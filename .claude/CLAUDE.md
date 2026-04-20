@@ -55,9 +55,9 @@ Next.js scheduling app for managing conference/event sessions with three phases:
 ### Database Migrations
 
 - Use Drizzle Kit to manage migrations
-- `bun run dev:migrate:create <name>` — generate new migration
-- `bun run dev:migrate:up` — apply migrations
-- `bun run dev:migrate:status` — check migration status
+- `bun dev:migrate:create <name>` — generate new migration
+- `bun dev:migrate:up` — apply migrations
+- `bun dev:migrate:status` — check migration status
 
 ### Development Commands
 
@@ -66,8 +66,8 @@ bun dev                    # Start development server
 bun lint                   # Run linting
 bun prettier               # Format code
 bun typecheck
-bun run dev:db:reset       # Reset database with test data
-bun run dev:test           # Run E2E tests
+bun dev:db:reset           # Reset database with test data
+bun dev:test               # Run E2E tests
 ```
 
 ### Mobile Responsiveness

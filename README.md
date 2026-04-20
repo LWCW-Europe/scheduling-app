@@ -36,13 +36,13 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
 3. Run database migrations:
 
    ```bash
-   bun run dev:migrate:up
+   bun dev:migrate:up
    ```
 
 4. Seed the development database:
 
    ```bash
-   bun run dev:db:reset
+   bun dev:db:reset
    ```
 
 5. Start the dev server:
@@ -57,7 +57,7 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
 
 ```bash
 bun playwright install   # install browser binaries for E2E tests (one-time)
-bun run dev:test         # run E2E tests
+bun dev:test             # run E2E tests
 bun lint                 # lint
 bun run                  # list all available scripts
 ```
@@ -67,7 +67,7 @@ bun run                  # list all available scripts
 Until a full admin UI is built ([#368](https://github.com/omarkohl/scheduling-app/issues/368)), a terminal CLI is available for managing core records (events, guests, phase dates):
 
 ```bash
-bun run dev:admin
+bun dev:admin
 ```
 
 This opens an interactive menu to create, edit, and delete events and guests, and to set event phase dates.
@@ -117,8 +117,8 @@ bun prettier   # format (writes changes in place)
 When changing the database schema, generate and run migrations:
 
 ```bash
-bun run dev:migrate:create   # generate migration from schema changes
-bun run dev:migrate:up       # apply pending migrations
+bun dev:migrate:create   # generate migration from schema changes
+bun dev:migrate:up       # apply pending migrations
 ```
 
 ### Testing
