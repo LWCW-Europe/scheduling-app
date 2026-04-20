@@ -72,6 +72,12 @@ bun dev:admin
 
 This opens an interactive menu to create, edit, and delete events and guests, and to set event phase dates.
 
+To run against a different environment (e.g. production):
+
+```bash
+bun set-env.ts production tsx scripts/admin.ts
+```
+
 ## Environment Variables
 
 ### Required
