@@ -118,15 +118,17 @@ export function DayGrid(props: {
                         {loc.capacity ? `max ${loc.capacity}` : <br />}
                       </p>
                     </div>
-                    <Image
-                      key={loc.name}
-                      src={loc.imageUrl}
-                      alt={loc.name}
-                      className="w-full mt-1 aspect-[4/3]"
-                      style={{ maxHeight: 200 }}
-                      width={500}
-                      height={500}
-                    />
+                    {loc.imageUrl && (
+                      <Image
+                        key={loc.name}
+                        src={loc.imageUrl}
+                        alt={loc.name}
+                        className="w-full mt-1 aspect-[4/3]"
+                        style={{ maxHeight: 200 }}
+                        width={500}
+                        height={500}
+                      />
+                    )}
                   </div>
                 </Tooltip>
               ))}
