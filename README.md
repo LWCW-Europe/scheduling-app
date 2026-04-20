@@ -109,7 +109,7 @@ Phase dates are set directly on the Event record in the database. If no dates ar
 
 ```bash
 bun lint       # lint
-bun prettier   # format (writes changes in place)
+bun format     # format (writes changes in place)
 ```
 
 ### Database Migrations

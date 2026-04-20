@@ -56,7 +56,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Check formatting
-        run: bun run prettier:check
+        run: bun format:check
 
   typecheck:
     runs-on: ubuntu-latest

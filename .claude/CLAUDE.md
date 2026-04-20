@@ -64,7 +64,7 @@ Next.js scheduling app for managing conference/event sessions with three phases:
 ```bash
 bun dev                    # Start development server
 bun lint                   # Run linting
-bun prettier               # Format code
+bun format               # Format code
 bun typecheck
 bun dev:db:reset           # Reset database with test data
 bun dev:test               # Run E2E tests
@@ -136,4 +136,4 @@ const { events, sessions } = getRepositories();
 - Use `jj` (jujutsu) if available, otherwise `git`
 - Use conventional commits (`feat:`, `fix:`, `docs:`, etc.)
 - Subject line ≤ 72 chars: summarize WHAT; explain WHY in the body
-- Before committing always run "bun lint", "bun prettier" and "bun typecheck"
+- Before committing always run "bun lint", "bun format" and "bun typecheck"
