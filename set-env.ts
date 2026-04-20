@@ -16,15 +16,16 @@ if (!mode || command.length === 0) {
 
 const envFile = path.resolve(__dirname, `.env.${mode}.local`);
 if (!fs.existsSync(envFile)) {
-  console.error(`Env file not found: ${envFile}`);
-  process.exit(1);
-}
-
-const dotenvResult = dotenv.config({ path: envFile });
-if (dotenvResult.error) {
-  console.error(`Failed to load ${envFile}`);
-  console.error(dotenvResult.error);
-  process.exit(1);
+  console.warn(
+    `Warning: env file not found: ${envFile} — proceeding with empty env`
+  );
+} else {
+  const dotenvResult = dotenv.config({ path: envFile });
+  if (dotenvResult.error) {
+    console.error(`Failed to load ${envFile}`);
+    console.error(dotenvResult.error);
+    process.exit(1);
+  }
 }
 
 const [cmd, ...args] = command as [string, ...string[]];
