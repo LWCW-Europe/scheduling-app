@@ -10,7 +10,7 @@
     "lint": "eslint --max-warnings 0 .",
     "typecheck": "tsc --noEmit",
     "lint-watch": "watchexec -c -w app -w db -w utils -w tests \"eslint --fix .\"",
-    "dev:test": "bun set-env.ts development npx playwright test --headed",
+    "dev:test": "bun set-env.ts test bun x playwright test --headed",
     "prettier": "prettier --write .",
     "prettier:check": "prettier --check .",
     "dev:migrate:up": "node set-env.js development drizzle-kit migrate",

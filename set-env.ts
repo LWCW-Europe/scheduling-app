@@ -14,10 +14,17 @@ if (!mode || command.length === 0) {
   process.exit(1);
 }
 
-const envFile = path.resolve(__dirname, `.env.${mode}.local`);
-if (!fs.existsSync(envFile)) {
+const envFileLocal = path.resolve(__dirname, `.env.${mode}.local`);
+const envFileShared = path.resolve(__dirname, `.env.${mode}`);
+const envFile = fs.existsSync(envFileLocal)
+  ? envFileLocal
+  : fs.existsSync(envFileShared)
+    ? envFileShared
+    : null;
+
+if (!envFile) {
   console.warn(
-    `Warning: env file not found: ${envFile} — proceeding with empty env`
+    `Warning: no env file found for mode "${mode}" — proceeding with empty env`
   );
 } else {
   const dotenvResult = dotenv.config({ path: envFile });

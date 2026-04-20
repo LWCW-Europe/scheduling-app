@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import fs from "fs";
 import { nanoid } from "nanoid";
 import dotenv from "dotenv";
 import path from "path";
@@ -8,9 +9,15 @@ import { fileURLToPath } from "url";
 import * as schema from "@/db/schema";
 import { VoteChoice } from "@/db/repositories/interfaces";
 
-const envFile =
-  process.env.NODE_ENV === "test" ? ".env.test.local" : ".env.local";
-dotenv.config({ path: path.resolve(process.cwd(), envFile) });
+const mode = process.env.NODE_ENV ?? "development";
+const envFileLocal = path.resolve(process.cwd(), `.env.${mode}.local`);
+const envFileShared = path.resolve(process.cwd(), `.env.${mode}`);
+const envFile = fs.existsSync(envFileLocal)
+  ? envFileLocal
+  : fs.existsSync(envFileShared)
+    ? envFileShared
+    : null;
+if (envFile) dotenv.config({ path: envFile });
 
 const dbUrl = process.env.DATABASE_URL ?? "file:./data.db";
 
