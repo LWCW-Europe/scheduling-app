@@ -36,13 +36,13 @@ bun set-env.ts test bun x playwright test --headed=false
 
 ### Running against a different environment
 
-You can substitute any env mode — for example `development` to run against your dev database:
+You can substitute any env mode — for example `dev` to run against your dev database:
 
 ```bash
-bun set-env.ts development bun x playwright test
+bun set-env.ts dev bun x playwright test
 ```
 
-This loads `.env.development.local` (or `.env.development`) instead of `.env.test`, so `DATABASE_URL` and `SITE_PASSWORD` are taken from that file. **The database will still be reset**, so don't point this at data you care about.
+This loads `.env.dev.local` (or `.env.dev`) instead of `.env.test`, so `DATABASE_URL` and `SITE_PASSWORD` are taken from that file. **The database will still be reset**, so don't point this at data you care about.
 
 ## Test Data
 

@@ -27,7 +27,7 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
    bun install
    ```
 
-2. Create `.env.development.local` with your database path:
+2. Create `.env.dev.local` with your database path:
 
    ```bash
    DATABASE_URL=file:./data.db

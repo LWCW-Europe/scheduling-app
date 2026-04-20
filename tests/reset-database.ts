@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 import * as schema from "@/db/schema";
 import { VoteChoice } from "@/db/repositories/interfaces";
 
-const mode = process.env.NODE_ENV ?? "development";
+const mode = process.env.NODE_ENV ?? "dev";
 const envFileLocal = path.resolve(process.cwd(), `.env.${mode}.local`);
 const envFileShared = path.resolve(process.cwd(), `.env.${mode}`);
 const envFile = fs.existsSync(envFileLocal)
@@ -587,7 +587,7 @@ function resetDatabase() {
   try {
     console.log("🔄 Resetting test database to known state...");
     console.log(`📍 Database: ${dbUrl}`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || "dev"}`);
 
     clearAll();
     seedTestData();
