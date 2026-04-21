@@ -10,6 +10,10 @@ updates:
       prefix: "deps"
       prefix-development: "deps-dev"
       include: "scope"
+    ignore:
+      # eslint-plugin-react not yet compatible with eslint 10 (issue #380)
+      - dependency-name: "eslint"
+        versions: [">= 10"]
     cooldown:
       default-days: 7
     groups:
