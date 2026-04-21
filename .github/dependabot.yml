@@ -10,6 +10,12 @@ updates:
       prefix: "deps"
       prefix-development: "deps-dev"
       include: "scope"
+    cooldown:
+      default-days: 7
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -20,3 +26,9 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
+    cooldown:
+      default-days: 7
+    groups:
+      all-dependencies:
+        patterns:
+          - "*"
