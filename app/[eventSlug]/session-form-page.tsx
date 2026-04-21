@@ -44,6 +44,7 @@ export async function renderSessionForm(props: {
           sessions={sessions}
           guests={guests}
           proposals={proposals}
+          maxSessionDuration={event.maxSessionDuration}
         />
       </div>
     </Suspense>

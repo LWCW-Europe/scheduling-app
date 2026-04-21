@@ -1,0 +1,1 @@
+ALTER TABLE `events` ADD `max_session_duration` integer DEFAULT 120 NOT NULL;

@@ -39,6 +39,7 @@ export type Event = {
   votingPhaseEnd?: Date;
   schedulingPhaseStart?: Date;
   schedulingPhaseEnd?: Date;
+  maxSessionDuration: number;
 };
 
 export interface EventsRepository {

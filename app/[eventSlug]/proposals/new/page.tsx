@@ -25,6 +25,7 @@ export default async function NewProposalPage({
         eventID={event.id}
         eventSlug={eventSlug}
         guests={guests}
+        maxSessionDuration={event.maxSessionDuration}
       />
     </div>
   );

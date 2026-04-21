@@ -15,15 +15,21 @@ import { SelectHosts } from "@/app/[eventSlug]/session-form";
 import { ConfirmDeletionModal } from "../modals";
 import { formatDuration, subtractBreakFromDuration } from "@/utils/utils";
 
-const DURATION_OPTIONS = [undefined, 30, 60, 90, 120];
-
 export function SessionProposalForm(props: {
   eventID: string;
   eventSlug: string;
   proposal?: SessionProposal;
   guests: Guest[];
+  maxSessionDuration: number;
 }) {
-  const { eventID, eventSlug, proposal, guests } = props;
+  const { eventID, eventSlug, proposal, guests, maxSessionDuration } = props;
+  const DURATION_OPTIONS = [
+    undefined,
+    ...Array.from(
+      { length: Math.floor(maxSessionDuration / 30) },
+      (_, i) => (i + 1) * 30
+    ),
+  ];
   const { user: currentUserId } = useContext(UserContext);
 
   const [title, setTitle] = useState(proposal?.title || "");

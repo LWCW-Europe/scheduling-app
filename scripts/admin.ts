@@ -76,6 +76,7 @@ function formatEventSummary(e: typeof schema.events.$inferSelect): string {
     `Proposal phase:   ${displayDate(e.proposalPhaseStart)} → ${displayDate(e.proposalPhaseEnd)}`,
     `Voting phase:     ${displayDate(e.votingPhaseStart)} → ${displayDate(e.votingPhaseEnd)}`,
     `Scheduling phase: ${displayDate(e.schedulingPhaseStart)} → ${displayDate(e.schedulingPhaseEnd)}`,
+    `Max session duration: ${e.maxSessionDuration} minutes`,
   ];
   if (e.description) lines.push(`Desc:  ${e.description}`);
   if (e.website) lines.push(`Web:   ${e.website}`);
@@ -128,6 +129,18 @@ async function createEvent(db: DB): Promise<void> {
     return;
   }
 
+  const maxSessionDurationRaw = await p.text({
+    message: "Max session duration (minutes)",
+    placeholder: "120",
+    defaultValue: "120",
+  });
+  cancelCheck(maxSessionDurationRaw);
+  const parsedDuration = parseInt(maxSessionDurationRaw as string, 10) || 120;
+  const maxSessionDuration = Math.max(30, Math.round(parsedDuration / 30) * 30);
+  if (maxSessionDuration !== parsedDuration) {
+    p.log.warn(`Rounded to nearest 30 minutes: ${maxSessionDuration}`);
+  }
+
   const id = nanoid();
   db.insert(schema.events)
     .values({
@@ -137,6 +150,7 @@ async function createEvent(db: DB): Promise<void> {
       website: (website as string) || "",
       start,
       end,
+      maxSessionDuration,
     })
     .run();
 
@@ -202,6 +216,17 @@ async function editEventBasicInfo(
     return;
   }
 
+  const maxSessionDurationRaw = await p.text({
+    message: "Max session duration (minutes)",
+    initialValue: String(event.maxSessionDuration),
+  });
+  cancelCheck(maxSessionDurationRaw);
+  const parsedDuration = parseInt(maxSessionDurationRaw as string, 10) || 120;
+  const maxSessionDuration = Math.max(30, Math.round(parsedDuration / 30) * 30);
+  if (maxSessionDuration !== parsedDuration) {
+    p.log.warn(`Rounded to nearest 30 minutes: ${maxSessionDuration}`);
+  }
+
   db.update(schema.events)
     .set({
       name: name as string,
@@ -209,6 +234,7 @@ async function editEventBasicInfo(
       website: website as string,
       start,
       end,
+      maxSessionDuration,
     })
     .where(eq(schema.events.id, event.id))
     .run();

@@ -34,6 +34,7 @@ export default async function EditProposalPage({
         eventSlug={eventSlug}
         proposal={proposal}
         guests={guests}
+        maxSessionDuration={event.maxSessionDuration}
       />
     </div>
   );

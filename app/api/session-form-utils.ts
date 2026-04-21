@@ -31,7 +31,7 @@ export function parseSessionTime(
   startTimeString: string,
   duration: number
 ): SessionInterval {
-  const dayStartDT = DateTime.fromJSDate(day.start);
+  const dayStartDT = DateTime.fromJSDate(new Date(day.start));
   const dayISOFormatted = dayStartDT.toFormat("yyyy-MM-dd");
   const [rawHour, rawMinute, ampm] = startTimeString.split(/[: ]/);
   const hourNum = parseInt(rawHour);

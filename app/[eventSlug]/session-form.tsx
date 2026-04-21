@@ -43,8 +43,17 @@ export function SessionForm(props: {
   locations: Location[];
   guests: Guest[];
   proposals: SessionProposal[];
+  maxSessionDuration: number;
 }) {
-  const { eventName, days, sessions, locations, guests, proposals } = props;
+  const {
+    eventName,
+    days,
+    sessions,
+    locations,
+    guests,
+    proposals,
+    maxSessionDuration,
+  } = props;
   const searchParams = useSearchParams();
   const dayParam = searchParams?.get("day");
   const timeParam = searchParams?.get("time");
@@ -103,7 +112,13 @@ export function SessionForm(props: {
     locations.find((l) => l.name === initLocation)?.id ??
       session.locations[0]?.id
   );
-  const startTimes = getAvailableStartTimes(day, sessions, session, locationId);
+  const startTimes = getAvailableStartTimes(
+    day,
+    sessions,
+    session,
+    maxSessionDuration,
+    locationId
+  );
   const initTimeValid = startTimes.some((st) => st.formattedTime === initTime);
   const [startTime, setStartTime] = useState(
     initTimeValid ? initTime : undefined
@@ -116,18 +131,17 @@ export function SessionForm(props: {
   )
     ? startTime
     : undefined;
-  const maxDuration = startTimes.find(
-    (st) => st.formattedTime === effectiveStartTime
-  )?.maxDuration;
+  const maxDuration =
+    startTimes.find((st) => st.formattedTime === effectiveStartTime)
+      ?.maxDuration ?? maxSessionDuration;
   const [duration, setDuration] = useState<number>(
     initialProposal?.durationMinutes ??
       sessionDuration ??
-      Math.min(maxDuration ?? 60, 60)
+      Math.min(maxDuration, 60)
   );
   // Derived: clamp duration to maxDuration. Preserves user-set value so it
   // restores when the limit widens again.
-  const effectiveDuration =
-    maxDuration && duration > maxDuration ? maxDuration : duration;
+  const effectiveDuration = duration > maxDuration ? maxDuration : duration;
   const [hosts, setHosts] = useState<Guest[]>(initialHosts);
 
   function applyProposal(next: SessionProposal | null) {
@@ -521,6 +535,7 @@ function getAvailableStartTimes(
   day: Day,
   sessions: Session[],
   currentSession: Session,
+  maxSessionDuration: number,
   locationId?: string
 ) {
   const locationSelected = !!locationId;
@@ -568,7 +583,10 @@ function getAvailableStartTimes(
         startTimes.push({
           formattedTime,
           time: t,
-          maxDuration: (latestEndTime - t) / 1000 / 60,
+          maxDuration: Math.min(
+            (latestEndTime - t) / 1000 / 60,
+            maxSessionDuration
+          ),
           available: true,
         });
       }
@@ -576,7 +594,7 @@ function getAvailableStartTimes(
       startTimes.push({
         formattedTime,
         time: t,
-        maxDuration: 120,
+        maxDuration: maxSessionDuration,
         available: true,
       });
     }
@@ -722,10 +740,11 @@ function SelectDuration(props: {
   maxDuration?: number;
 }) {
   const { duration, setDuration, maxDuration } = props;
-  const durations = [30, 60, 90, 120];
-  const availableDurations = maxDuration
-    ? durations.filter((value) => value <= maxDuration)
-    : durations;
+  const limit = maxDuration ?? 180;
+  const availableDurations = Array.from(
+    { length: Math.floor(limit / 30) },
+    (_, i) => (i + 1) * 30
+  );
   return (
     <fieldset>
       <div className="space-y-4">

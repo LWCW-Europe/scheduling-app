@@ -24,6 +24,7 @@ export const events = sqliteTable("events", {
   votingPhaseEnd: text("voting_phase_end"),
   schedulingPhaseStart: text("scheduling_phase_start"),
   schedulingPhaseEnd: text("scheduling_phase_end"),
+  maxSessionDuration: integer("max_session_duration").notNull().default(120),
 });
 
 export const eventGuests = sqliteTable(

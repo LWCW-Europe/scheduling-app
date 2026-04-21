@@ -8,6 +8,13 @@
       "when": 1776427018156,
       "tag": "0000_early_mindworm",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1776795822236,
+      "tag": "0001_lovely_malcolm_colcord",
+      "breakpoints": true
     }
   ]
 }
