@@ -137,3 +137,4 @@ const { events, sessions } = getRepositories();
 - Use conventional commits (`feat:`, `fix:`, `docs:`, etc.)
 - Subject line ≤ 72 chars: summarize WHAT; explain WHY in the body
 - Before committing always run "bun lint", "bun format" and "bun typecheck"
+- When working on a GitHub issue, include a footer in the commit message: `issue #123` (if partial work) or `fixes #123` (if the commit fully resolves it)
