@@ -95,10 +95,6 @@ bun set-env.ts production tsx scripts/admin.ts
 
 `NEXT_PUBLIC_` variables are exposed to the browser; all others are server-side only.
 
-### Deploying to Fly.io / Vercel
-
-Set the variables above in your deployment platform's environment settings, then deploy.
-
 ## Event Phases
 
 Events can progress through three optional phases:
@@ -113,23 +109,7 @@ Phase dates are set directly on the Event record in the database. If no dates ar
 
 ## Development
 
-```bash
-bun lint       # lint
-bun format     # format (writes changes in place)
-```
-
-### Database Migrations
-
-When changing the database schema, generate and run migrations:
-
-```bash
-bun dev:migrate:create   # generate migration from schema changes
-bun dev:migrate:up       # apply pending migrations
-```
-
-### Testing
-
-See [tests/README.md](tests/README.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
