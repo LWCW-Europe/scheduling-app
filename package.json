@@ -13,10 +13,10 @@
     "dev:test": "bun set-env.ts test bun x playwright test --headed",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "dev:migrate:up": "node set-env.js dev drizzle-kit migrate",
-    "dev:migrate:status": "node set-env.js dev drizzle-kit check",
-    "dev:migrate:create": "node set-env.js dev drizzle-kit generate",
-    "dev:db:reset": "node set-env.js dev tsx tests/reset-database.ts",
+    "dev:migrate:up": "bun set-env.ts dev drizzle-kit migrate",
+    "dev:migrate:status": "bun set-env.ts dev drizzle-kit check",
+    "dev:migrate:create": "bun set-env.ts dev drizzle-kit generate",
+    "dev:db:reset": "bun set-env.ts dev tsx tests/reset-database.ts",
     "dev:admin": "bun set-env.ts dev tsx scripts/admin.ts"
   },
   "dependencies": {
