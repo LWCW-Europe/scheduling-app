@@ -3,7 +3,7 @@
 Working document to drive implementation. Progress is tracked via
 checkboxes on each actionable item — an agent picking up the work should
 continue from the first unchecked box. **Discard once every checkbox is
-ticked off.** The durable record of *why* this shape was chosen lives in
+ticked off.** The durable record of _why_ this shape was chosen lives in
 `docs/adr/0002-testing-strategy.md`.
 
 ## Commit discipline
@@ -52,16 +52,16 @@ Each step independently shippable.
 ### Step 1 — Infra
 
 - [ ] Move existing Playwright specs into `tests/e2e/`
-  (`basic-sanity.spec.ts`, `proposals.spec.ts`, `voting.spec.ts`), plus
-  `tests/init.ts` and `tests/reset-database.ts` (Playwright-only). Update
-  `playwright.config.ts`: `testDir: "./tests/e2e"` and
-  `globalSetup: "./tests/e2e/init.ts"`. No test logic changes.
+      (`basic-sanity.spec.ts`, `proposals.spec.ts`, `voting.spec.ts`), plus
+      `tests/init.ts` and `tests/reset-database.ts` (Playwright-only). Update
+      `playwright.config.ts`: `testDir: "./tests/e2e"` and
+      `globalSetup: "./tests/e2e/init.ts"`. No test logic changes.
 - [ ] Add `vitest`, `@vitest/ui`, and `@vitest/coverage-v8` dev deps.
-  Vitest config (`vitest.config.ts` at root): `include:
-  ["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"]`,
-  `environment: "node"`, `pool: "forks"` (clean module state per test
-  file → lets each file get its own DB singleton), `coverage.provider:
-  "v8"`, `coverage.reporter: ["text", "lcov", "html"]`.
+      Vitest config (`vitest.config.ts` at root): `include:
+["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"]`,
+      `environment: "node"`, `pool: "forks"` (clean module state per test
+      file → lets each file get its own DB singleton), `coverage.provider:
+"v8"`, `coverage.reporter: ["text", "lcov", "html"]`.
 - [ ] Add scripts to `package.json`:
   - `"test": "bun x vitest run"` (unit + integration, used in pre-commit / CI)
   - `"test:unit": "bun x vitest run tests/unit"`
@@ -72,7 +72,7 @@ Each step independently shippable.
     intercepted by Bun's native test runner before it reads
     `package.json` scripts, so it would ignore these aliases.
 - [ ] Update pre-commit / CI to run `bun run test` alongside `bun lint`,
-  `bun format`, and `bun typecheck`. Keep Playwright on `bun dev:test`.
+      `bun format`, and `bun typecheck`. Keep Playwright on `bun dev:test`.
 - [ ] `tests/helpers/db.ts`:
   - `setupTestDb()` — set `process.env.DATABASE_URL = "file::memory:"`,
     reset the `_repositories` singleton in `db/container.ts` (may need a
@@ -94,14 +94,14 @@ Each step independently shippable.
   - `vi.mock("next/navigation", ...)` exposing a recorded `redirect`.
   - `vi.mock("next/cache", ...)` no-op `revalidatePath`.
 - [ ] Sanity check: one trivial `tests/unit/sanity.test.ts` and one
-  `tests/integration/sanity.test.ts` that creates an event via a factory
-  and reads it back through `eventsRepo.findById`.
+      `tests/integration/sanity.test.ts` that creates an event via a factory
+      and reads it back through `eventsRepo.findById`.
 
 ### Step 2 — Pure unit tests (P1 support + quick wins)
 
 - [ ] `tests/unit/session-overlap.test.ts` — `sessionsOverlap`:
   - No overlap when disjoint.
-  - Back-to-back (end === start) does *not* overlap.
+  - Back-to-back (end === start) does _not_ overlap.
   - Start-overlap, end-overlap, fully contained, fully containing — all
     overlap.
   - Same `id` on both sides → returns `false` (match is by `id`, not object
@@ -134,7 +134,7 @@ Each step independently shippable.
 - [ ] `tests/unit/parse-session-time.test.ts`:
   - `10:00 AM`, `12:00 AM`, `12:00 PM`, `01:05 PM` — each parses and round-trips.
   - Minute padding for single-digit minutes.
-  - *Pin current `-07:00` behavior* — test documents it; bug is tracked
+  - _Pin current `-07:00` behavior_ — test documents it; bug is tracked
     separately.
 
 - [ ] `tests/unit/utils.test.ts` — utility module:
@@ -162,7 +162,7 @@ ADR "Integration tests"). Do **not** query Drizzle tables directly.
     the request payload.
   - Rejects overlap in same location; listing sessions for the event
     afterwards returns the pre-existing session only.
-  - Accepts overlap in *different* location; listing shows both.
+  - Accepts overlap in _different_ location; listing shows both.
   - Rejects past start time.
   - Rejects missing title / missing host / missing location.
   - Malformed JSON → error response.
@@ -289,7 +289,7 @@ goes through `sessionProposalsRepo.listByEvent` / `findById`.
     a guest who had voted (or flag current behavior).
 
 - [ ] E2E: add a single delete-proposal flow to
-  `tests/e2e/proposals.spec.ts`. Existing coverage is otherwise adequate.
+      `tests/e2e/proposals.spec.ts`. Existing coverage is otherwise adequate.
 
 ## Coverage
 
@@ -348,7 +348,7 @@ These are **not** in scope for this plan. Track separately.
 2. **Voting race condition** hinted at by `waitForTimeout(1500)` in
    `tests/e2e/voting.spec.ts`. Server should upsert by
    `(guestId, proposalId)`. Note: an in-process integration test
-   *cannot* exercise this race — `better-sqlite3` is synchronous on a
+   _cannot_ exercise this race — `better-sqlite3` is synchronous on a
    single connection, so concurrent `POST` invocations serialize. The
    race surfaces across real HTTP requests. Fix is still needed;
    regression coverage would have to come from E2E or a process-level

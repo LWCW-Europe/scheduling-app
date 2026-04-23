@@ -109,8 +109,8 @@ serves two roles:
 1. **Discovery tool (always).** Run it to find completely uncovered
    modules or code paths that look risky. Ask whether the gap represents
    untested user-facing behavior. If yes, write a test; if no, move on.
-   The right question is: *"What user-visible behavior would regress
-   silently if we deleted this test?"* A number cannot answer that; it
+   The right question is: _"What user-visible behavior would regress
+   silently if we deleted this test?"_ A number cannot answer that; it
    can only point to places where we have not asked the question yet.
 
 2. **CI floor (introduced gradually).** A minimum threshold — targeting
