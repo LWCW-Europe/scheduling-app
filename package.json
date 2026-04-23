@@ -16,8 +16,13 @@
     "dev:migrate:up": "bun set-env.ts dev drizzle-kit migrate",
     "dev:migrate:status": "bun set-env.ts dev drizzle-kit check",
     "dev:migrate:create": "bun set-env.ts dev drizzle-kit generate",
-    "dev:db:reset": "bun set-env.ts dev tsx tests/reset-database.ts",
-    "dev:admin": "bun set-env.ts dev tsx scripts/admin.ts"
+    "dev:db:reset": "bun set-env.ts dev tsx tests/e2e/reset-database.ts",
+    "dev:admin": "bun set-env.ts dev tsx scripts/admin.ts",
+    "test": "bun x vitest run",
+    "test:unit": "bun x vitest run tests/unit",
+    "test:integration": "bun x vitest run tests/integration",
+    "test:watch": "bun x vitest",
+    "test:coverage": "bun x vitest run --coverage"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",
@@ -52,6 +57,8 @@
     "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8.59.0",
     "@typescript-eslint/parser": "^8.59.0",
+    "@vitest/coverage-v8": "^3",
+    "@vitest/ui": "^3",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "^16",
@@ -60,6 +67,7 @@
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
     "typescript": "^6",
-    "typescript-eslint": "^8.58.2"
+    "typescript-eslint": "^8.58.2",
+    "vitest": "^3"
   }
 }

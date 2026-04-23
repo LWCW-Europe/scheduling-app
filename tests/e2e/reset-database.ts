@@ -30,7 +30,7 @@ function openDb() {
   const db = drizzle(sqlite, { schema });
   const migrationsFolder = path.join(
     path.dirname(fileURLToPath(import.meta.url)),
-    "../drizzle"
+    "../../drizzle"
   );
   migrate(db, { migrationsFolder });
   return db;

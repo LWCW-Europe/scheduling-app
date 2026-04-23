@@ -36,28 +36,50 @@ export type Repositories = {
 
 const DEFAULT_DB_URL = "file:./data.db";
 
+let _sqlite: Database.Database | null = null;
 let _repositories: Repositories | null = null;
+
+function buildRepositories(sqlite: Database.Database): Repositories {
+  const db = drizzle(sqlite, { schema });
+  return {
+    days: new SqliteDaysRepository(db),
+    events: new SqliteEventsRepository(db),
+    guests: new SqliteGuestsRepository(db),
+    locations: new SqliteLocationsRepository(db),
+    sessions: new SqliteSessionsRepository(db),
+    rsvps: new SqliteRsvpsRepository(db),
+    sessionProposals: new SqliteSessionProposalsRepository(db),
+    votes: new SqliteVotesRepository(db),
+  };
+}
 
 export function getRepositories(): Repositories {
   if (!_repositories) {
     const url = process.env.DATABASE_URL ?? DEFAULT_DB_URL;
-    const sqlite = new Database(url.replace(/^file:/, ""));
-    const db = drizzle(sqlite, { schema });
+    _sqlite = new Database(url.replace(/^file:/, ""));
+    const db = drizzle(_sqlite, { schema });
     const migrationsFolder = path.join(
       path.dirname(fileURLToPath(import.meta.url)),
       "../drizzle"
     );
     migrate(db, { migrationsFolder });
-    _repositories = {
-      days: new SqliteDaysRepository(db),
-      events: new SqliteEventsRepository(db),
-      guests: new SqliteGuestsRepository(db),
-      locations: new SqliteLocationsRepository(db),
-      sessions: new SqliteSessionsRepository(db),
-      rsvps: new SqliteRsvpsRepository(db),
-      sessionProposals: new SqliteSessionProposalsRepository(db),
-      votes: new SqliteVotesRepository(db),
-    };
+    _repositories = buildRepositories(_sqlite);
   }
   return _repositories;
+}
+
+export function resetRepositories(): void {
+  _sqlite = null;
+  _repositories = null;
+}
+
+export function serializeDb(): Buffer {
+  if (!_sqlite)
+    throw new Error("DB not initialized — call getRepositories() first");
+  return _sqlite.serialize();
+}
+
+export function restoreDb(snapshot: Buffer): void {
+  _sqlite = new Database(snapshot);
+  _repositories = buildRepositories(_sqlite);
 }

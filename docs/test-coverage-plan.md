@@ -51,18 +51,18 @@ Each step independently shippable.
 
 ### Step 1 — Infra
 
-- [ ] Move existing Playwright specs into `tests/e2e/`
+- [x] Move existing Playwright specs into `tests/e2e/`
       (`basic-sanity.spec.ts`, `proposals.spec.ts`, `voting.spec.ts`), plus
       `tests/init.ts` and `tests/reset-database.ts` (Playwright-only). Update
       `playwright.config.ts`: `testDir: "./tests/e2e"` and
       `globalSetup: "./tests/e2e/init.ts"`. No test logic changes.
-- [ ] Add `vitest`, `@vitest/ui`, and `@vitest/coverage-v8` dev deps.
+- [x] Add `vitest`, `@vitest/ui`, and `@vitest/coverage-v8` dev deps.
       Vitest config (`vitest.config.ts` at root): `include:
 ["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"]`,
       `environment: "node"`, `pool: "forks"` (clean module state per test
       file → lets each file get its own DB singleton), `coverage.provider:
 "v8"`, `coverage.reporter: ["text", "lcov", "html"]`.
-- [ ] Add scripts to `package.json`:
+- [x] Add scripts to `package.json`:
   - `"test": "bun x vitest run"` (unit + integration, used in pre-commit / CI)
   - `"test:unit": "bun x vitest run tests/unit"`
   - `"test:integration": "bun x vitest run tests/integration"`
@@ -71,9 +71,9 @@ Each step independently shippable.
   - **Invocation:** always use `bun run test[:...]`. Plain `bun test` is
     intercepted by Bun's native test runner before it reads
     `package.json` scripts, so it would ignore these aliases.
-- [ ] Update pre-commit / CI to run `bun run test` alongside `bun lint`,
+- [x] Update pre-commit / CI to run `bun run test` alongside `bun lint`,
       `bun format`, and `bun typecheck`. Keep Playwright on `bun dev:test`.
-- [ ] `tests/helpers/db.ts`:
+- [x] `tests/helpers/db.ts`:
   - `setupTestDb()` — set `process.env.DATABASE_URL = "file::memory:"`,
     reset the `_repositories` singleton in `db/container.ts` (may need a
     small exported reset hook — add it in this step), call
@@ -85,15 +85,15 @@ Each step independently shippable.
     hand-maintaining a FK-safe `DELETE FROM` order. Fall back to
     `DELETE FROM` only if the snapshot approach runs into trouble with
     the singleton wiring.
-- [ ] `tests/helpers/factories.ts`:
+- [x] `tests/helpers/factories.ts`:
   - `createEvent({ phase?: "proposal" | "voting" | "scheduling" })` —
     sets phase-window dates relative to now.
   - `createGuest`, `createLocation`, `createDay`, `createProposal`,
     `createSession` — each builds a minimal valid entity and returns it.
-- [ ] `tests/helpers/next-mocks.ts`:
+- [x] `tests/helpers/next-mocks.ts`:
   - `vi.mock("next/navigation", ...)` exposing a recorded `redirect`.
   - `vi.mock("next/cache", ...)` no-op `revalidatePath`.
-- [ ] Sanity check: one trivial `tests/unit/sanity.test.ts` and one
+- [x] Sanity check: one trivial `tests/unit/sanity.test.ts` and one
       `tests/integration/sanity.test.ts` that creates an event via a factory
       and reads it back through `eventsRepo.findById`.
 
