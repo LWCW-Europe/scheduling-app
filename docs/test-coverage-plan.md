@@ -99,7 +99,7 @@ Each step independently shippable.
 
 ### Step 2 — Pure unit tests (P1 support + quick wins)
 
-- [ ] `tests/unit/session-overlap.test.ts` — `sessionsOverlap`:
+- [x] `tests/unit/session-overlap.test.ts` — `sessionsOverlap`:
   - No overlap when disjoint.
   - Back-to-back (end === start) does _not_ overlap.
   - Start-overlap, end-overlap, fully contained, fully containing — all
@@ -112,7 +112,7 @@ Each step independently shippable.
     yield overlap against a real interval. Document as-is; don't "fix" in
     the test.
 
-- [ ] `tests/unit/session-validation.test.ts` — `validateSession`:
+- [x] `tests/unit/session-validation.test.ts` — `validateSession`:
   - Valid session in empty schedule → accepted.
   - Same-location overlap (partial / contained / containing) → rejected.
   - Different-location overlap → accepted.
@@ -131,13 +131,13 @@ Each step independently shippable.
     comment referencing finding #5 so the suite stays green in the
     meantime.
 
-- [ ] `tests/unit/parse-session-time.test.ts`:
+- [x] `tests/unit/parse-session-time.test.ts`:
   - `10:00 AM`, `12:00 AM`, `12:00 PM`, `01:05 PM` — each parses and round-trips.
   - Minute padding for single-digit minutes.
   - _Pin current `-07:00` behavior_ — test documents it; bug is tracked
     separately.
 
-- [ ] `tests/unit/utils.test.ts` — utility module:
+- [x] `tests/unit/utils.test.ts` — utility module:
   - `subtractBreakFromDuration`: 30 → 25, 60 → 55, 61 → 51, 120 → 110.
   - `formatDuration`: `45` short + long, `60`, `90`, `120` — both formats.
   - `eventNameToSlug` / `eventSlugToName`: simple names round-trip;
@@ -147,7 +147,7 @@ Each step independently shippable.
   - `getNumHalfHours`: 0, 1, 2-hour windows.
   - `getEndTimeMinusBreak`: ≤60 and >60 both produce expected adjusted end.
 
-- [ ] `tests/unit/votes.test.ts` — `voteChoiceToEmoji`: all three enum values.
+- [x] `tests/unit/votes.test.ts` — `voteChoiceToEmoji`: all three enum values.
 
 ### Step 3 — P1 integration: sessions
 
