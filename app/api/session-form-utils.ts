@@ -92,14 +92,10 @@ export const validateSession = (
   const sessionsHere = existingSessions.filter((s) => {
     return s.locations.some((l) => l.id === session.locationIds[0]);
   });
-  const concurrentSessions = sessionsHere.filter((s) => {
-    const sStart = s.startTime ?? new Date(0);
-    const sEnd = s.endTime ?? new Date(0);
-    return (
-      (sStart < sessionStart && sEnd > sessionStart) ||
-      (sStart < sessionEnd && sEnd > sessionEnd) ||
-      (sStart > sessionStart && sEnd < sessionEnd)
-    );
+  const concurrentSessions = sessionsHere.filter((existing) => {
+    const existingStart = existing.startTime ?? new Date(0);
+    const existingEnd = existing.endTime ?? new Date(0);
+    return existingStart < sessionEnd && existingEnd > sessionStart;
   });
   const sessionValid =
     sessionStartsBeforeEnds &&

@@ -121,24 +121,19 @@ describe("validateSession", () => {
     expect(validateSession(input, [existing])).toBeTruthy();
   });
 
-  // finding #5: validateSession misses boundary-coincidence overlaps
-  // These are expected-correct assertions; they will fail until the overlap logic is fixed.
-
-  it.fails("rejects identical interval in same location (finding #5)", () => {
+  it("rejects identical interval in same location", () => {
     const existing = makeExisting(fromNow(60), fromNow(120));
     const input = makeInput({ startTime: fromNow(60), endTime: fromNow(120) });
     expect(validateSession(input, [existing])).toBeFalsy();
   });
 
   it("rejects same-start longer-end in same location", () => {
-    // existing starts at same time but runs longer — caught by condition 2 (sStart < sessionEnd && sEnd > sessionEnd)
     const existing = makeExisting(fromNow(60), fromNow(180));
     const input = makeInput({ startTime: fromNow(60), endTime: fromNow(120) });
     expect(validateSession(input, [existing])).toBeFalsy();
   });
 
   it("rejects same-end earlier-start in same location", () => {
-    // existing starts earlier and ends at same time — caught by condition 1 (sStart < sessionStart && sEnd > sessionStart)
     const existing = makeExisting(fromNow(30), fromNow(120));
     const input = makeInput({ startTime: fromNow(60), endTime: fromNow(120) });
     expect(validateSession(input, [existing])).toBeFalsy();

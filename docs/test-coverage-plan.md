@@ -120,16 +120,10 @@ Each step independently shippable.
   - Start in the past → rejected.
   - Missing title / missing host / missing location → rejected.
   - Back-to-back in same location → accepted.
-  - **Boundary-coincidence cases — all expected rejected; will currently
-    fail (see finding #5):**
+  - Boundary-coincidence cases — all expected rejected:
     - Identical interval, same location.
     - Same start, later end, same location.
     - Same end, earlier start, same location.
-
-    Write these with the expected-correct assertion. They should fail
-    until the overlap logic is fixed; mark with `test.fail()` plus a
-    comment referencing finding #5 so the suite stays green in the
-    meantime.
 
 - [x] `tests/unit/parse-session-time.test.ts`:
   - `10:00 AM`, `12:00 AM`, `12:00 PM`, `01:05 PM` — each parses and round-trips.
@@ -360,13 +354,3 @@ These are **not** in scope for this plan. Track separately.
 4. **`eventSlugToName` is lossy** (`utils/utils.ts:27`). Hyphens in
    event names round-trip to spaces. Works today only because names
    don't contain `-`. Latent.
-5. **`validateSession` misses boundary-coincidence overlaps**
-   (`app/api/session-form-utils.ts:84`). The concurrent-session filter
-   uses strict `<` / `>`, so when an existing session shares a start
-   or end instant with the candidate, it is not flagged. Concretely:
-   identical interval, same-start-longer-end, and same-end-earlier-start
-   cases all pass validation at the same location. `sessionsOverlap`
-   (`app/session_utils.ts:22`) uses the correct `maxStart < minEnd`
-   idiom; the two should be reconciled. Step 2 `validateSession` tests
-   pin the expected-correct behavior with `test.fail()` until the fix
-   lands.
