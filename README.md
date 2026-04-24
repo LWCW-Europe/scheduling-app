@@ -57,7 +57,7 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
 
 ```bash
 bun playwright install   # install browser binaries for E2E tests (one-time)
-bun dev:test             # run E2E tests
+bun test:e2e             # run E2E tests
 bun lint                 # lint
 bun run                  # list all available scripts
 ```

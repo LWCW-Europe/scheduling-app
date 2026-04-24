@@ -223,7 +223,7 @@ it moves the percentage.
 ### Neutral / follow-ups
 
 - Pre-commit runs `bun lint`, `bun format`, `bun typecheck`, and gains
-  `bun x vitest run`. Playwright continues to run via `bun dev:test`
+  `bun x vitest run`. Playwright continues to run via `bun test:e2e`
   (heavier, not part of the fast feedback loop).
 - The existing Playwright seed in `tests/reset-database.ts` stays for
   E2E. Integration tests build per-test state and do not depend on it.

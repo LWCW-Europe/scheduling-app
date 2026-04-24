@@ -72,7 +72,7 @@ Each step independently shippable.
     intercepted by Bun's native test runner before it reads
     `package.json` scripts, so it would ignore these aliases.
 - [x] Update pre-commit / CI to run `bun run test` alongside `bun lint`,
-      `bun format`, and `bun typecheck`. Keep Playwright on `bun dev:test`.
+      `bun format`, and `bun typecheck`. Keep Playwright on `bun test:e2e`.
 - [x] `tests/helpers/db.ts`:
   - `setupTestDb()` — set `process.env.DATABASE_URL = "file::memory:"`,
     reset the `_repositories` singleton in `db/container.ts` (may need a

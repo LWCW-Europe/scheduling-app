@@ -25,7 +25,7 @@ bun lint                     # Lint
 bun format                   # Format (writes in place)
 bun typecheck                # Type check
 bun dev:db:reset             # Reset database with test data
-bun dev:test                 # Run E2E tests
+bun test:e2e                 # Run E2E tests
 bun dev:migrate:create <name> # Generate migration from schema changes
 bun dev:migrate:up           # Apply pending migrations
 bun dev:migrate:status       # Check migration status

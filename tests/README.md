@@ -19,7 +19,7 @@ The test environment is pre-configured via `.env.test` (committed):
 **IMPORTANT!** Tests reset the database before each run. Do NOT run against production data.
 
 ```bash
-bun dev:test
+bun test:e2e
 ```
 
 This resets the test database, starts the app with the test env, and runs all tests headed.
