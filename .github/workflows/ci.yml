@@ -89,3 +89,22 @@ jobs:
 
       - name: Test
         run: bun run test
+
+  test-e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v6
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        run: bunx playwright install --with-deps firefox
+
+      - name: E2E Tests
+        run: bun set-env.ts test bunx playwright test
