@@ -150,7 +150,7 @@ verified through `sessionsRepo.listByEvent` / `sessionsRepo.findById`
 (the same read surface server components use to render the page — see
 ADR "Integration tests"). Do **not** query Drizzle tables directly.
 
-- [ ] `tests/integration/add-session.test.ts` — `POST /api/add-session`:
+- [x] `tests/integration/add-session.test.ts` — `POST /api/add-session`:
   - Happy path: response indicates success; listing sessions for the event
     finds one whose title, host set, location set, and time window match
     the request payload.
@@ -161,13 +161,13 @@ ADR "Integration tests"). Do **not** query Drizzle tables directly.
   - Rejects missing title / missing host / missing location.
   - Malformed JSON → error response.
 
-- [ ] `tests/integration/update-session.test.ts` — `POST /api/update-session`:
+- [x] `tests/integration/update-session.test.ts` — `POST /api/update-session`:
   - Changes time without conflict; re-fetched session reflects new times.
   - Moves to a colliding slot → rejected; re-fetched session is unchanged.
   - Does not "collide with itself" when re-saved unchanged.
   - Changes location / hosts / capacity; re-fetched session reflects each.
 
-- [ ] `tests/integration/delete-session.test.ts` — `POST /api/delete-session`:
+- [x] `tests/integration/delete-session.test.ts` — `POST /api/delete-session`:
   - After delete, the session is absent from `listByEvent`.
   - After delete, `GET /api/rsvps` for guests who RSVPed no longer
     includes the deleted session (or: document current behavior if not).
