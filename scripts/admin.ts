@@ -8,6 +8,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { eq, inArray } from "drizzle-orm";
+import fs from "fs";
 import { nanoid } from "nanoid";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -614,6 +615,105 @@ async function manageGuests(db: DB): Promise<void> {
   }
 }
 
+// ── Locations ─────────────────────────────────────────────────────────────────
+
+const LOCATION_IMAGE_NOTE =
+  "Images must be 4:3 aspect ratio (e.g. 800×600 or 1200×900). " +
+  "Supported formats: JPEG, PNG, WebP.";
+
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
+
+function listLocations(db: DB): void {
+  const locations = db.select().from(schema.locations).all();
+  if (locations.length === 0) {
+    p.note("No locations found.", "Locations");
+    return;
+  }
+  const lines = locations.map((l) => {
+    const parts = [`${l.name}  (${l.id})`];
+    parts.push(`  Image:    ${l.imageUrl || "(none)"}`);
+    if (l.description) parts.push(`  Desc:     ${l.description}`);
+    parts.push(
+      `  Capacity: ${l.capacity}  Hidden: ${l.hidden}  Bookable: ${l.bookable}`
+    );
+    return parts.join("\n");
+  });
+  p.note(lines.join("\n\n─────\n\n"), "Locations");
+}
+
+async function setLocationImage(db: DB): Promise<void> {
+  const locations = db.select().from(schema.locations).all();
+  if (locations.length === 0) {
+    p.log.warn("No locations found.");
+    return;
+  }
+
+  const locationId = await p.select({
+    message: "Select location",
+    options: locations.map((l) => ({
+      value: l.id,
+      label: `${l.name}${l.imageUrl ? " (has image)" : ""}`,
+    })),
+  });
+  cancelCheck(locationId);
+  const location = locations.find((l) => l.id === locationId)!;
+
+  p.log.info(LOCATION_IMAGE_NOTE);
+
+  const sourcePath = await p.text({
+    message: "Path to image file",
+    placeholder: "/path/to/image.jpg",
+  });
+  cancelCheck(sourcePath);
+
+  const resolvedSource = path.resolve(sourcePath as string);
+  if (!fs.existsSync(resolvedSource)) {
+    p.log.error(`File not found: ${resolvedSource}`);
+    return;
+  }
+
+  const ext = path.extname(resolvedSource).toLowerCase();
+  if (!ALLOWED_IMAGE_EXTENSIONS.includes(ext)) {
+    p.log.error(
+      `Unsupported format "${ext}". Allowed: ${ALLOWED_IMAGE_EXTENSIONS.join(", ")}`
+    );
+    return;
+  }
+
+  const outputDir = path.join(__dirname, "../public/locations");
+  fs.mkdirSync(outputDir, { recursive: true });
+
+  const destFilename = `${location.id}${ext}`;
+  const destPath = path.join(outputDir, destFilename);
+  fs.copyFileSync(resolvedSource, destPath);
+
+  const imageUrl = `/locations/${destFilename}`;
+  db.update(schema.locations)
+    .set({ imageUrl })
+    .where(eq(schema.locations.id, location.id))
+    .run();
+
+  p.log.success(`Image set for "${location.name}": ${imageUrl}`);
+}
+
+async function manageLocations(db: DB): Promise<void> {
+  while (true) {
+    const action = await p.select({
+      message: "Locations",
+      options: [
+        { value: "list", label: "List" },
+        { value: "set-image", label: "Set image" },
+        { value: "back", label: "← Back" },
+      ],
+    });
+    cancelCheck(action);
+    if (action === "back") return;
+
+    if (action === "list") listLocations(db);
+    else if (action === "set-image") await setLocationImage(db);
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -626,6 +726,7 @@ async function main() {
       options: [
         { value: "events", label: "Events" },
         { value: "guests", label: "Guests" },
+        { value: "locations", label: "Locations" },
         { value: "exit", label: "Exit" },
       ],
     });
@@ -634,6 +735,7 @@ async function main() {
 
     if (section === "events") await manageEvents(db);
     else if (section === "guests") await manageGuests(db);
+    else if (section === "locations") await manageLocations(db);
   }
 
   p.outro("Done.");
