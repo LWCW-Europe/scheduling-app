@@ -7,7 +7,7 @@ import * as p from "@clack/prompts";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -358,6 +358,52 @@ async function deleteEvent(db: DB): Promise<void> {
     return;
   }
 
+  const sessionIds = db
+    .select({ id: schema.sessions.id })
+    .from(schema.sessions)
+    .where(eq(schema.sessions.eventId, event.id))
+    .all()
+    .map((s) => s.id);
+
+  if (sessionIds.length > 0) {
+    db.delete(schema.rsvps)
+      .where(inArray(schema.rsvps.sessionId, sessionIds))
+      .run();
+    db.delete(schema.sessionHosts)
+      .where(inArray(schema.sessionHosts.sessionId, sessionIds))
+      .run();
+    db.delete(schema.sessionLocations)
+      .where(inArray(schema.sessionLocations.sessionId, sessionIds))
+      .run();
+  }
+
+  const proposalIds = db
+    .select({ id: schema.sessionProposals.id })
+    .from(schema.sessionProposals)
+    .where(eq(schema.sessionProposals.eventId, event.id))
+    .all()
+    .map((sp) => sp.id);
+
+  if (proposalIds.length > 0) {
+    db.delete(schema.votes)
+      .where(inArray(schema.votes.proposalId, proposalIds))
+      .run();
+    db.delete(schema.proposalHosts)
+      .where(inArray(schema.proposalHosts.proposalId, proposalIds))
+      .run();
+  }
+
+  db.delete(schema.sessions).where(eq(schema.sessions.eventId, event.id)).run();
+  db.delete(schema.sessionProposals)
+    .where(eq(schema.sessionProposals.eventId, event.id))
+    .run();
+  db.delete(schema.eventLocations)
+    .where(eq(schema.eventLocations.eventId, event.id))
+    .run();
+  db.delete(schema.eventGuests)
+    .where(eq(schema.eventGuests.eventId, event.id))
+    .run();
+  db.delete(schema.days).where(eq(schema.days.eventId, event.id)).run();
   db.delete(schema.events).where(eq(schema.events.id, event.id)).run();
   p.log.success(`Deleted "${event.name}".`);
 }
