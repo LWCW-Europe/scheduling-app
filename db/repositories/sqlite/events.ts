@@ -34,6 +34,7 @@ function rowToEvent(row: typeof schema.events.$inferSelect): Event {
       : undefined,
     maxSessionDuration: row.maxSessionDuration,
     timezone: row.timezone,
+    icon: row.icon ?? undefined,
   };
 }
 
@@ -81,6 +82,7 @@ export class SqliteEventsRepository implements EventsRepository {
         schedulingPhaseEnd: data.schedulingPhaseEnd?.toISOString() ?? null,
         maxSessionDuration: data.maxSessionDuration,
         timezone: data.timezone,
+        icon: data.icon ?? null,
       })
       .run();
     return { id, ...data };

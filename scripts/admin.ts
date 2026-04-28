@@ -118,10 +118,57 @@ async function promptDate(
 
 // ── Events ────────────────────────────────────────────────────────────────────
 
+const AVAILABLE_ICONS = [
+  "AcademicCapIcon",
+  "BeakerIcon",
+  "BoltIcon",
+  "BookOpenIcon",
+  "BriefcaseIcon",
+  "BuildingOfficeIcon",
+  "CakeIcon",
+  "CalendarIcon",
+  "ChatBubbleLeftIcon",
+  "CloudIcon",
+  "CodeBracketIcon",
+  "CogIcon",
+  "CommandLineIcon",
+  "ComputerDesktopIcon",
+  "CpuChipIcon",
+  "FireIcon",
+  "GlobeAltIcon",
+  "HeartIcon",
+  "HomeIcon",
+  "MicrophoneIcon",
+  "MusicalNoteIcon",
+  "PaintBrushIcon",
+  "RocketLaunchIcon",
+  "SparklesIcon",
+  "StarIcon",
+  "SunIcon",
+  "TrophyIcon",
+  "UserGroupIcon",
+  "WrenchIcon",
+] as const;
+
+async function promptIcon(current: string | null): Promise<string | null> {
+  const options = [
+    { value: "", label: "None" },
+    ...AVAILABLE_ICONS.map((name) => ({ value: name, label: name })),
+  ];
+  const value = await p.select({
+    message: "Icon (heroicons/24/outline)",
+    options,
+    initialValue: current ?? "",
+  });
+  cancelCheck(value);
+  return (value as string) || null;
+}
+
 function formatEventSummary(e: typeof schema.events.$inferSelect): string {
   const lines = [
     `Name:  ${e.name}`,
     `ID:    ${e.id}`,
+    `Icon:  ${e.icon ?? "(none)"}`,
     `Dates: ${displayDate(e.start)} → ${displayDate(e.end)}`,
     `Proposal phase:   ${displayDate(e.proposalPhaseStart)} → ${displayDate(e.proposalPhaseEnd)}`,
     `Voting phase:     ${displayDate(e.votingPhaseStart)} → ${displayDate(e.votingPhaseEnd)}`,
@@ -194,6 +241,8 @@ async function createEvent(db: DB): Promise<void> {
 
   const timezone = await promptTimezone("UTC");
 
+  const icon = await promptIcon(null);
+
   const id = nanoid();
   db.insert(schema.events)
     .values({
@@ -205,6 +254,7 @@ async function createEvent(db: DB): Promise<void> {
       end,
       maxSessionDuration,
       timezone,
+      icon,
     })
     .run();
 
@@ -283,6 +333,8 @@ async function editEventBasicInfo(
 
   const timezone = await promptTimezone(event.timezone);
 
+  const icon = await promptIcon(event.icon ?? null);
+
   db.update(schema.events)
     .set({
       name: name as string,
@@ -292,6 +344,7 @@ async function editEventBasicInfo(
       end,
       maxSessionDuration,
       timezone,
+      icon,
     })
     .where(eq(schema.events.id, event.id))
     .run();

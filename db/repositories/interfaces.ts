@@ -41,6 +41,7 @@ export type Event = {
   schedulingPhaseEnd?: Date;
   maxSessionDuration: number;
   timezone: string;
+  icon?: string | null;
 };
 
 export interface EventsRepository {

@@ -8,9 +8,15 @@ test.describe("Basic Sanity Checks", () => {
 
   test("homepage loads and shows multiple events", async ({ page }) => {
     // Should show all three test events
-    await expect(page.getByText("Conference Alpha")).toBeVisible();
-    await expect(page.getByText("Conference Beta")).toBeVisible();
-    await expect(page.getByText("Conference Gamma")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Conference Alpha" })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Conference Beta" })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Conference Gamma" })
+    ).toBeVisible();
 
     // Should show phase descriptions
     await expect(

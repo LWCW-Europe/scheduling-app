@@ -8,6 +8,9 @@ import clsx from "clsx";
 import { CONSTS } from "@/utils/constants";
 import { isPasswordProtectionEnabledServer } from "@/utils/auth";
 import { LogoutButton } from "./logout-button";
+import { getRepositories } from "@/db/container";
+import { eventNameToSlug } from "@/utils/utils";
+import { cookies } from "next/headers";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -29,19 +32,31 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const showLogout = isPasswordProtectionEnabledServer();
+  const passwordProtected = isPasswordProtectionEnabledServer();
+  const isAuthenticated =
+    !passwordProtected ||
+    (await cookies()).get("site-auth")?.value === "authenticated";
+  const events =
+    CONSTS.MULTIPLE_EVENTS && isAuthenticated
+      ? await getRepositories().events.list()
+      : [];
+  const navItems = events.map((e) => ({
+    name: e.name,
+    href: `/${eventNameToSlug(e.name)}`,
+    icon: e.icon ?? null,
+  }));
 
   return (
     <html lang="en" className={fontVars}>
       <body className="font-monteserrat flex flex-col min-h-screen">
         <UserProvider>
-          {CONSTS.MULTIPLE_EVENTS && <NavBar />}
-          {showLogout && !CONSTS.MULTIPLE_EVENTS && (
+          {CONSTS.MULTIPLE_EVENTS && <NavBar navItems={navItems} />}
+          {passwordProtected && !CONSTS.MULTIPLE_EVENTS && (
             <div className="fixed top-4 right-4 z-50">
               <LogoutButton />
             </div>

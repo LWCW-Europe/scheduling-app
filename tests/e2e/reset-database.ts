@@ -117,6 +117,7 @@ function generateEventDates() {
     {
       name: "Conference Alpha",
       description: "Event currently in proposal phase",
+      icon: "AcademicCapIcon",
       start: e1Start,
       end: e1End,
       proposalPhaseStart: e1PropStart,
@@ -129,6 +130,7 @@ function generateEventDates() {
     {
       name: "Conference Beta",
       description: "Event currently in voting phase",
+      icon: "BeakerIcon",
       start: e2Start,
       end: e2End,
       proposalPhaseStart: e2PropStart,
@@ -141,6 +143,7 @@ function generateEventDates() {
     {
       name: "Conference Gamma",
       description: "Event currently in scheduling phase",
+      icon: "GlobeAltIcon",
       start: e3Start,
       end: e3End,
       proposalPhaseStart: e3PropStart,
@@ -322,6 +325,7 @@ function seedTestData() {
     id: nanoid(),
     name: config.name,
     description: config.description,
+    icon: config.icon,
     website: `test-event-${index + 1}.example.com`,
     start: config.start.toISOString(),
     end: config.end.toISOString(),

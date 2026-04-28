@@ -1,20 +1,96 @@
 "use client";
 import { Disclosure } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  AcademicCapIcon,
+  Bars3Icon,
+  BeakerIcon,
+  BoltIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
+  BuildingOfficeIcon,
+  CakeIcon,
+  CalendarIcon,
+  ChatBubbleLeftIcon,
+  CloudIcon,
+  CodeBracketIcon,
+  CogIcon,
+  CommandLineIcon,
+  ComputerDesktopIcon,
+  CpuChipIcon,
+  FireIcon,
+  GlobeAltIcon,
+  HeartIcon,
+  HomeIcon,
+  MicrophoneIcon,
+  MusicalNoteIcon,
+  PaintBrushIcon,
+  RocketLaunchIcon,
+  SparklesIcon,
+  StarIcon,
+  SunIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  WrenchIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ExportScheduleModal, MapModal } from "./modals";
-import { CONSTS, NavItem } from "@/utils/constants";
 import { LogoutButton } from "./logout-button";
 import { useEffect, useState } from "react";
+import { ForwardRefExoticComponent, RefAttributes, SVGProps } from "react";
 
-export default function Example() {
+type HeroIcon = ForwardRefExoticComponent<
+  Omit<SVGProps<SVGSVGElement>, "ref"> & {
+    title?: string;
+    titleId?: string;
+  } & RefAttributes<SVGSVGElement>
+>;
+
+const ICON_MAP: Record<string, HeroIcon> = {
+  AcademicCapIcon,
+  BeakerIcon,
+  BoltIcon,
+  BookOpenIcon,
+  BriefcaseIcon,
+  BuildingOfficeIcon,
+  CakeIcon,
+  CalendarIcon,
+  ChatBubbleLeftIcon,
+  CloudIcon,
+  CodeBracketIcon,
+  CogIcon,
+  CommandLineIcon,
+  ComputerDesktopIcon,
+  CpuChipIcon,
+  FireIcon,
+  GlobeAltIcon,
+  HeartIcon,
+  HomeIcon,
+  MicrophoneIcon,
+  MusicalNoteIcon,
+  PaintBrushIcon,
+  RocketLaunchIcon,
+  SparklesIcon,
+  StarIcon,
+  SunIcon,
+  TrophyIcon,
+  UserGroupIcon,
+  WrenchIcon,
+};
+
+export type NavItem = {
+  name: string;
+  href: string;
+  icon: string | null;
+};
+
+export default function NavBar({ navItems }: { navItems: NavItem[] }) {
   const [showLogout, setShowLogout] = useState(false);
   const pathname = usePathname();
 
   const checkAuth = () => {
-    // Check if password protection is enabled and user is authenticated
     const hasAuthCookie = document.cookie.includes("site-auth=authenticated");
     setShowLogout(hasAuthCookie);
   };
@@ -27,14 +103,10 @@ export default function Example() {
     checkAuth();
   }, [pathname]);
 
-  // Listen for custom auth events (triggered by login/logout actions)
   useEffect(() => {
     const handleAuthChange = () => checkAuth();
 
-    // Listen for custom events
     window.addEventListener("authStateChanged", handleAuthChange);
-
-    // Also listen for focus (when user returns to tab)
     window.addEventListener("focus", handleAuthChange);
 
     return () => {
@@ -68,7 +140,7 @@ export default function Example() {
                   {/* Desktop nav */}
                   <div className="hidden sm:block">
                     <div className="flex space-x-4">
-                      {CONSTS.NAV_ITEMS.map((item) => (
+                      {navItems.map((item) => (
                         <NavBarItem key={item.name} item={item} />
                       ))}
                     </div>
@@ -84,7 +156,7 @@ export default function Example() {
           </div>
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 px-2 pb-3 pt-2">
-              {CONSTS.NAV_ITEMS.map((item) => (
+              {navItems.map((item) => (
                 <SmallNavBarItem key={item.name} item={item} />
               ))}
               {showLogout && (
@@ -103,6 +175,7 @@ export default function Example() {
 function NavBarItem(props: { item: NavItem }) {
   const { item } = props;
   const isCurrentPage = usePathname().includes(item.href) && item.href != null;
+  const Icon = item.icon ? ICON_MAP[item.icon] : null;
   return (
     <Link
       key={item.name}
@@ -114,7 +187,7 @@ function NavBarItem(props: { item: NavItem }) {
         "group flex gap-1 cursor-pointer items-center rounded-md px-3 py-2 text-sm font-medium"
       )}
     >
-      <item.icon className="block h-5 w-auto" />
+      {Icon && <Icon className="block h-5 w-auto" />}
       {item.name}
     </Link>
   );
@@ -123,6 +196,7 @@ function NavBarItem(props: { item: NavItem }) {
 function SmallNavBarItem(props: { item: NavItem }) {
   const { item } = props;
   const isCurrentPage = usePathname().includes(item.href) && item.href != null;
+  const Icon = item.icon ? ICON_MAP[item.icon] : null;
   return (
     <Disclosure.Button
       key={item.name}
@@ -135,7 +209,7 @@ function SmallNavBarItem(props: { item: NavItem }) {
         "flex gap-2 rounded-md px-3 py-2 text-base font-medium"
       )}
     >
-      <item.icon className="block h-5 w-auto" />
+      {Icon && <Icon className="block h-5 w-auto" />}
       {item.name}
     </Disclosure.Button>
   );
