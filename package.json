@@ -44,6 +44,9 @@
     "react": "^19",
     "react-dom": "^19"
   },
+  "overrides": {
+    "typescript-eslint": "^8.59.0"
+  },
   "devDependencies": {
     "@clack/prompts": "^1.2.0",
     "@playwright/test": "^1.59.1",
