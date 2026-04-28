@@ -103,7 +103,16 @@ export function DayGrid(props: {
               {includedLocations.map((loc) => (
                 <Tooltip
                   key={loc.name}
-                  content={<p className="text-sm p-2">{loc.description}</p>}
+                  content={
+                    loc.description ? (
+                      <div className="p-2 space-y-1">
+                        <p className="text-xs font-semibold text-gray-700">
+                          {loc.name}
+                        </p>
+                        <p className="text-sm">{loc.description}</p>
+                      </div>
+                    ) : undefined
+                  }
                   placement="bottom-start"
                 >
                   <div
