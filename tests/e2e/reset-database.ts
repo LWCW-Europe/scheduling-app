@@ -281,7 +281,9 @@ function seedTestData() {
       sortIndex: 1,
       color: "blue",
       imageUrl: "/locations/loc-main-hall.jpg",
-      description: "",
+      description:
+        "Our largest venue, featuring a professional stage with tiered seating. Equipped with full AV including projector and sound system. Ideal for keynotes, panels, and large-audience sessions.",
+      areaDescription: "Ground floor, East Wing",
       hidden: false,
     },
     {
@@ -292,7 +294,9 @@ function seedTestData() {
       sortIndex: 2,
       color: "green",
       imageUrl: "/locations/loc-room-a.jpg",
-      description: "",
+      description:
+        "A bright breakout room with whiteboards and flexible seating. Natural light and a relaxed atmosphere make it well suited for workshops and interactive sessions.",
+      areaDescription: "1st floor, West Wing",
       hidden: false,
     },
     {
@@ -303,7 +307,9 @@ function seedTestData() {
       sortIndex: 3,
       color: "red",
       imageUrl: "/locations/loc-room-b.jpg",
-      description: "",
+      description:
+        "An informal outdoor space with picnic tables overlooking the lake. Perfect for open-space sessions, unconference discussions, and casual networking.",
+      areaDescription: "Outdoor, South Courtyard",
       hidden: false,
     },
   ];
