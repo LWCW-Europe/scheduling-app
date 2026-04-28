@@ -43,16 +43,18 @@ export function EventDisplay() {
           <CalendarIcon className="h-4 w-4 stroke-2" />
           <span>
             {DateTime.fromJSDate(event.start)
-              .setZone("America/Los_Angeles")
+              .setZone(event.timezone)
               .toFormat("LLL d")}
             {multipleDays && (
               <>
                 {" - "}
                 {DateTime.fromJSDate(event.end)
-                  .setZone("America/Los_Angeles")
+                  .setZone(event.timezone)
                   .toFormat("LLL d")}
               </>
             )}
+            {" · "}
+            {event.timezone}
           </span>
         </span>
         <a

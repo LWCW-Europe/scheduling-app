@@ -27,6 +27,55 @@ function openDb() {
 
 type DB = ReturnType<typeof openDb>;
 
+// ── Timezone helpers ──────────────────────────────────────────────────────────
+
+const MAX_TZ_OPTIONS = 9;
+
+async function promptTimezone(current?: string): Promise<string> {
+  const hint = `current: ${current ?? "UTC"} — type to search (e.g. "America/New_York", "Europe/Berlin")`;
+  const searchTerm = await p.text({
+    message: "Timezone (type to search)",
+    placeholder: hint,
+  });
+  cancelCheck(searchTerm);
+
+  const term = (searchTerm as string).trim() || (current ?? "UTC");
+
+  const allZones: string[] = Intl.supportedValuesOf("timeZone");
+
+  if (allZones.includes(term)) return term;
+
+  const matches = allZones.filter((tz) =>
+    tz.toLowerCase().includes(term.toLowerCase())
+  );
+
+  if (matches.length === 0) {
+    p.log.error(
+      `No timezone matching "${term}". Try "America/New_York", "Europe/Berlin", "UTC", etc.`
+    );
+    return promptTimezone(current);
+  }
+
+  if (matches.length === 1) {
+    p.log.info(`Using timezone: ${matches[0]}`);
+    return matches[0];
+  }
+
+  if (matches.length > MAX_TZ_OPTIONS) {
+    p.log.warn(
+      `${matches.length} matches for "${term}" — too many to list. Be more specific (e.g. "America/New" instead of "America").`
+    );
+    return promptTimezone(current);
+  }
+
+  const selected = await p.select({
+    message: "Select timezone",
+    options: matches.map((tz) => ({ value: tz, label: tz })),
+  });
+  cancelCheck(selected);
+  return selected as string;
+}
+
 // ── Date helpers ──────────────────────────────────────────────────────────────
 
 function displayDate(iso: string | null | undefined): string {
@@ -77,6 +126,7 @@ function formatEventSummary(e: typeof schema.events.$inferSelect): string {
     `Voting phase:     ${displayDate(e.votingPhaseStart)} → ${displayDate(e.votingPhaseEnd)}`,
     `Scheduling phase: ${displayDate(e.schedulingPhaseStart)} → ${displayDate(e.schedulingPhaseEnd)}`,
     `Max session duration: ${e.maxSessionDuration} minutes`,
+    `Timezone: ${e.timezone}`,
   ];
   if (e.description) lines.push(`Desc:  ${e.description}`);
   if (e.website) lines.push(`Web:   ${e.website}`);
@@ -141,6 +191,8 @@ async function createEvent(db: DB): Promise<void> {
     p.log.warn(`Rounded to nearest 30 minutes: ${maxSessionDuration}`);
   }
 
+  const timezone = await promptTimezone("UTC");
+
   const id = nanoid();
   db.insert(schema.events)
     .values({
@@ -151,6 +203,7 @@ async function createEvent(db: DB): Promise<void> {
       start,
       end,
       maxSessionDuration,
+      timezone,
     })
     .run();
 
@@ -227,6 +280,8 @@ async function editEventBasicInfo(
     p.log.warn(`Rounded to nearest 30 minutes: ${maxSessionDuration}`);
   }
 
+  const timezone = await promptTimezone(event.timezone);
+
   db.update(schema.events)
     .set({
       name: name as string,
@@ -235,6 +290,7 @@ async function editEventBasicInfo(
       start,
       end,
       maxSessionDuration,
+      timezone,
     })
     .where(eq(schema.events.id, event.id))
     .run();

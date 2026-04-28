@@ -3,7 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { SessionText } from "./session-text";
 import { DateTime } from "luxon";
 import { useContext } from "react";
-import { UserContext } from "../context";
+import { UserContext, EventContext } from "../context";
 import type { DayWithSessions } from "@/app/context";
 import type { Rsvp, Location, Session } from "@/db/repositories/interfaces";
 
@@ -17,6 +17,8 @@ export function DayText(props: {
   const { day, locations, search, rsvps, eventSlug } = props;
   const searchParams = useSearchParams();
   const { user: currentUser } = useContext(UserContext);
+  const { event } = useContext(EventContext);
+  const timezone = event?.timezone ?? "UTC";
   const locParams = searchParams?.getAll("loc");
   const locationsFromParams = locations.filter((loc) =>
     locParams?.includes(loc.name)
@@ -55,7 +57,7 @@ export function DayText(props: {
     <div className="flex flex-col max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold w-full text-left">
         {DateTime.fromJSDate(day.start)
-          .setZone("America/Los_Angeles")
+          .setZone(timezone)
           .toFormat("EEEE, MMMM d")}{" "}
       </h2>
       <div className="flex flex-col divide-y divide-gray-300">

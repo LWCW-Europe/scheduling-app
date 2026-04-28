@@ -64,6 +64,7 @@ export async function createEvent(opts?: {
     schedulingPhaseStart,
     schedulingPhaseEnd,
     maxSessionDuration: 120,
+    timezone: "UTC",
   });
 }
 

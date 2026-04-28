@@ -256,11 +256,11 @@ export function ViewSession(props: {
           <span className="font-medium">Time:</span>
           <span>
             {DateTime.fromJSDate(session.startTime ?? new Date())
-              .setZone("America/Los_Angeles")
+              .setZone(event.timezone)
               .toFormat("EEEE h:mm a")}{" "}
             -{" "}
             {getEndTimeMinusBreak(session)
-              .setZone("America/Los_Angeles")
+              .setZone(event.timezone)
               .toFormat("h:mm a")}
           </span>
         </div>

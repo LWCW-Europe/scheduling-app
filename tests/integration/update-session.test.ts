@@ -41,6 +41,7 @@ function basePayload(
     day,
     startTimeString: "10:00 AM",
     duration: 60,
+    timezone: "UTC",
     ...overrides,
   };
 }

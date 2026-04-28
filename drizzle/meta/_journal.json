@@ -15,6 +15,13 @@
       "when": 1776795822236,
       "tag": "0001_lovely_malcolm_colcord",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1777365674121,
+      "tag": "0002_red_true_believers",
+      "breakpoints": true
     }
   ]
 }

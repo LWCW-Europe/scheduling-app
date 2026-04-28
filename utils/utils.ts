@@ -10,8 +10,12 @@ export const getNumHalfHours = (start: Date, end: Date) => {
   return lengthOfDay / 1000 / 60 / 30;
 };
 
-export const convertParamDateTime = (date: string, time: string) => {
-  return new Date(`2024-${date}T${time}:00-07:00`);
+export const convertParamDateTime = (
+  date: string,
+  time: string,
+  timezone: string
+) => {
+  return DateTime.fromISO(`${date}T${time}:00`, { zone: timezone }).toJSDate();
 };
 
 export const dateOnDay = (date: Date, day: Day) => {

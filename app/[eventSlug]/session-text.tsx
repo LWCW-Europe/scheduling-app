@@ -18,7 +18,8 @@ export function SessionText(props: {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user: currentUser } = useContext(UserContext);
-  const { rsvpdForSession } = useContext(EventContext);
+  const { rsvpdForSession, event } = useContext(EventContext);
+  const timezone = event?.timezone ?? "UTC";
   const [showFullDescription, setShowFullDescription] = useState(false);
   const formattedHostNames =
     session.hosts.map((h) => h.name).join(", ") || "No hosts";
@@ -75,16 +76,16 @@ export function SessionText(props: {
         <div className="flex gap-2 text-sm text-gray-500">
           <div className="flex gap-1">
             <span>
-              {DateTime.fromJSDate(session.startTime ?? new Date()).toFormat(
-                "EEEE"
-              )}
+              {DateTime.fromJSDate(session.startTime ?? new Date())
+                .setZone(timezone)
+                .toFormat("EEEE")}
               ,{" "}
               {DateTime.fromJSDate(session.startTime ?? new Date())
-                .setZone("America/Los_Angeles")
+                .setZone(timezone)
                 .toFormat("h:mm a")}{" "}
               -{" "}
               {getEndTimeMinusBreak(session)
-                .setZone("America/Los_Angeles")
+                .setZone(timezone)
                 .toFormat("h:mm a")}
             </span>
           </div>

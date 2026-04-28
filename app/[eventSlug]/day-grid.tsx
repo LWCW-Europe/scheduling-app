@@ -4,12 +4,13 @@ import clsx from "clsx";
 import { useSearchParams } from "next/navigation";
 import { getNumHalfHours } from "@/utils/utils";
 import { useSafeLayoutEffect } from "@/utils/hooks";
-import { useRef, useState } from "react";
+import { useRef, useState, useContext } from "react";
 import Image from "next/image";
 import { Tooltip } from "./tooltip";
 import { DateTime } from "luxon";
 import type { Guest, Location } from "@/db/repositories/interfaces";
 import type { DayWithSessions } from "@/app/context";
+import { EventContext } from "@/app/context";
 
 export function DayGrid(props: {
   eventName: string;
@@ -18,6 +19,8 @@ export function DayGrid(props: {
   guests: Guest[];
 }) {
   const { eventName, day, locations, guests } = props;
+  const { event } = useContext(EventContext);
+  const timezone = event?.timezone ?? "UTC";
   const searchParams = useSearchParams();
   const locParams = searchParams?.getAll("loc");
   const locationsFromParams = locations.filter((loc) =>
@@ -73,7 +76,7 @@ export function DayGrid(props: {
         <div className="flex items-center gap-2">
           <h2 className="text-2xl font-bold">
             {DateTime.fromJSDate(day.start)
-              .setZone("America/Los_Angeles")
+              .setZone(timezone)
               .toFormat("EEEE, MMMM d")}
           </h2>
           <button
@@ -86,7 +89,7 @@ export function DayGrid(props: {
       </div>
       {expanded && (
         <div className="flex items-end relative w-full overflow-visible">
-          <TimestampCol start={start} end={end} />
+          <TimestampCol start={start} end={end} timezone={timezone} />
           <div
             className="overflow-x-auto overflow-y-clip flex-shrink"
             ref={scrollableDivRef}
@@ -171,8 +174,8 @@ export function DayGrid(props: {
   );
 }
 
-function TimestampCol(props: { start: Date; end: Date }) {
-  const { start, end } = props;
+function TimestampCol(props: { start: Date; end: Date; timezone: string }) {
+  const { start, end, timezone } = props;
   const numHalfHours = getNumHalfHours(start, end);
   return (
     <div
@@ -187,7 +190,7 @@ function TimestampCol(props: { start: Date; end: Date }) {
           className="border-b border-gray-100 text-[10px] p-1 text-right h-[44px]"
         >
           {DateTime.fromMillis(start.getTime() + i * 30 * 60 * 1000)
-            .setZone("America/Los_Angeles")
+            .setZone(timezone)
             .toFormat("h:mm a")}
         </div>
       ))}

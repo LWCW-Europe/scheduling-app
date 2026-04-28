@@ -19,6 +19,7 @@ export type SessionParams = {
   startTimeString: string;
   duration: number;
   proposal?: string;
+  timezone: string;
 };
 
 export type SessionInterval = {
@@ -29,9 +30,10 @@ export type SessionInterval = {
 export function parseSessionTime(
   day: Day,
   startTimeString: string,
-  duration: number
+  duration: number,
+  timezone: string
 ): SessionInterval {
-  const dayStartDT = DateTime.fromJSDate(new Date(day.start));
+  const dayStartDT = DateTime.fromJSDate(new Date(day.start)).setZone(timezone);
   const dayISOFormatted = dayStartDT.toFormat("yyyy-MM-dd");
   const [rawHour, rawMinute, ampm] = startTimeString.split(/[: ]/);
   const hourNum = parseInt(rawHour);
@@ -39,9 +41,10 @@ export function parseSessionTime(
   const hourStr = hour24Num < 10 ? `0${hour24Num}` : hour24Num.toString();
   const minuteNum = parseInt(rawMinute);
   const minuteStr = minuteNum < 10 ? `0${minuteNum}` : rawMinute;
-  const startTimeStamp = new Date(
-    `${dayISOFormatted}T${hourStr}:${minuteStr}:00-07:00`
-  );
+  const startTimeStamp = DateTime.fromISO(
+    `${dayISOFormatted}T${hourStr}:${minuteStr}:00`,
+    { zone: timezone }
+  ).toJSDate();
   return {
     start: startTimeStamp.toISOString(),
     end: new Date(
@@ -61,7 +64,12 @@ export function prepareToInsert(params: SessionParams): SessionCreateInput {
     startTimeString,
     duration,
   } = params;
-  const { start, end } = parseSessionTime(day, startTimeString, duration);
+  const { start, end } = parseSessionTime(
+    day,
+    startTimeString,
+    duration,
+    params.timezone
+  );
   const input: SessionCreateInput = {
     title,
     description,

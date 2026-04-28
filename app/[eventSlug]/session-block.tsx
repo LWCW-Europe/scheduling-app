@@ -23,7 +23,8 @@ export function SessionBlock(props: {
 }) {
   const { eventName, session, location, day, guests } = props;
   const eventSlug = eventNameToSlug(eventName);
-  const { rsvpdForSession } = useContext(EventContext);
+  const { rsvpdForSession, event } = useContext(EventContext);
+  const timezone = event?.timezone ?? "UTC";
   const { user } = useContext(UserContext);
   const rsvpd = rsvpdForSession(session.id + (user ? "" : ""));
 
@@ -46,6 +47,7 @@ export function SessionBlock(props: {
       session={session}
       location={location}
       numHalfHours={numHalfHours}
+      timezone={timezone}
     />
   ) : (
     <>
@@ -75,13 +77,14 @@ export function BookableSessionCard(props: {
   session: Session;
   numHalfHours: number;
   eventSlug: string;
+  timezone: string;
 }) {
-  const { numHalfHours, session, location, eventSlug } = props;
+  const { numHalfHours, session, location, eventSlug, timezone } = props;
   const dayParam = DateTime.fromJSDate(session.startTime ?? new Date())
-    .setZone("America/Los_Angeles")
-    .toFormat("MM-dd");
+    .setZone(timezone)
+    .toFormat("yyyy-MM-dd");
   const timeParam = DateTime.fromJSDate(session.startTime ?? new Date())
-    .setZone("America/Los_Angeles")
+    .setZone(timezone)
     .toFormat("HH:mm");
   return (
     <div className={`row-span-${numHalfHours} my-0.5 min-h-10`}>
@@ -122,10 +125,12 @@ function SessionInfoDisplay({
   session,
   formattedHostNames,
   numRSVPs,
+  timezone,
 }: {
   session: Session;
   formattedHostNames: string;
   numRSVPs: number;
+  timezone: string;
 }) {
   return (
     <>
@@ -154,12 +159,10 @@ function SessionInfoDisplay({
           <ClockIcon className="h-4 w-4" />
           <span>
             {DateTime.fromJSDate(session.startTime ?? new Date())
-              .setZone("America/Los_Angeles")
+              .setZone(timezone)
               .toFormat("h:mm a")}{" "}
             -{" "}
-            {getEndTimeMinusBreak(session)
-              .setZone("America/Los_Angeles")
-              .toFormat("h:mm a")}
+            {getEndTimeMinusBreak(session).setZone(timezone).toFormat("h:mm a")}
           </span>
         </div>
       </div>
@@ -177,8 +180,9 @@ export function RealSessionCard(props: {
 }) {
   const { eventSlug, session, numHalfHours, location, guests, rsvpd } = props;
   const { user: currentUser } = useContext(UserContext);
-  const { localSessions, updateRsvp, userBusySessions } =
+  const { localSessions, updateRsvp, userBusySessions, event } =
     useContext(EventContext);
+  const timezone = event?.timezone ?? "UTC";
   const router = useRouter();
   const [isRsvping, setIsRsvping] = useState(false);
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -267,6 +271,7 @@ export function RealSessionCard(props: {
           session={session}
           formattedHostNames={formattedHostNames}
           numRSVPs={numRSVPs}
+          timezone={timezone}
         />
       }
       className={`row-span-${numHalfHours} my-0.5 overflow-hidden group`}

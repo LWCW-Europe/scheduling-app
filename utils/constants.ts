@@ -14,8 +14,7 @@ export type NavItem = {
 
 export const CONSTS = {
   TITLE: "Example Conference Weekend",
-  DESCRIPTION:
-    "An Example Conference is happening from August 23 - 25, 2024 at Lighthaven. Check out the schedules for the main event and afterparty below!",
+  DESCRIPTION: "Welcome! Browse the schedules for each event below.",
   MULTIPLE_EVENTS: true,
   // If you have multiple events, add your events to the nav bar below
   // If you only have one event, you can leave the array empty

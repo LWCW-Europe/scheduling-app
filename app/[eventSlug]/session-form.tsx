@@ -28,7 +28,7 @@ import type {
   SessionProposal,
 } from "@/db/repositories/interfaces";
 import { ConfirmDeletionModal } from "../modals";
-import { UserContext } from "../context";
+import { UserContext, EventContext } from "../context";
 import { sessionsOverlap, newEmptySession } from "../session_utils";
 import { parseSessionTime } from "../api/session-form-utils";
 
@@ -54,6 +54,10 @@ export function SessionForm(props: {
     proposals,
     maxSessionDuration,
   } = props;
+  const { user: currentUser } = useContext(UserContext);
+  const { event } = useContext(EventContext);
+  const timezone = event?.timezone ?? "UTC";
+
   const searchParams = useSearchParams();
   const dayParam = searchParams?.get("day");
   const timeParam = searchParams?.get("time");
@@ -65,18 +69,14 @@ export function SessionForm(props: {
     sessions.find((ses) => ses.id === sessionID) || newEmptySession();
   const initDateTime =
     dayParam && timeParam
-      ? convertParamDateTime(dayParam, timeParam)
+      ? convertParamDateTime(dayParam, timeParam, timezone)
       : (session.startTime ?? null);
   const initDay = initDateTime
     ? days.find((d) => dateOnDay(initDateTime, d))
     : undefined;
   const initTime = initDateTime
-    ? DateTime.fromJSDate(initDateTime)
-        .setZone("America/Los_Angeles")
-        .toFormat("h:mm a")
+    ? DateTime.fromJSDate(initDateTime).setZone(timezone).toFormat("h:mm a")
     : undefined;
-
-  const { user: currentUser } = useContext(UserContext);
 
   // Compute default hosts for new sessions (no initial proposal, no sessionID).
   // Also used as the "reset" target when the user un-selects a proposal.
@@ -117,6 +117,7 @@ export function SessionForm(props: {
     sessions,
     session,
     maxSessionDuration,
+    timezone,
     locationId
   );
   const initTimeValid = startTimes.some((st) => st.formattedTime === initTime);
@@ -166,7 +167,8 @@ export function SessionForm(props: {
     const { start, end } = parseSessionTime(
       day,
       effectiveStartTime,
-      effectiveDuration
+      effectiveDuration,
+      timezone
     );
     dummySession = {
       ...newEmptySession(),
@@ -218,8 +220,7 @@ export function SessionForm(props: {
     .map((hostClashes) => {
       const { id, sessionClashes, rsvpClashes } = hostClashes;
       const hostName = hosts.find((host) => host.id === id)!.name;
-      const formatTime = (d: DateTime) =>
-        d.setZone("America/Los_Angeles").toFormat("HH:mm");
+      const formatTime = (d: DateTime) => d.setZone(timezone).toFormat("HH:mm");
       const displayInterval = (ses: Session) =>
         `from ${formatTime(DateTime.fromJSDate(ses.startTime ?? new Date()))} to ${formatTime(getEndTimeMinusBreak(ses))}`;
       const sessionErrors = sessionClashes.map(
@@ -260,6 +261,7 @@ export function SessionForm(props: {
         duration: effectiveDuration,
         hosts,
         proposal: proposal?.id ?? session.proposalId,
+        timezone,
       }),
     });
     if (res.ok) {
@@ -536,6 +538,7 @@ function getAvailableStartTimes(
   sessions: Session[],
   currentSession: Session,
   maxSessionDuration: number,
+  timezone: string,
   locationId?: string
 ) {
   const locationSelected = !!locationId;
@@ -558,7 +561,7 @@ function getAvailableStartTimes(
     t += 30 * 60 * 1000
   ) {
     const formattedTime = DateTime.fromMillis(t)
-      .setZone("America/Los_Angeles")
+      .setZone(timezone)
       .toFormat("h:mm a");
     if (locationSelected) {
       const sessionNow = sortedSessions.find(

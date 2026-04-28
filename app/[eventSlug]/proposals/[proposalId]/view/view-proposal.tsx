@@ -208,11 +208,11 @@ export function ViewProposal(props: {
                 className="text-rose-500 underline hover:text-rose-600 transition-colors"
               >
                 {DateTime.fromJSDate(sessions[0].startTime ?? new Date())
-                  .setZone("America/Los_Angeles")
+                  .setZone(event.timezone)
                   .toFormat("EEEE")}{" "}
                 at{" "}
                 {DateTime.fromJSDate(sessions[0].startTime ?? new Date())
-                  .setZone("America/Los_Angeles")
+                  .setZone(event.timezone)
                   .toFormat("h:mm a")}{" "}
                 in {sessions[0].locations[0]?.name}
               </Link>
@@ -229,7 +229,7 @@ export function ViewProposal(props: {
                       className="text-rose-500 underline hover:text-rose-600 transition-colors"
                     >
                       {DateTime.fromJSDate(session.startTime ?? new Date())
-                        .setZone("America/Los_Angeles")
+                        .setZone(event.timezone)
                         .toFormat("EEEE h:mm a")}{" "}
                       in {session.locations[0]?.name}
                     </Link>

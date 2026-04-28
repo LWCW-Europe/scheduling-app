@@ -6,8 +6,26 @@ import { nanoid } from "nanoid";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { DateTime } from "luxon";
 import * as schema from "@/db/schema";
 import { VoteChoice } from "@/db/repositories/interfaces";
+
+const TZ = "Europe/Berlin";
+
+// Returns a UTC Date representing the given clock time on a specific day in Berlin.
+// dayOffset is added to baseDate's Berlin calendar date before setting the time.
+function berlinTime(
+  baseDate: Date,
+  dayOffset: number,
+  hour: number,
+  minute = 0
+): Date {
+  return DateTime.fromJSDate(baseDate)
+    .setZone(TZ)
+    .plus({ days: dayOffset })
+    .set({ hour, minute, second: 0, millisecond: 0 })
+    .toJSDate();
+}
 
 const mode = process.env.NODE_ENV ?? "dev";
 const envFileLocal = path.resolve(process.cwd(), `.env.${mode}.local`);
@@ -307,6 +325,8 @@ function seedTestData() {
     votingPhaseEnd: config.votingPhaseEnd.toISOString(),
     schedulingPhaseStart: config.schedulingPhaseStart.toISOString(),
     schedulingPhaseEnd: config.schedulingPhaseEnd.toISOString(),
+    timezone: TZ,
+    maxSessionDuration: 120,
   }));
   db.insert(schema.events).values(eventRows).run();
   console.log(`  ✅ Created ${eventRows.length} events`);
@@ -321,29 +341,18 @@ function seedTestData() {
   db.insert(schema.eventGuests).values(eventGuestRows).run();
   db.insert(schema.eventLocations).values(eventLocationRows).run();
 
-  // Days (3 per event, 8AM-6PM with 9AM-5PM bookings)
+  // Days (3 per event, 09:00–18:00 Berlin, bookable 09:00–17:30 Berlin)
   console.log("  📅 Creating test days...");
   const dayRows = eventRows.flatMap((ev, eventIndex) => {
     const config = eventConfigs[eventIndex];
-    return [0, 1, 2].map((dayIndex) => {
-      const dayStart = new Date(config.start);
-      dayStart.setDate(config.start.getDate() + dayIndex);
-      dayStart.setHours(8, 0, 0, 0);
-      const dayEnd = new Date(dayStart);
-      dayEnd.setHours(18, 0, 0, 0);
-      const bookingStart = new Date(dayStart);
-      bookingStart.setHours(9, 0, 0, 0);
-      const bookingEnd = new Date(dayStart);
-      bookingEnd.setHours(17, 0, 0, 0);
-      return {
-        id: nanoid(),
-        start: dayStart.toISOString(),
-        end: dayEnd.toISOString(),
-        startBookings: bookingStart.toISOString(),
-        endBookings: bookingEnd.toISOString(),
-        eventId: ev.id,
-      };
-    });
+    return [0, 1, 2].map((dayIndex) => ({
+      id: nanoid(),
+      start: berlinTime(config.start, dayIndex, 9, 0).toISOString(),
+      end: berlinTime(config.start, dayIndex, 18, 0).toISOString(),
+      startBookings: berlinTime(config.start, dayIndex, 9, 0).toISOString(),
+      endBookings: berlinTime(config.start, dayIndex, 17, 30).toISOString(),
+      eventId: ev.id,
+    }));
   });
   db.insert(schema.days).values(dayRows).run();
   console.log(
@@ -516,18 +525,14 @@ function seedTestData() {
   eventRows.forEach((ev, eventIndex) => {
     const config = eventConfigs[eventIndex];
 
-    // Opening keynote
-    const keynoteStart = new Date(config.start);
-    keynoteStart.setHours(9, 0, 0, 0);
-    const keynoteEnd = new Date(keynoteStart);
-    keynoteEnd.setHours(10, 0, 0, 0);
+    // Opening keynote: 09:00–10:30 Berlin on day 1
     const keynoteId = nanoid();
     sessionRows.push({
       id: keynoteId,
       title: `Opening Keynote - ${config.name}`,
       description: `Welcome to ${config.name}`,
-      startTime: keynoteStart.toISOString(),
-      endTime: keynoteEnd.toISOString(),
+      startTime: berlinTime(config.start, 0, 9, 0).toISOString(),
+      endTime: berlinTime(config.start, 0, 10, 30).toISOString(),
       eventId: ev.id,
       capacity: 0,
       attendeeScheduled: false,
@@ -543,20 +548,15 @@ function seedTestData() {
       locationId: locationRows[0].id,
     });
 
-    // Lunch blockers
+    // Lunch blockers: 12:30–14:00 Berlin, all rooms, all 3 days
     for (let dayIndex = 0; dayIndex < 3; dayIndex++) {
-      const lunchStart = new Date(config.start);
-      lunchStart.setDate(config.start.getDate() + dayIndex);
-      lunchStart.setHours(12, 0, 0, 0);
-      const lunchEnd = new Date(lunchStart);
-      lunchEnd.setHours(13, 0, 0, 0);
       const lunchId = nanoid();
       sessionRows.push({
         id: lunchId,
         title: "Lunch Break",
         description: "",
-        startTime: lunchStart.toISOString(),
-        endTime: lunchEnd.toISOString(),
+        startTime: berlinTime(config.start, dayIndex, 12, 30).toISOString(),
+        endTime: berlinTime(config.start, dayIndex, 14, 0).toISOString(),
         eventId: ev.id,
         capacity: 0,
         attendeeScheduled: false,

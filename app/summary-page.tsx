@@ -29,11 +29,11 @@ export default function SummaryPage(props: { events: Event[] }) {
                   <CalendarIcon className="3 w-3 stroke-2" />
                   <span>
                     {DateTime.fromJSDate(event.start)
-                      .setZone("America/Los_Angeles")
+                      .setZone(event.timezone)
                       .toFormat("LLL d")}
                     {" - "}
                     {DateTime.fromJSDate(event.end)
-                      .setZone("America/Los_Angeles")
+                      .setZone(event.timezone)
                       .toFormat("LLL d")}
                   </span>
                 </span>
