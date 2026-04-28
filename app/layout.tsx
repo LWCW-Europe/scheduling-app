@@ -56,7 +56,7 @@ export default async function RootLayout({
           <main
             className={clsx(
               "lg:px-24 p-3 flex-1",
-              multipleEvents ? "py-24 lg:pb-16" : "pt-12 lg:pb-16"
+              multipleEvents ? "py-24 lg:pb-16" : "pt-20 lg:pb-16"
             )}
           >
             {children}

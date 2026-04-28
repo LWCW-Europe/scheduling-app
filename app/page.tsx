@@ -13,8 +13,10 @@ export default async function Home() {
   });
   if (sortedEvents.length > 1) {
     return <SummaryPage events={sortedEvents} />;
-  } else {
+  } else if (sortedEvents.length === 1) {
     const eventSlug = eventNameToSlug(sortedEvents[0].name);
     redirect(`/${eventSlug}`);
+  } else {
+    return <p>No events found.</p>;
   }
 }
