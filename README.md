@@ -13,6 +13,8 @@ This is a public open-source fork of [rachelweinberg12/scheduling-app](https://g
 - **Multi-event support** — host multiple events from one deployment
 - **Site password protection** — optional single-password gate for the whole app
 
+![Scheduling board](docs/screenshot-schedule.png)
+
 ## Getting Started
 
 ### Prerequisites
