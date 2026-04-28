@@ -288,7 +288,7 @@ function seedTestData() {
     },
     {
       id: "loc-room-a",
-      name: "Room A",
+      name: "Workshop Room",
       capacity: 30,
       bookable: true,
       sortIndex: 2,
@@ -301,7 +301,7 @@ function seedTestData() {
     },
     {
       id: "loc-room-b",
-      name: "Room B",
+      name: "Garden Terrace",
       capacity: 25,
       bookable: true,
       sortIndex: 3,

@@ -148,8 +148,8 @@ describe("POST /api/update-session", () => {
     const event = await createEvent();
     const host1 = await createGuest({ name: "Host 1" });
     const host2 = await createGuest({ name: "Host 2" });
-    const loc1 = await createLocation({ name: "Room A", capacity: 20 });
-    const loc2 = await createLocation({ name: "Room B", capacity: 50 });
+    const loc1 = await createLocation({ name: "Workshop Room", capacity: 20 });
+    const loc2 = await createLocation({ name: "Garden Terrace", capacity: 50 });
     const day = await createDay(event.id);
 
     const id = await createScheduledSession(event.id, host1, loc1, day);

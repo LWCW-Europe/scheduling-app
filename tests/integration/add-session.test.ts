@@ -95,8 +95,8 @@ describe("POST /api/add-session", () => {
   it("accepts overlap in different location; both sessions are listed", async () => {
     const event = await createEvent();
     const guest = await createGuest();
-    const locA = await createLocation({ name: "Room A" });
-    const locB = await createLocation({ name: "Room B" });
+    const locA = await createLocation({ name: "Workshop Room" });
+    const locB = await createLocation({ name: "Garden Terrace" });
     const day = await createDay(event.id);
 
     const r1 = await POST(
