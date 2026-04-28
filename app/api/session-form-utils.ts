@@ -6,7 +6,6 @@ import type {
   SessionCreateInput,
 } from "@/db/repositories/interfaces";
 import { DateTime } from "luxon";
-import { CONSTS } from "@/utils/constants";
 
 export type SessionParams = {
   id?: string;
@@ -83,7 +82,7 @@ export function prepareToInsert(params: SessionParams): SessionCreateInput {
     blocker: false,
     proposalId: params.proposal ?? undefined,
   };
-  if (CONSTS.MULTIPLE_EVENTS && day.eventId) {
+  if (day.eventId) {
     input.eventId = day.eventId;
   }
   return input;

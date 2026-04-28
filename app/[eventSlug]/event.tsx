@@ -11,7 +11,6 @@ import { useSearchParams } from "next/navigation";
 import { DayText } from "./day-text";
 import { Input } from "./input";
 import { useState, useContext } from "react";
-import { CONSTS } from "@/utils/constants";
 import { EventContext } from "../context";
 import { hasPhases } from "@/app/utils/events";
 import Link from "next/link";
@@ -27,9 +26,7 @@ export function EventDisplay() {
 
   const eventSlug = eventNameToSlug(event.name);
 
-  const daysForEvent = days.filter(
-    (day) => !CONSTS.MULTIPLE_EVENTS || day.eventId === event.id
-  );
+  const daysForEvent = days.filter((day) => day.eventId === event.id);
   const locationsForEvent = locations;
   const multipleDays = event.start.getTime() !== event.end.getTime();
 

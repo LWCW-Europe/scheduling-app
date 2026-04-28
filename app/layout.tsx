@@ -6,11 +6,10 @@ import Footer from "./footer";
 import { UserProvider } from "./context";
 import clsx from "clsx";
 import { CONSTS } from "@/utils/constants";
-import { isPasswordProtectionEnabledServer } from "@/utils/auth";
-import { LogoutButton } from "./logout-button";
 import { getRepositories } from "@/db/container";
 import { eventNameToSlug } from "@/utils/utils";
 import { cookies } from "next/headers";
+import { isPasswordProtectionEnabledServer } from "@/utils/auth";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -41,10 +40,8 @@ export default async function RootLayout({
   const isAuthenticated =
     !passwordProtected ||
     (await cookies()).get("site-auth")?.value === "authenticated";
-  const events =
-    CONSTS.MULTIPLE_EVENTS && isAuthenticated
-      ? await getRepositories().events.list()
-      : [];
+  const events = isAuthenticated ? await getRepositories().events.list() : [];
+  const multipleEvents = events.length > 1;
   const navItems = events.map((e) => ({
     name: e.name,
     href: `/${eventNameToSlug(e.name)}`,
@@ -55,16 +52,11 @@ export default async function RootLayout({
     <html lang="en" className={fontVars}>
       <body className="font-monteserrat flex flex-col min-h-screen">
         <UserProvider>
-          {CONSTS.MULTIPLE_EVENTS && <NavBar navItems={navItems} />}
-          {passwordProtected && !CONSTS.MULTIPLE_EVENTS && (
-            <div className="fixed top-4 right-4 z-50">
-              <LogoutButton />
-            </div>
-          )}
+          <NavBar navItems={multipleEvents ? navItems : []} />
           <main
             className={clsx(
               "lg:px-24 p-3 flex-1",
-              CONSTS.MULTIPLE_EVENTS ? "py-24 lg:pb-16" : "pt-12 lg:pb-16"
+              multipleEvents ? "py-24 lg:pb-16" : "pt-12 lg:pb-16"
             )}
           >
             {children}

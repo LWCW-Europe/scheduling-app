@@ -4,7 +4,6 @@ import { cookies } from "next/headers";
 import { eventSlugToName } from "@/utils/utils";
 import { SessionForm } from "./session-form";
 import { getRepositories } from "@/db/container";
-import { CONSTS } from "@/utils/constants";
 
 export async function renderSessionForm(props: {
   params: Promise<{ eventSlug: string }>;
@@ -27,7 +26,7 @@ export async function renderSessionForm(props: {
     repos.sessionProposals.listByEvent(event.id),
   ]);
 
-  const filteredLocations = CONSTS.MULTIPLE_EVENTS ? locations : locations;
+  const filteredLocations = locations;
 
   const currentUserProposals = allProposals.filter(
     (p) => currentUser && p.hosts.some((h) => h.id === currentUser)
