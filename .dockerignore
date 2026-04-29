@@ -1,0 +1,13 @@
+.next
+node_modules
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+.env*.local
+.env.test
+.git
+.jj
+tests
+.github
+coverage

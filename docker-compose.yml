@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        COMMIT_HASH: ${COMMIT_HASH:-}
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    volumes:
+      - data:/data
+    environment:
+      DATABASE_URL: file:/data/data.db
+      SITE_PASSWORD: ${SITE_PASSWORD:-}
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      NEXT_PUBLIC_FOOTER_RIGHT_HTML: ${NEXT_PUBLIC_FOOTER_RIGHT_HTML:-}
+
+volumes:
+  data:
