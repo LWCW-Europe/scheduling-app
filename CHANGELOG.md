@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+> **Breaking change**: the database backend has switched from Airtable to SQLite. There is no automated migration path — data must be re-entered manually or migrated via a custom script.
+
+### Added
+
+- **SQLite replaces Airtable**: the database backend is now SQLite (via Drizzle ORM); no Airtable account is needed. `DATABASE_URL` defaults to `./data.db` and migrations run automatically on startup
+- **Interactive admin CLI**: terminal UI (`bun run dev:admin`) for creating and managing events, guests, and locations — bridges the gap until a web-based admin UI exists
+- **Per-event timezone**: each event stores its own timezone; hardcoded offsets are gone
+- **Configurable maximum session duration**: set per event; duration buttons in forms are generated dynamically (30-minute increments up to the configured limit)
+- **Location images**: images can be attached to locations via the admin CLI
+- **Dynamic navigation from database**: nav items are generated from events stored in the database, with an optional icon per event
+- **Production Docker Compose setup**: `compose.yml`, `Dockerfile`, and `.env.example` for running the app in production
+- **MIT License**: the project is now explicitly MIT-licensed
+
+### Changed
+
+- Upgraded to Next.js 16, React 19, Tailwind CSS v4, and headlessui v2
+
+### Fixed
+
+- Session overlap validation incorrectly allowing boundary-coincident sessions
+- `SelectHosts` Combobox switching between controlled and uncontrolled when no host is selected
+- Several Next.js 15/16 compatibility issues (params and searchParams are now async)
+- React 19 compatibility: `useFormState` replaced with `useActionState`
+- Empty location `imageUrl` causing a render error
+
+### Security
+
+- **HMAC-signed auth cookie**: the static cookie value was replayable by any client, bypassing `SITE_PASSWORD`. The value is now HMAC-SHA256-signed with `AUTH_SECRET` and freshness-checked on every request. `AUTH_SECRET` is required whenever `SITE_PASSWORD` is set.
+
+### Internal
+
+- Unit tests with Vitest (60% line-coverage floor enforced in CI)
+- Integration tests for session API routes
+- E2E tests on Firefox added to CI alongside Chromium
+- ESLint now covers all files (previously only `app/`, `db/`, `utils/`)
+- CONTRIBUTING.md added with architecture overview and development workflow
+- Dependabot update grouping with cooldown to reduce PR noise
+
 ## [2.0.0] - 2025-08-29
 
 The version number 2.0.0 is a retroactive label assigned here purely as a reference point — it was never designated as such. It is chosen to signal the significant deviation from the upstream baseline accumulated since the fork was created.
@@ -63,5 +103,6 @@ This version corresponds to commit [9aa2a273](https://github.com/LWCW-Europe/sch
 
 The version number 1.0.0 is a retroactive label assigned here purely as a reference point to mark the upstream baseline — it was never designated as such. This is the upstream codebase at the point the fork was created, taken from commit [babcd627](https://github.com/rachelweinberg12/scheduling-app/commit/babcd6275a853f1911cd48bbdaf4f2b1725c3d47) of [rachelweinberg12/scheduling-app](https://github.com/rachelweinberg12/scheduling-app) ([full log](https://github.com/rachelweinberg12/scheduling-app/commits/babcd6275a853f1911cd48bbdaf4f2b1725c3d47/)). It was never properly released since it was deployed directly from the Git repository.
 
+[Unreleased]: https://github.com/LWCW-Europe/scheduling-app/compare/9aa2a273...HEAD
 [2.0.0]: https://github.com/LWCW-Europe/scheduling-app/compare/babcd6275a853f1911cd48bbdaf4f2b1725c3d47...9aa2a273
 [1.0.0]: https://github.com/rachelweinberg12/scheduling-app/commits/babcd6275a853f1911cd48bbdaf4f2b1725c3d47
