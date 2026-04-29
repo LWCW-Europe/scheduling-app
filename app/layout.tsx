@@ -9,7 +9,11 @@ import { CONSTS } from "@/utils/constants";
 import { getRepositories } from "@/db/container";
 import { eventNameToSlug } from "@/utils/utils";
 import { cookies } from "next/headers";
-import { isPasswordProtectionEnabledServer } from "@/utils/auth";
+import {
+  AUTH_COOKIE_NAME,
+  isAuthCookieValid,
+  isPasswordProtectionEnabledServer,
+} from "@/utils/auth";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -37,9 +41,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const passwordProtected = isPasswordProtectionEnabledServer();
-  const isAuthenticated =
-    !passwordProtected ||
-    (await cookies()).get("site-auth")?.value === "authenticated";
+  const authCookieValue = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
+  const isAuthenticated = await isAuthCookieValid(authCookieValue);
   const events = isAuthenticated ? await getRepositories().events.list() : [];
   const multipleEvents = events.length > 1;
   const navItems = events.map((e) => ({
@@ -52,7 +55,10 @@ export default async function RootLayout({
     <html lang="en" className={fontVars}>
       <body className="font-monteserrat flex flex-col min-h-screen">
         <UserProvider>
-          <NavBar navItems={multipleEvents ? navItems : []} />
+          <NavBar
+            navItems={multipleEvents ? navItems : []}
+            showLogout={passwordProtected && isAuthenticated}
+          />
           <main
             className={clsx(
               "lg:px-24 p-3 flex-1",

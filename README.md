@@ -90,12 +90,19 @@ bun set-env.ts production tsx scripts/admin.ts
 
 ### Optional
 
-| Variable                        | Description                                                                    |
-| ------------------------------- | ------------------------------------------------------------------------------ |
-| `SITE_PASSWORD`                 | Enables site-wide password protection. Omit to disable.                        |
-| `NEXT_PUBLIC_FOOTER_RIGHT_HTML` | HTML for the right side of the footer (e.g. links to GitHub or a bug tracker). |
+| Variable                        | Description                                                                                        |
+| ------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `SITE_PASSWORD`                 | Enables site-wide password protection. Omit to disable.                                            |
+| `AUTH_SECRET`                   | HMAC secret used to sign auth cookies. Required when `SITE_PASSWORD` is set. Use ≥32 random bytes. |
+| `NEXT_PUBLIC_FOOTER_RIGHT_HTML` | HTML for the right side of the footer (e.g. links to GitHub or a bug tracker).                     |
 
 `NEXT_PUBLIC_` variables are exposed to the browser; all others are server-side only.
+
+Generate a fresh `AUTH_SECRET`:
+
+```bash
+openssl rand -base64 32
+```
 
 ## Event Phases
 

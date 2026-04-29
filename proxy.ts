@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "./utils/auth";
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow access to login page and auth API routes
@@ -10,7 +10,7 @@ export function proxy(request: NextRequest) {
   }
 
   // Check authentication for all other routes
-  const authResponse = requireAuth(request);
+  const authResponse = await requireAuth(request);
   if (authResponse) {
     return authResponse;
   }

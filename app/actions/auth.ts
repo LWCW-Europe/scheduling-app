@@ -25,7 +25,7 @@ export async function loginAction(
   }
 
   if (verifyPassword(password)) {
-    (await cookies()).set(createAuthCookie());
+    (await cookies()).set(await createAuthCookie());
     redirect(redirectTo);
   }
 

@@ -12,8 +12,6 @@ export function LogoutButton({ className = "" }: { className?: string }) {
     setIsLoggingOut(true);
     try {
       await logoutAction();
-      // Dispatch custom event to notify other components of auth state change
-      window.dispatchEvent(new CustomEvent("authStateChanged"));
     } catch (error) {
       console.error("Logout error:", error);
     } finally {

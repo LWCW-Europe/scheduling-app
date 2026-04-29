@@ -38,7 +38,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ExportScheduleModal, MapModal } from "./modals";
 import { LogoutButton } from "./logout-button";
-import { useEffect, useState } from "react";
 import { ForwardRefExoticComponent, RefAttributes, SVGProps } from "react";
 
 type HeroIcon = ForwardRefExoticComponent<
@@ -86,35 +85,13 @@ export type NavItem = {
   icon: string | null;
 };
 
-export default function NavBar({ navItems }: { navItems: NavItem[] }) {
-  const [showLogout, setShowLogout] = useState(false);
-  const pathname = usePathname();
-
-  const checkAuth = () => {
-    const hasAuthCookie = document.cookie.includes("site-auth=authenticated");
-    setShowLogout(hasAuthCookie);
-  };
-
-  useEffect(() => {
-    // checkAuth reads document.cookie, a browser-only API; must run
-    // post-mount to avoid hydration mismatch. Re-check on pathname change
-    // to catch login/logout redirects.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    checkAuth();
-  }, [pathname]);
-
-  useEffect(() => {
-    const handleAuthChange = () => checkAuth();
-
-    window.addEventListener("authStateChanged", handleAuthChange);
-    window.addEventListener("focus", handleAuthChange);
-
-    return () => {
-      window.removeEventListener("authStateChanged", handleAuthChange);
-      window.removeEventListener("focus", handleAuthChange);
-    };
-  }, []);
-
+export default function NavBar({
+  navItems,
+  showLogout,
+}: {
+  navItems: NavItem[];
+  showLogout: boolean;
+}) {
   return (
     <Disclosure
       as="nav"
