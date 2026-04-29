@@ -116,6 +116,10 @@ Events can progress through three optional phases:
 
 Phase dates are set directly on the Event record in the database. If no dates are set, the app skips phases and goes straight to scheduling.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
