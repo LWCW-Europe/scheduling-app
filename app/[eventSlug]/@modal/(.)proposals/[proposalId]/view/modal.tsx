@@ -51,10 +51,7 @@ export function ProposalModal(props: {
       aria-modal="true"
       aria-label="Proposal details"
     >
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50"
-        onClick={onDismiss}
-      />
+      <div className="fixed inset-0 bg-black/50" onClick={onDismiss} />
       <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onDismiss}
