@@ -2,6 +2,10 @@ import { Day } from "@/db/repositories/interfaces";
 import type { Session } from "@/db/repositories/interfaces";
 import { DateTime } from "luxon";
 
+export const TIME_FORMAT = "HH:mm";
+// Note: if you want to change this to am/pm, the timestamp column in day-grid.tsx,
+// needs to be wider (see https://github.com/LWCW-Europe/schellingboard/pull/402/changes)
+
 export const getPercentThroughDay = (now: Date, start: Date, end: Date) =>
   ((now.getTime() - start.getTime()) / (end.getTime() - start.getTime())) * 100;
 
