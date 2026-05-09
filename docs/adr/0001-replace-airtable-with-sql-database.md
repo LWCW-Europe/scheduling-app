@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-04-16
-- **Tracking issue:** [#367](https://github.com/LWCW-Europe/scheduling-app/issues/367)
+- **Tracking issue:** [#367](https://github.com/LWCW-Europe/schelling-board/issues/367)
 
 ## Context
 
@@ -206,7 +206,7 @@ Rationale for each piece:
   dates, occasional record fixes); (b) for operators who want generic
   row-level access, any standard SQLite tool works against the database
   file — e.g. `sqlite3` CLI, sqlite-web, DB Browser for SQLite, or
-  DBeaver. Tracked in [#368](https://github.com/LWCW-Europe/scheduling-app/issues/368).
+  DBeaver. Tracked in [#368](https://github.com/LWCW-Europe/schelling-board/issues/368).
 - **Operators now run a database.** For SQLite this is "a file in a
   volume" and is close to free.
 - **No live multi-user editing of raw data.** Airtable let multiple admins
@@ -226,11 +226,11 @@ Rationale for each piece:
   current-state schema as a single initial migration — we do not
   replay the Airtable-era migration sequence.
 - The admin backend replacement is explicitly out of scope for this ADR
-  and is tracked in [#368](https://github.com/LWCW-Europe/scheduling-app/issues/368).
+  and is tracked in [#368](https://github.com/LWCW-Europe/schelling-board/issues/368).
 
 ## References
 
-- Issue [#367](https://github.com/LWCW-Europe/scheduling-app/issues/367)
+- Issue [#367](https://github.com/LWCW-Europe/schelling-board/issues/367)
 - Drizzle ORM: <https://orm.drizzle.team>
 - Drizzle Kit migration system (SQLite `ALTER TABLE` limitations → table-rebuild statements): <https://deepwiki.com/drizzle-team/drizzle-orm/3.2-migration-system>
 - `better-sqlite3`: <https://github.com/WiseLibs/better-sqlite3>
