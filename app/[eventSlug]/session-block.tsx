@@ -11,7 +11,11 @@ import { useContext, useState } from "react";
 import { CurrentUserModal, ConfirmationModal } from "../modals";
 import { UserContext, EventContext } from "../context";
 import { sessionsOverlap } from "../session_utils";
-import { eventNameToSlug, getEndTimeMinusBreak } from "@/utils/utils";
+import {
+  eventNameToSlug,
+  getEndTimeMinusBreak,
+  TIME_FORMAT,
+} from "@/utils/utils";
 import { LockIcon } from "../lock-icon";
 
 export function SessionBlock(props: {
@@ -160,9 +164,11 @@ function SessionInfoDisplay({
           <span>
             {DateTime.fromJSDate(session.startTime ?? new Date())
               .setZone(timezone)
-              .toFormat("h:mm a")}{" "}
+              .toFormat(TIME_FORMAT)}{" "}
             -{" "}
-            {getEndTimeMinusBreak(session).setZone(timezone).toFormat("h:mm a")}
+            {getEndTimeMinusBreak(session)
+              .setZone(timezone)
+              .toFormat(TIME_FORMAT)}
           </span>
         </div>
       </div>

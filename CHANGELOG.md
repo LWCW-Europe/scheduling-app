@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Upgraded to Next.js 16, React 19, Tailwind CSS v4, and headlessui v2
+- Times now display in 24-hour format
 
 ### Fixed
 

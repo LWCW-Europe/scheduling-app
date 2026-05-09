@@ -2,7 +2,7 @@
 import { LocationCol } from "./location-col";
 import clsx from "clsx";
 import { useSearchParams } from "next/navigation";
-import { getNumHalfHours } from "@/utils/utils";
+import { getNumHalfHours, TIME_FORMAT } from "@/utils/utils";
 import { useSafeLayoutEffect } from "@/utils/hooks";
 import { useRef, useState, useContext } from "react";
 import Image from "next/image";
@@ -175,7 +175,7 @@ export function DayGrid(props: {
             <div className="bg-gradient-to-r from-transparent to-white h-full absolute right-0 w-3" />
           )}
           {!scrolledToLeftEnd && (
-            <div className="bg-gradient-to-l from-transparent to-white h-full absolute left-14 w-3" />
+            <div className="bg-gradient-to-l from-transparent to-white h-full absolute left-8 w-3" />
           )}
         </div>
       )}
@@ -189,7 +189,7 @@ function TimestampCol(props: { start: Date; end: Date; timezone: string }) {
   return (
     <div
       className={clsx(
-        "grid h-full min-w-14 border-r border-t border-gray-100",
+        "grid h-full min-w-8 border-r border-t border-gray-100",
         `grid-rows-[repeat(${numHalfHours},44px)]`
       )}
     >
@@ -200,7 +200,7 @@ function TimestampCol(props: { start: Date; end: Date; timezone: string }) {
         >
           {DateTime.fromMillis(start.getTime() + i * 30 * 60 * 1000)
             .setZone(timezone)
-            .toFormat("h:mm a")}
+            .toFormat(TIME_FORMAT)}
         </div>
       ))}
     </div>

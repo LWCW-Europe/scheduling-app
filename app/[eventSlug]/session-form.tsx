@@ -17,6 +17,7 @@ import {
   eventNameToSlug,
   formatDuration,
   subtractBreakFromDuration,
+  TIME_FORMAT,
 } from "@/utils/utils";
 import { MyListbox, type Option } from "./select";
 import type {
@@ -224,7 +225,8 @@ export function SessionForm(props: {
     .map((hostClashes) => {
       const { id, sessionClashes, rsvpClashes } = hostClashes;
       const hostName = hosts.find((host) => host.id === id)!.name;
-      const formatTime = (d: DateTime) => d.setZone(timezone).toFormat("HH:mm");
+      const formatTime = (d: DateTime) =>
+        d.setZone(timezone).toFormat(TIME_FORMAT);
       const displayInterval = (ses: Session) =>
         `from ${formatTime(DateTime.fromJSDate(ses.startTime ?? new Date()))} to ${formatTime(getEndTimeMinusBreak(ses))}`;
       const sessionErrors = sessionClashes.map(
@@ -572,7 +574,7 @@ function getAvailableStartTimes(
     t += 30 * 60 * 1000
   ) {
     const dt = DateTime.fromMillis(t).setZone(timezone);
-    const formattedTime = dt.toFormat("h:mm a");
+    const formattedTime = dt.toFormat(TIME_FORMAT);
     const minutesFromMidnight = dt.hour * 60 + dt.minute;
     if (locationSelected) {
       const sessionNow = sortedSessions.find(

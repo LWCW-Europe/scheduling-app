@@ -21,6 +21,7 @@ import type {
 import { VotingButtons } from "@/app/[eventSlug]/proposals/voting-buttons";
 import { VoteChoice } from "@/app/votes";
 import { DateTime } from "luxon";
+import { TIME_FORMAT } from "@/utils/utils";
 
 export function ViewProposal(props: {
   proposal: SessionProposal;
@@ -213,7 +214,7 @@ export function ViewProposal(props: {
                 at{" "}
                 {DateTime.fromJSDate(sessions[0].startTime ?? new Date())
                   .setZone(event.timezone)
-                  .toFormat("h:mm a")}{" "}
+                  .toFormat(TIME_FORMAT)}{" "}
                 in {sessions[0].locations[0]?.name}
               </Link>
               .
@@ -230,7 +231,7 @@ export function ViewProposal(props: {
                     >
                       {DateTime.fromJSDate(session.startTime ?? new Date())
                         .setZone(event.timezone)
-                        .toFormat("EEEE h:mm a")}{" "}
+                        .toFormat(`EEEE ${TIME_FORMAT}`)}{" "}
                       in {session.locations[0]?.name}
                     </Link>
                   </li>

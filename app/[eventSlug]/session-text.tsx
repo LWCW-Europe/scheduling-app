@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { DateTime } from "luxon";
 import type { Session, Location } from "@/db/repositories/interfaces";
-import { getEndTimeMinusBreak } from "@/utils/utils";
+import { getEndTimeMinusBreak, TIME_FORMAT } from "@/utils/utils";
 import { useRouter } from "next/navigation";
 import { useState, useContext } from "react";
 import { useSearchParams } from "next/navigation";
@@ -82,11 +82,11 @@ export function SessionText(props: {
               ,{" "}
               {DateTime.fromJSDate(session.startTime ?? new Date())
                 .setZone(timezone)
-                .toFormat("h:mm a")}{" "}
+                .toFormat(TIME_FORMAT)}{" "}
               -{" "}
               {getEndTimeMinusBreak(session)
                 .setZone(timezone)
-                .toFormat("h:mm a")}
+                .toFormat(TIME_FORMAT)}
             </span>
           </div>
           •<span>{formattedHostNames}</span>
