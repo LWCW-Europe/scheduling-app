@@ -13,7 +13,6 @@ services:
       DATABASE_URL: file:/data/data.db
       SITE_PASSWORD: ${SITE_PASSWORD:-}
       AUTH_SECRET: ${AUTH_SECRET:-}
-      NEXT_PUBLIC_FOOTER_RIGHT_HTML: ${NEXT_PUBLIC_FOOTER_RIGHT_HTML:-}
 
 volumes:
   data:
