@@ -40,7 +40,7 @@ async function createScheduledSession(
     hosts: [host],
     location,
     day,
-    startTimeString: "10:00 AM",
+    startTimeMinutes: 10 * 60,
     duration: 60,
     timezone: "UTC",
     ...overrides,

@@ -39,7 +39,7 @@ function basePayload(
     hosts: [host],
     location,
     day,
-    startTimeString: "10:00 AM",
+    startTimeMinutes: 10 * 60,
     duration: 60,
     timezone: "UTC",
     ...overrides,
@@ -74,13 +74,13 @@ describe("POST /api/update-session", () => {
     const day = await createDay(event.id);
 
     const id = await createScheduledSession(event.id, guest, location, day, {
-      startTimeString: "10:00 AM",
+      startTimeMinutes: 10 * 60,
     });
     const before = (await getRepositories().sessions.findById(id))!;
 
     const res = await POST(
       makeUpdateReq({
-        ...basePayload(guest, location, day, { startTimeString: "12:00 PM" }),
+        ...basePayload(guest, location, day, { startTimeMinutes: 12 * 60 }),
         id,
       })
     );
@@ -100,7 +100,7 @@ describe("POST /api/update-session", () => {
 
     await createScheduledSession(event.id, guest, location, day, {
       title: "Anchor",
-      startTimeString: "10:00 AM",
+      startTimeMinutes: 10 * 60,
     });
     const movingId = await createScheduledSession(
       event.id,
@@ -109,7 +109,7 @@ describe("POST /api/update-session", () => {
       day,
       {
         title: "Moving",
-        startTimeString: "12:00 PM",
+        startTimeMinutes: 12 * 60,
       }
     );
     const originalTime = (await getRepositories().sessions.findById(movingId))!
@@ -119,7 +119,7 @@ describe("POST /api/update-session", () => {
       makeUpdateReq({
         ...basePayload(guest, location, day, {
           title: "Moving",
-          startTimeString: "10:30 AM",
+          startTimeMinutes: 10 * 60 + 30,
         }),
         id: movingId,
       })
