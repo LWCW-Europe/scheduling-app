@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
 import { loginAndGoto, login } from "./helpers/auth";
 
 test("should auto-focus the title input for new proposals", async ({
