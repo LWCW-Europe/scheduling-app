@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
 import { loginAndGoto, login } from "./helpers/auth";
 
 test("should allow voting on proposals with different choices", async ({
