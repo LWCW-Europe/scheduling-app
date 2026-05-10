@@ -41,8 +41,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const passwordProtected = isPasswordProtectionEnabledServer();
-  const authCookieValue = (await cookies()).get(AUTH_COOKIE_NAME)?.value;
+  const cookieStore = await cookies();
+  const authCookieValue = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   const isAuthenticated = await isAuthCookieValid(authCookieValue);
+  const initialUser = isAuthenticated
+    ? (cookieStore.get("user")?.value ?? null)
+    : null;
   const events = isAuthenticated ? await getRepositories().events.list() : [];
   const multipleEvents = events.length > 1;
   const navItems = events.map((e) => ({
@@ -54,7 +58,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={fontVars}>
       <body className="font-monteserrat flex flex-col min-h-screen">
-        <UserProvider>
+        <UserProvider initialUser={initialUser}>
           <NavBar
             navItems={multipleEvents ? navItems : []}
             showLogout={passwordProtected && isAuthenticated}

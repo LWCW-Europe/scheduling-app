@@ -86,18 +86,14 @@ export const VotesContext = createContext<VotesContextType>({
   isLoading: false,
 });
 
-export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Cookies.get reads document.cookie, a browser-only API. Must run
-    // post-mount so SSR and the first client render agree on user=null.
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setUser(userCookie);
-    }
-  }, []);
+export function UserProvider({
+  children,
+  initialUser,
+}: {
+  children: ReactNode;
+  initialUser: string | null;
+}) {
+  const [user, setUser] = useState<string | null>(initialUser);
 
   const setCurrentUser = (user: string | null) => {
     if (user) {
