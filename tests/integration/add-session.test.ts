@@ -31,7 +31,7 @@ function buildPayload(
     hosts: [host],
     location,
     day,
-    startTimeString: "10:00 AM",
+    startTimeMinutes: 10 * 60,
     duration: 60,
     timezone: "UTC",
     ...overrides,
@@ -81,7 +81,7 @@ describe("POST /api/add-session", () => {
       makeReq(
         buildPayload(guest, location, day, {
           title: "Overlap",
-          startTimeString: "10:30 AM",
+          startTimeMinutes: 10 * 60 + 30,
         })
       )
     );

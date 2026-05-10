@@ -30,7 +30,7 @@ import type {
 import { ConfirmDeletionModal } from "../modals";
 import { UserContext, EventContext } from "../context";
 import { sessionsOverlap, newEmptySession } from "../session_utils";
-import { parseSessionTime } from "../api/session-form-utils";
+import { buildSessionInterval } from "../api/session-form-utils";
 
 interface ErrorResponse {
   message: string;
@@ -74,9 +74,11 @@ export function SessionForm(props: {
   const initDay = initDateTime
     ? days.find((d) => dateOnDay(initDateTime, d))
     : undefined;
-  const initTime = initDateTime
-    ? DateTime.fromJSDate(initDateTime).setZone(timezone).toFormat("h:mm a")
-    : undefined;
+  let initMinutes: number | undefined;
+  if (initDateTime) {
+    const dt = DateTime.fromJSDate(initDateTime).setZone(timezone);
+    initMinutes = dt.hour * 60 + dt.minute;
+  }
 
   // Compute default hosts for new sessions (no initial proposal, no sessionID).
   // Also used as the "reset" target when the user un-selects a proposal.
@@ -120,20 +122,22 @@ export function SessionForm(props: {
     timezone,
     locationId
   );
-  const initTimeValid = startTimes.some((st) => st.formattedTime === initTime);
-  const [startTime, setStartTime] = useState(
-    initTimeValid ? initTime : undefined
+  const initTimeValid = startTimes.some(
+    (st) => st.minutesFromMidnight === initMinutes
+  );
+  const [startTime, setStartTime] = useState<number | undefined>(
+    initTimeValid ? initMinutes : undefined
   );
   // Derived: the currently-selected startTime if it is still available under
   // the current location/day, otherwise undefined. Avoids a setState-in-effect
   // reset by not storing invalid values downstream.
   const effectiveStartTime = startTimes.some(
-    (st) => st.formattedTime === startTime && st.available
+    (st) => st.minutesFromMidnight === startTime && st.available
   )
     ? startTime
     : undefined;
   const maxDuration =
-    startTimes.find((st) => st.formattedTime === effectiveStartTime)
+    startTimes.find((st) => st.minutesFromMidnight === effectiveStartTime)
       ?.maxDuration ?? maxSessionDuration;
   const [duration, setDuration] = useState<number>(
     initialProposal?.durationMinutes ??
@@ -163,8 +167,8 @@ export function SessionForm(props: {
   }
 
   let dummySession = newEmptySession();
-  if (effectiveStartTime && day) {
-    const { start, end } = parseSessionTime(
+  if (effectiveStartTime !== undefined && day) {
+    const { start, end } = buildSessionInterval(
       day,
       effectiveStartTime,
       effectiveDuration,
@@ -172,8 +176,8 @@ export function SessionForm(props: {
     );
     dummySession = {
       ...newEmptySession(),
-      startTime: new Date(start),
-      endTime: new Date(end),
+      startTime: start,
+      endTime: end,
       id: sessionID || "",
     };
   }
@@ -239,7 +243,7 @@ export function SessionForm(props: {
     setIsSubmitting(true);
     setError(null);
     const location = locations.find((loc) => loc.id === locationId);
-    if (!location || !day || !effectiveStartTime) {
+    if (!location || !day || effectiveStartTime === undefined) {
       setError("Missing required fields");
       setIsSubmitting(false);
       return;
@@ -257,7 +261,7 @@ export function SessionForm(props: {
         closed,
         day,
         location,
-        startTimeString: effectiveStartTime,
+        startTimeMinutes: effectiveStartTime,
         duration: effectiveDuration,
         hosts,
         proposal: proposal?.id ?? session.proposalId,
@@ -450,11 +454,17 @@ export function SessionForm(props: {
           <RequiredStar />
         </label>
         <MyListbox
-          currValue={effectiveStartTime}
-          setCurrValue={setStartTime}
-          options={startTimes.map((st) => {
-            return { value: st.formattedTime, available: st.available };
-          })}
+          currValue={
+            effectiveStartTime !== undefined
+              ? String(effectiveStartTime)
+              : undefined
+          }
+          setCurrValue={(v) => setStartTime(parseInt(v, 10))}
+          options={startTimes.map((st) => ({
+            value: String(st.minutesFromMidnight),
+            display: st.formattedTime,
+            available: st.available,
+          }))}
           placeholder={"Select a start time"}
           truncateText={true}
         />
@@ -502,7 +512,7 @@ export function SessionForm(props: {
         className="bg-rose-400 text-white font-semibold py-2 rounded shadow disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none hover:bg-rose-500 active:bg-rose-500 mx-auto px-12"
         disabled={
           !title ||
-          !effectiveStartTime ||
+          effectiveStartTime === undefined ||
           !hosts.length ||
           !locationId ||
           !day ||
@@ -529,6 +539,7 @@ const RequiredStar = () => <span className="text-rose-500 mx-1">*</span>;
 
 type StartTime = {
   formattedTime: string;
+  minutesFromMidnight: number;
   time: number;
   maxDuration: number;
   available: boolean;
@@ -560,9 +571,9 @@ function getAvailableStartTimes(
     t < day.endBookings.getTime();
     t += 30 * 60 * 1000
   ) {
-    const formattedTime = DateTime.fromMillis(t)
-      .setZone(timezone)
-      .toFormat("h:mm a");
+    const dt = DateTime.fromMillis(t).setZone(timezone);
+    const formattedTime = dt.toFormat("h:mm a");
+    const minutesFromMidnight = dt.hour * 60 + dt.minute;
     if (locationSelected) {
       const sessionNow = sortedSessions.find(
         (session) =>
@@ -572,6 +583,7 @@ function getAvailableStartTimes(
       if (sessionNow) {
         startTimes.push({
           formattedTime,
+          minutesFromMidnight,
           time: t,
           maxDuration: 0,
           available: false,
@@ -585,6 +597,7 @@ function getAvailableStartTimes(
           : day.endBookings.getTime();
         startTimes.push({
           formattedTime,
+          minutesFromMidnight,
           time: t,
           maxDuration: Math.min(
             (latestEndTime - t) / 1000 / 60,
@@ -596,6 +609,7 @@ function getAvailableStartTimes(
     } else {
       startTimes.push({
         formattedTime,
+        minutesFromMidnight,
         time: t,
         maxDuration: maxSessionDuration,
         available: true,

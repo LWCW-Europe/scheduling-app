@@ -15,40 +15,37 @@ export type SessionParams = {
   hosts: Guest[];
   location: Location;
   day: Day;
-  startTimeString: string;
+  startTimeMinutes: number;
   duration: number;
   proposal?: string;
   timezone: string;
 };
 
 export type SessionInterval = {
-  start: string;
-  end: string;
+  start: Date;
+  end: Date;
 };
 
-export function parseSessionTime(
+export function buildSessionInterval(
   day: Day,
-  startTimeString: string,
-  duration: number,
+  startTimeMinutes: number,
+  durationMinutes: number,
   timezone: string
 ): SessionInterval {
-  const dayStartDT = DateTime.fromJSDate(new Date(day.start)).setZone(timezone);
-  const dayISOFormatted = dayStartDT.toFormat("yyyy-MM-dd");
-  const [rawHour, rawMinute, ampm] = startTimeString.split(/[: ]/);
-  const hourNum = parseInt(rawHour);
-  const hour24Num = ampm === "PM" && hourNum !== 12 ? hourNum + 12 : hourNum;
-  const hourStr = hour24Num < 10 ? `0${hour24Num}` : hour24Num.toString();
-  const minuteNum = parseInt(rawMinute);
-  const minuteStr = minuteNum < 10 ? `0${minuteNum}` : rawMinute;
-  const startTimeStamp = DateTime.fromISO(
-    `${dayISOFormatted}T${hourStr}:${minuteStr}:00`,
+  const dayStart = DateTime.fromJSDate(new Date(day.start)).setZone(timezone);
+  const startDT = DateTime.fromObject(
+    {
+      year: dayStart.year,
+      month: dayStart.month,
+      day: dayStart.day,
+      hour: Math.floor(startTimeMinutes / 60),
+      minute: startTimeMinutes % 60,
+    },
     { zone: timezone }
-  ).toJSDate();
+  );
   return {
-    start: startTimeStamp.toISOString(),
-    end: new Date(
-      startTimeStamp.getTime() + duration * 60 * 1000
-    ).toISOString(),
+    start: startDT.toJSDate(),
+    end: startDT.plus({ minutes: durationMinutes }).toJSDate(),
   };
 }
 
@@ -60,12 +57,12 @@ export function prepareToInsert(params: SessionParams): SessionCreateInput {
     hosts,
     location,
     day,
-    startTimeString,
+    startTimeMinutes,
     duration,
   } = params;
-  const { start, end } = parseSessionTime(
+  const { start, end } = buildSessionInterval(
     day,
-    startTimeString,
+    startTimeMinutes,
     duration,
     params.timezone
   );
@@ -75,8 +72,8 @@ export function prepareToInsert(params: SessionParams): SessionCreateInput {
     closed,
     hostIds: hosts.map((host) => host.id),
     locationIds: [location.id],
-    startTime: new Date(start),
-    endTime: new Date(end),
+    startTime: start,
+    endTime: end,
     capacity: location.capacity ?? 0,
     attendeeScheduled: true,
     blocker: false,
