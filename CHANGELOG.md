@@ -52,7 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 The version number 2.0.0 is a retroactive label assigned here purely as a reference point — it was never designated as such. It is chosen to signal the significant deviation from the upstream baseline accumulated since the fork was created.
 
-This version corresponds to commit [9aa2a273](https://github.com/LWCW-Europe/schelling-board/commit/9aa2a273). It was never properly released since it was deployed directly from the Git repository.
+This version corresponds to commit [9aa2a273](https://github.com/LWCW-Europe/schellingboard/commit/9aa2a273). It was never properly released since it was deployed directly from the Git repository.
 
 ### Added
 
@@ -107,6 +107,6 @@ This version corresponds to commit [9aa2a273](https://github.com/LWCW-Europe/sch
 
 The version number 1.0.0 is a retroactive label assigned here purely as a reference point to mark the upstream baseline — it was never designated as such. This is the upstream codebase at the point the fork was created, taken from commit [babcd627](https://github.com/rachelweinberg12/scheduling-app/commit/babcd6275a853f1911cd48bbdaf4f2b1725c3d47) of [rachelweinberg12/scheduling-app](https://github.com/rachelweinberg12/scheduling-app) ([full log](https://github.com/rachelweinberg12/scheduling-app/commits/babcd6275a853f1911cd48bbdaf4f2b1725c3d47/)). It was never properly released since it was deployed directly from the Git repository.
 
-[Unreleased]: https://github.com/LWCW-Europe/schelling-board/compare/9aa2a273...HEAD
-[2.0.0]: https://github.com/LWCW-Europe/schelling-board/compare/babcd6275a853f1911cd48bbdaf4f2b1725c3d47...9aa2a273
+[Unreleased]: https://github.com/LWCW-Europe/schellingboard/compare/9aa2a273...HEAD
+[2.0.0]: https://github.com/LWCW-Europe/schellingboard/compare/babcd6275a853f1911cd48bbdaf4f2b1725c3d47...9aa2a273
 [1.0.0]: https://github.com/rachelweinberg12/scheduling-app/commits/babcd6275a853f1911cd48bbdaf4f2b1725c3d47

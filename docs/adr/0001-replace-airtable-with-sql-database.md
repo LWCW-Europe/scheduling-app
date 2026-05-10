@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-04-16
-- **Tracking issue:** [#367](https://github.com/LWCW-Europe/schelling-board/issues/367)
+- **Tracking issue:** [#367](https://github.com/LWCW-Europe/schellingboard/issues/367)
 
 ## Context
 
@@ -230,7 +230,7 @@ Rationale for each piece:
 
 ## References
 
-- Issue [#367](https://github.com/LWCW-Europe/schelling-board/issues/367)
+- Issue [#367](https://github.com/LWCW-Europe/schellingboard/issues/367)
 - Drizzle ORM: <https://orm.drizzle.team>
 - Drizzle Kit migration system (SQLite `ALTER TABLE` limitations → table-rebuild statements): <https://deepwiki.com/drizzle-team/drizzle-orm/3.2-migration-system>
 - `better-sqlite3`: <https://github.com/WiseLibs/better-sqlite3>

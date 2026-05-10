@@ -68,7 +68,7 @@ bun run                  # list all available scripts
 
 ### Admin CLI
 
-Until a full admin UI is built ([#368](https://github.com/omarkohl/schelling-board/issues/368)), a terminal CLI is available for managing core records (events, guests, phase dates):
+Until a full admin UI is built ([#368](https://github.com/omarkohl/schellingboard/issues/368)), a terminal CLI is available for managing core records (events, guests, phase dates):
 
 ```bash
 bun dev:admin
