@@ -37,19 +37,13 @@
    DATABASE_URL=file:./data.db
    ```
 
-3. Run database migrations:
-
-   ```bash
-   make dev-migrate-up
-   ```
-
-4. Seed the development database:
+3. Seed the development database:
 
    ```bash
    make dev-db-reset
    ```
 
-5. Start the dev server:
+4. Start the dev server:
 
    ```bash
    make dev

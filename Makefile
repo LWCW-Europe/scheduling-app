@@ -46,7 +46,7 @@ help:
 install:
 	bun install --frozen-lockfile
 
-dev: install
+dev: dev-migrate-up install
 	bun set-env.ts dev bun x next dev
 
 build: install
