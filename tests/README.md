@@ -5,8 +5,7 @@ This directory contains Playwright end-to-end tests.
 ## Setup
 
 ```bash
-bun install
-bun playwright install
+make install-playwright
 ```
 
 The test environment is pre-configured via `.env.test` (committed):
@@ -19,10 +18,11 @@ The test environment is pre-configured via `.env.test` (committed):
 **IMPORTANT!** Tests reset the database before each run. Do NOT run against production data.
 
 ```bash
-bun test:e2e
+make test-e2e            # Run all tests (headed, for local dev)
+make test-e2e-ci         # Run all tests (headless)
 ```
 
-This resets the test database, starts the app with the test env, and runs all tests headed.
+These reset the test database, start the app with the test env, and run all tests.
 
 ### Running specific tests
 

@@ -123,12 +123,26 @@ make check-and-format  # Format, lint, type check, and run tests
 
 See [tests/README.md](tests/README.md) for full details.
 
+Run all tests:
+
+```bash
+make test                # Run unit and integration tests
+make test-e2e            # Run E2E tests (headed, for local dev)
+make test-e2e-ci         # Run E2E tests (headless)
+```
+
+To use E2E tests, first install Playwright browsers:
+
+```bash
+make install-playwright
+```
+
 E2E tests use Playwright:
 
 - Imitate human behavior — click visible elements, navigate naturally
 - Use semantic locators (`getByRole`, `getByText`, `getByLabel`), not IDs or CSS classes
 - Navigate through the UI rather than jumping to URLs directly
-- Tests run against a clean database (`bun dev:db:reset` seeds it)
+- Tests run against a clean database (`make dev-db-reset` seeds it)
 - Use `login()` and `loginAndGoto()` from `tests/helpers/auth.ts`
 
 Test data: 3 events (Alpha/Beta/Gamma) in different phases, with pre-created proposals, sessions, users, and auth.

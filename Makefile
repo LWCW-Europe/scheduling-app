@@ -1,4 +1,4 @@
-.PHONY: help dev build start lint typecheck lint-watch test test-unit test-integration test-watch test-coverage test-e2e test-e2e-ci format format-check check-and-format dev-migrate-up dev-migrate-status dev-migrate-create dev-db-reset dev-admin install clean clean-all
+.PHONY: help dev build start lint typecheck lint-watch test test-unit test-integration test-watch test-coverage test-e2e test-e2e-ci format format-check check-and-format dev-migrate-up dev-migrate-status dev-migrate-create dev-db-reset dev-admin install install-playwright clean clean-all
 
 SHELL := /bin/bash
 
@@ -38,6 +38,7 @@ help:
 	@echo ""
 	@echo "Dependencies:"
 	@echo "  make install          Install dependencies"
+	@echo "  make install-playwright Install Playwright browsers"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean            Remove dev and build artifacts as well as test output"
@@ -45,6 +46,9 @@ help:
 
 install:
 	bun install --frozen-lockfile
+
+install-playwright: install
+	bun x playwright install
 
 dev: dev-migrate-up install
 	bun set-env.ts dev bun x next dev
@@ -79,10 +83,10 @@ test-watch: install
 test-coverage: install
 	bun x vitest run --coverage
 
-test-e2e: install
+test-e2e: install-playwright
 	bun set-env.ts test bun x playwright test --headed
 
-test-e2e-ci: install
+test-e2e-ci: install-playwright
 	bun set-env.ts test bun x playwright test
 
 format: install
