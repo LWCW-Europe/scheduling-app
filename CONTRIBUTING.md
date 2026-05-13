@@ -28,7 +28,7 @@
 1. Clone the repo and install dependencies:
 
    ```bash
-   bun install
+   make install
    ```
 
 2. Create `.env.dev.local` with your database path:
@@ -40,19 +40,19 @@
 3. Run database migrations:
 
    ```bash
-   bun dev:migrate:up
+   make dev-migrate-up
    ```
 
 4. Seed the development database:
 
    ```bash
-   bun dev:db:reset
+   make dev-db-reset
    ```
 
 5. Start the dev server:
 
    ```bash
-   bun dev
+   make dev
    ```
 
    Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -62,7 +62,7 @@
 Until a full admin UI is built ([#368](https://github.com/omarkohl/schellingboard/issues/368)), a terminal CLI is available for managing core records (events, guests, phase dates):
 
 ```bash
-bun dev:admin
+make dev-admin
 ```
 
 This opens an interactive menu to create, edit, and delete events and guests, and to set event phase dates.
@@ -98,16 +98,14 @@ openssl rand -base64 32
 
 ## Development Commands
 
+Run `make` to see all available commands:
+
 ```bash
-bun dev                      # Start dev server
-bun lint                     # Lint
-bun format                   # Format (writes in place)
-bun typecheck                # Type check
-bun dev:db:reset             # Reset database with test data
-bun test:e2e                 # Run E2E tests
-bun dev:migrate:create <name> # Generate migration from schema changes
-bun dev:migrate:up           # Apply pending migrations
-bun dev:migrate:status       # Check migration status
+make          # List all commands
+make dev      # Start dev server
+make test     # Run tests
+make lint     # Lint code
+make format   # Format code
 ```
 
 ## Code Style

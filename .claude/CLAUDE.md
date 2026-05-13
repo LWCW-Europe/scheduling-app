@@ -17,8 +17,8 @@ Next.js scheduling app for managing conference/event sessions with three phases:
 ## Version Control
 
 - Use `jj` (jujutsu) if available, otherwise `git`
-- Pre-commit: always run `bun lint`, `bun format`, and `bun typecheck`
+- Pre-commit: always run `make lint`, `make format`, and `make typecheck`
 
 ## Testing
 
-- Always run tests with `bun run test` (not `bun test`)
+- Always run tests with `make test` (not `bun test`)
