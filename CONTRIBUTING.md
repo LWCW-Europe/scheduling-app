@@ -31,13 +31,17 @@
    make install
    ```
 
-2. Create `.env.dev.local` with your database path:
+2. (Optional) Create `.env.dev.local` to customize environment variables:
 
    ```bash
    DATABASE_URL=file:./data.db
+   SITE_PASSWORD=your-password
+   AUTH_SECRET=<generated via openssl rand -base64 32>
    ```
 
-3. Seed the development database:
+   See [Environment Variables](#environment-variables) for all options. Note: `AUTH_SECRET` is required only when `SITE_PASSWORD` is set. Omitting this file uses sensible defaults.
+
+3. (Optional) Seed the database with test data:
 
    ```bash
    make dev-db-reset
