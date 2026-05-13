@@ -1,4 +1,4 @@
-.PHONY: help dev build start lint typecheck lint-watch test test-unit test-integration test-watch test-coverage test-e2e test-e2e-ci format format-check dev-migrate-up dev-migrate-status dev-migrate-create dev-db-reset dev-admin install
+.PHONY: help dev build start lint typecheck lint-watch test test-unit test-integration test-watch test-coverage test-e2e test-e2e-ci format format-check check-and-format dev-migrate-up dev-migrate-status dev-migrate-create dev-db-reset dev-admin install
 
 SHELL := /bin/bash
 
@@ -86,6 +86,8 @@ format: install
 
 format-check: install
 	bun x prettier --check .
+
+check-and-format: format lint typecheck test test-e2e-ci
 
 dev-migrate-up: install
 	bun set-env.ts dev bun x drizzle-kit migrate

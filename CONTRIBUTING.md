@@ -108,6 +108,12 @@ make lint     # Lint code
 make format   # Format code
 ```
 
+Before committing or pushing, run:
+
+```bash
+make check-and-format  # Format, lint, type check, and run tests
+```
+
 ## Code Style
 
 - TypeScript strict mode throughout
