@@ -1,4 +1,4 @@
-.PHONY: help dev build start lint typecheck lint-watch test test-unit test-integration test-watch test-coverage test-e2e test-e2e-ci format format-check check-and-format dev-migrate-up dev-migrate-status dev-migrate-create dev-db-reset dev-admin install
+.PHONY: help dev build start lint typecheck lint-watch test test-unit test-integration test-watch test-coverage test-e2e test-e2e-ci format format-check check-and-format dev-migrate-up dev-migrate-status dev-migrate-create dev-db-reset dev-admin install clean clean-all
 
 SHELL := /bin/bash
 
@@ -38,6 +38,10 @@ help:
 	@echo ""
 	@echo "Dependencies:"
 	@echo "  make install          Install dependencies"
+	@echo ""
+	@echo "Cleanup:"
+	@echo "  make clean            Remove dev and build artifacts as well as test output"
+	@echo "  make clean-all        Clean + remove node_modules"
 
 install:
 	bun install --frozen-lockfile
@@ -88,6 +92,16 @@ format-check: install
 	bun x prettier --check .
 
 check-and-format: format lint typecheck test test-e2e-ci
+
+clean:
+	rm -rf .next
+	rm -f next-env.d.ts
+	rm -f data.db data.test.db
+	rm -rf playwright-report test-results
+	rm -f tsconfig.tsbuildinfo
+
+clean-all: clean
+	rm -rf node_modules
 
 dev-migrate-up: install
 	bun set-env.ts dev bun x drizzle-kit migrate
